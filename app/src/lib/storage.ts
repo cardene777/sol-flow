@@ -82,6 +82,37 @@ export function loadProject(projectId: string): CallGraph | null {
 }
 
 /**
+ * Rename a saved project
+ */
+export function renameProject(projectId: string, newName: string): boolean {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    // Update projects index
+    const projects = getSavedProjects();
+    const projectIndex = projects.findIndex(p => p.id === projectId);
+    if (projectIndex === -1) return false;
+
+    projects[projectIndex].name = newName;
+    localStorage.setItem(PROJECTS_INDEX_KEY, JSON.stringify(projects));
+
+    // Also update the callGraph's projectName
+    const dataKey = `${STORAGE_KEY_PREFIX}${projectId}`;
+    const data = localStorage.getItem(dataKey);
+    if (data) {
+      const callGraph: CallGraph = JSON.parse(data);
+      callGraph.projectName = newName;
+      localStorage.setItem(dataKey, JSON.stringify(callGraph));
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Failed to rename project:', error);
+    return false;
+  }
+}
+
+/**
  * Delete a saved project
  */
 export function deleteProject(projectId: string): boolean {
@@ -205,5 +236,21 @@ export function importProject(jsonString: string): SavedProject | null {
   } catch (error) {
     console.error('Failed to import project:', error);
     return null;
+  }
+}
+
+/**
+ * Update a project's callGraph (for user edges)
+ */
+export function updateProjectCallGraph(projectId: string, callGraph: CallGraph): boolean {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    const dataKey = `${STORAGE_KEY_PREFIX}${projectId}`;
+    localStorage.setItem(dataKey, JSON.stringify(callGraph));
+    return true;
+  } catch (error) {
+    console.error('Failed to update project:', error);
+    return false;
   }
 }

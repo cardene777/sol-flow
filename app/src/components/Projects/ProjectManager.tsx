@@ -1,12 +1,35 @@
 'use client';
 
-import { memo } from 'react';
-import { X, Trash2, FolderOpen, Database, Shield, Zap } from 'lucide-react';
+import { memo, useState } from 'react';
+import { X, Trash2, FolderOpen, Database, Shield, Zap, ArrowUpCircle, Eye, Gem, Radio, Layers, Mountain, ChevronDown, ChevronRight, Send, Coins, Users, Settings } from 'lucide-react';
 import clsx from 'clsx';
 import type { SavedProject } from '@/lib/storage';
+import type { LucideIcon } from 'lucide-react';
 
-// Built-in libraries
-export const BUILT_IN_LIBRARIES = [
+// Library item definition
+export interface LibraryItem {
+  id: string;
+  name: string;
+  version: string;
+  description: string;
+  icon: LucideIcon;
+  color: LibraryColor;
+}
+
+// Library group definition
+export interface LibraryGroup {
+  id: string;
+  name: string;
+  description: string;
+  icon: LucideIcon;
+  color: LibraryColor;
+  children: LibraryItem[];
+}
+
+export type LibraryColor = 'mint' | 'blue' | 'amber' | 'purple' | 'cyan' | 'pink' | 'orange' | 'red' | 'emerald' | 'slate';
+
+// Standalone libraries (not in any group)
+export const STANDALONE_LIBRARIES: LibraryItem[] = [
   {
     id: 'openzeppelin',
     name: 'OpenZeppelin Contracts',
@@ -31,9 +54,165 @@ export const BUILT_IN_LIBRARIES = [
     icon: Zap,
     color: 'amber',
   },
+];
+
+// Library groups with children
+export const LIBRARY_GROUPS: LibraryGroup[] = [
+  {
+    id: 'avalanche',
+    name: 'Avalanche ICM',
+    description: 'Interchain messaging & token transfer',
+    icon: Mountain,
+    color: 'red',
+    children: [
+      {
+        id: 'avalanche-teleporter',
+        name: 'Teleporter',
+        version: 'v1.0.0',
+        description: 'Cross-chain messaging protocol',
+        icon: Send,
+        color: 'red',
+      },
+      {
+        id: 'avalanche-ictt',
+        name: 'ICTT',
+        version: 'v1.0.0',
+        description: 'Interchain token transfer',
+        icon: Coins,
+        color: 'red',
+      },
+      {
+        id: 'avalanche-validator-manager',
+        name: 'Validator Manager',
+        version: 'v1.0.0',
+        description: 'L1 validator management & staking',
+        icon: Users,
+        color: 'red',
+      },
+      {
+        id: 'avalanche-utilities',
+        name: 'Utilities',
+        version: 'v1.0.0',
+        description: 'Common utilities for ICM',
+        icon: Settings,
+        color: 'red',
+      },
+    ],
+  },
+  {
+    id: 'proxy',
+    name: 'Proxy Patterns',
+    description: 'Upgradeable proxy implementations',
+    icon: Layers,
+    color: 'purple',
+    children: [
+      {
+        id: 'sample-uups',
+        name: 'UUPS',
+        version: 'v1.0.0',
+        description: 'Upgrade logic in implementation',
+        icon: ArrowUpCircle,
+        color: 'purple',
+      },
+      {
+        id: 'sample-transparent',
+        name: 'Transparent',
+        version: 'v1.0.0',
+        description: 'Admin/user call separation',
+        icon: Eye,
+        color: 'cyan',
+      },
+      {
+        id: 'sample-diamond',
+        name: 'Diamond',
+        version: 'v1.0.0',
+        description: 'Multi-facet upgradeable (EIP-2535)',
+        icon: Gem,
+        color: 'pink',
+      },
+      {
+        id: 'sample-beacon',
+        name: 'Beacon',
+        version: 'v1.0.0',
+        description: 'Multiple proxies share implementation',
+        icon: Radio,
+        color: 'orange',
+      },
+    ],
+  },
+];
+
+// For backwards compatibility - flat list of all libraries
+export const BUILT_IN_LIBRARIES = [
+  ...STANDALONE_LIBRARIES,
+  ...LIBRARY_GROUPS.flatMap(g => g.children),
 ] as const;
 
 export type LibraryId = typeof BUILT_IN_LIBRARIES[number]['id'];
+
+// Color classes for different library colors
+const COLOR_CLASSES: Record<LibraryColor, { active: string; icon: string; badge: string; groupBg: string }> = {
+  mint: {
+    active: 'bg-mint/10 border-mint/30 text-mint',
+    icon: 'text-mint',
+    badge: 'bg-mint/20 text-mint',
+    groupBg: 'bg-mint/5',
+  },
+  blue: {
+    active: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
+    icon: 'text-blue-400',
+    badge: 'bg-blue-500/20 text-blue-400',
+    groupBg: 'bg-blue-500/5',
+  },
+  amber: {
+    active: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
+    icon: 'text-amber-400',
+    badge: 'bg-amber-500/20 text-amber-400',
+    groupBg: 'bg-amber-500/5',
+  },
+  purple: {
+    active: 'bg-purple-500/10 border-purple-500/30 text-purple-400',
+    icon: 'text-purple-400',
+    badge: 'bg-purple-500/20 text-purple-400',
+    groupBg: 'bg-purple-500/5',
+  },
+  cyan: {
+    active: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400',
+    icon: 'text-cyan-400',
+    badge: 'bg-cyan-500/20 text-cyan-400',
+    groupBg: 'bg-cyan-500/5',
+  },
+  pink: {
+    active: 'bg-pink-500/10 border-pink-500/30 text-pink-400',
+    icon: 'text-pink-400',
+    badge: 'bg-pink-500/20 text-pink-400',
+    groupBg: 'bg-pink-500/5',
+  },
+  orange: {
+    active: 'bg-orange-500/10 border-orange-500/30 text-orange-400',
+    icon: 'text-orange-400',
+    badge: 'bg-orange-500/20 text-orange-400',
+    groupBg: 'bg-orange-500/5',
+  },
+  red: {
+    active: 'bg-red-500/10 border-red-500/30 text-red-400',
+    icon: 'text-red-400',
+    badge: 'bg-red-500/20 text-red-400',
+    groupBg: 'bg-red-500/5',
+  },
+  emerald: {
+    active: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
+    icon: 'text-emerald-400',
+    badge: 'bg-emerald-500/20 text-emerald-400',
+    groupBg: 'bg-emerald-500/5',
+  },
+  slate: {
+    active: 'bg-slate-500/10 border-slate-500/30 text-slate-400',
+    icon: 'text-slate-400',
+    badge: 'bg-slate-500/20 text-slate-400',
+    groupBg: 'bg-slate-500/5',
+  },
+};
 
 interface ProjectManagerProps {
   projects: SavedProject[];
@@ -54,6 +233,33 @@ function ProjectManagerComponent({
   onDeleteProject,
   onLoadLibrary,
 }: ProjectManagerProps) {
+  // Track expanded groups (default: expand group containing active library)
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => {
+    const initial = new Set<string>();
+    // Auto-expand group containing current library
+    if (currentLibraryId) {
+      for (const group of LIBRARY_GROUPS) {
+        if (group.children.some(lib => lib.id === currentLibraryId)) {
+          initial.add(group.id);
+          break;
+        }
+      }
+    }
+    return initial;
+  });
+
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('ja-JP', {
@@ -67,6 +273,85 @@ function ProjectManagerComponent({
 
   const formatSize = (contractCount: number) => {
     return `${contractCount} contracts`;
+  };
+
+  // Render a single library item
+  const renderLibraryItem = (lib: LibraryItem, indented = false) => {
+    const Icon = lib.icon;
+    const isActive = currentProjectId === null && currentLibraryId === lib.id;
+    const colorClasses = COLOR_CLASSES[lib.color];
+
+    return (
+      <button
+        key={lib.id}
+        onClick={() => onLoadLibrary(lib.id as LibraryId)}
+        className={clsx(
+          'w-full flex items-center gap-3 px-4 py-2.5 rounded-lg border transition-all',
+          indented && 'ml-6',
+          isActive
+            ? colorClasses.active
+            : 'bg-navy-700/50 border-navy-600 text-slate-300 hover:bg-navy-700 hover:border-navy-500'
+        )}
+      >
+        <Icon className={clsx('w-4 h-4', isActive ? colorClasses.icon : 'text-slate-400')} />
+        <div className="flex-1 text-left">
+          <div className="font-medium text-sm">{lib.name}</div>
+          <div className="text-xs text-slate-500">{lib.description}</div>
+        </div>
+        <span className={clsx('text-[10px] px-1.5 py-0.5 rounded', colorClasses.badge)}>
+          {lib.version}
+        </span>
+        {isActive && (
+          <span className={clsx('text-xs px-2 py-0.5 rounded', colorClasses.badge)}>
+            Active
+          </span>
+        )}
+      </button>
+    );
+  };
+
+  // Render a library group
+  const renderLibraryGroup = (group: LibraryGroup) => {
+    const Icon = group.icon;
+    const isExpanded = expandedGroups.has(group.id);
+    const hasActiveChild = group.children.some(lib => currentProjectId === null && currentLibraryId === lib.id);
+    const colorClasses = COLOR_CLASSES[group.color];
+
+    return (
+      <div key={group.id} className="space-y-1">
+        {/* Group header */}
+        <button
+          onClick={() => toggleGroup(group.id)}
+          className={clsx(
+            'w-full flex items-center gap-3 px-4 py-3 rounded-lg border transition-all',
+            hasActiveChild
+              ? colorClasses.active
+              : 'bg-navy-700/30 border-navy-600 text-slate-300 hover:bg-navy-700/50 hover:border-navy-500'
+          )}
+        >
+          {isExpanded ? (
+            <ChevronDown className="w-4 h-4 text-slate-400" />
+          ) : (
+            <ChevronRight className="w-4 h-4 text-slate-400" />
+          )}
+          <Icon className={clsx('w-5 h-5', hasActiveChild ? colorClasses.icon : 'text-slate-400')} />
+          <div className="flex-1 text-left">
+            <div className="font-medium">{group.name}</div>
+            <div className="text-xs text-slate-500">{group.description}</div>
+          </div>
+          <span className="text-xs text-slate-500 bg-navy-600 px-2 py-0.5 rounded">
+            {group.children.length}
+          </span>
+        </button>
+
+        {/* Expanded children */}
+        {isExpanded && (
+          <div className={clsx('space-y-1 py-2 px-2 rounded-lg', colorClasses.groupBg)}>
+            {group.children.map(lib => renderLibraryItem(lib, true))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -97,51 +382,11 @@ function ProjectManagerComponent({
               Built-in Libraries
             </h3>
             <div className="space-y-2">
-              {BUILT_IN_LIBRARIES.map((lib) => {
-                const Icon = lib.icon;
-                const isActive = currentProjectId === null && currentLibraryId === lib.id;
-                const colorClasses = {
-                  mint: {
-                    active: 'bg-mint/10 border-mint/30 text-mint',
-                    icon: 'text-mint',
-                    badge: 'bg-mint/20 text-mint',
-                  },
-                  blue: {
-                    active: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
-                    icon: 'text-blue-400',
-                    badge: 'bg-blue-500/20 text-blue-400',
-                  },
-                  amber: {
-                    active: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
-                    icon: 'text-amber-400',
-                    badge: 'bg-amber-500/20 text-amber-400',
-                  },
-                }[lib.color];
+              {/* Standalone libraries */}
+              {STANDALONE_LIBRARIES.map(lib => renderLibraryItem(lib))}
 
-                return (
-                  <button
-                    key={lib.id}
-                    onClick={() => onLoadLibrary(lib.id)}
-                    className={clsx(
-                      'w-full flex items-center gap-3 px-4 py-3 rounded-lg border transition-all',
-                      isActive
-                        ? colorClasses.active
-                        : 'bg-navy-700/50 border-navy-600 text-slate-300 hover:bg-navy-700 hover:border-navy-500'
-                    )}
-                  >
-                    <Icon className={clsx('w-5 h-5', isActive ? colorClasses.icon : 'text-slate-400')} />
-                    <div className="flex-1 text-left">
-                      <div className="font-medium">{lib.name}</div>
-                      <div className="text-xs text-slate-500">{lib.description} - {lib.version}</div>
-                    </div>
-                    {isActive && (
-                      <span className={clsx('text-xs px-2 py-0.5 rounded', colorClasses.badge)}>
-                        Active
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+              {/* Library groups */}
+              {LIBRARY_GROUPS.map(group => renderLibraryGroup(group))}
             </div>
           </div>
 

@@ -23,19 +23,8 @@ export interface EventDefinition {
   parameters: Parameter[];
 }
 
-/** Contract Category (aligned with OpenZeppelin directory structure) */
-export type ContractCategory =
-  | 'access'      // access control (Ownable, AccessControl, etc.)
-  | 'account'     // account abstraction
-  | 'finance'     // payment, vesting
-  | 'governance'  // governor, timelock
-  | 'metatx'      // meta transactions
-  | 'proxy'       // proxy patterns
-  | 'token'       // ERC20, ERC721, ERC1155
-  | 'utils'       // utilities (Context, ReentrancyGuard, Pausable, etc.)
-  | 'interface'   // interfaces
-  | 'library'     // libraries
-  | 'other';      // uncategorized
+/** Contract Category - dynamically determined from directory structure */
+export type ContractCategory = string;
 
 /** Contract Kind */
 export type ContractKind = 'contract' | 'library' | 'interface' | 'abstract';
@@ -114,6 +103,9 @@ export interface Contract {
   proxyPattern?: ProxyPatternType;
   proxyRole?: ProxyRole;
   proxyGroupId?: string;
+  // External library flag (OpenZeppelin, Solady, etc.)
+  isExternalLibrary?: boolean;
+  librarySource?: 'openzeppelin' | 'openzeppelin-upgradeable' | 'solady' | 'avalanche-icm';
 }
 
 /** Dependency Type */
@@ -169,6 +161,18 @@ export interface Stats {
   totalFunctions: number;
 }
 
+/** User-added Edge */
+export interface UserEdge {
+  id: string;
+  from: string;
+  to: string;
+  type: DependencyType;
+  label?: string;
+  sourceHandle?: string;
+  targetHandle?: string;
+  createdAt: string;
+}
+
 /** Call Graph */
 export interface CallGraph {
   version: string;
@@ -179,4 +183,7 @@ export interface CallGraph {
   dependencies: Dependency[];
   proxyGroups: ProxyGroup[];
   stats: Stats;
+  // User editing
+  userEdges?: UserEdge[];
+  deletedEdgeIds?: string[];
 }

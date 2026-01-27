@@ -2,10 +2,10 @@
   "id": "solady",
   "name": "Solady",
   "version": "latest",
-  "generatedAt": "2026-01-27T01:55:27.521Z",
+  "generatedAt": "2026-01-27T07:24:09.041Z",
   "callGraph": {
     "version": "1.0.0",
-    "generatedAt": "2026-01-27T01:55:27.521Z",
+    "generatedAt": "2026-01-27T07:24:09.040Z",
     "projectName": "Solady",
     "structure": {
       "name": "src",
@@ -1116,7 +1116,7 @@
       {
         "name": "EIP7702Proxy",
         "kind": "contract",
-        "category": "proxy",
+        "category": "Solady/accounts",
         "filePath": "solady/src/accounts/EIP7702Proxy.sol",
         "inherits": [],
         "implements": [],
@@ -1130,7 +1130,7 @@
       {
         "name": "ERC1271",
         "kind": "abstract",
-        "category": "other",
+        "category": "Solady/accounts",
         "filePath": "solady/src/accounts/ERC1271.sol",
         "inherits": [
           "EIP712"
@@ -1225,10 +1225,6 @@
             "calls": [
               {
                 "target": "_domainNameAndVersion",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -1429,10 +1425,6 @@
               }
             ],
             "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              },
               {
                 "target": "eip712Domain",
                 "type": "internal"
@@ -1726,7 +1718,7 @@
       {
         "name": "ERC4337",
         "kind": "abstract",
-        "category": "other",
+        "category": "Solady/accounts",
         "filePath": "solady/src/accounts/ERC4337.sol",
         "inherits": [
           "Ownable",
@@ -2118,10 +2110,6 @@
               {
                 "target": "_setOwner",
                 "type": "internal"
-              },
-              {
-                "target": "address",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -2380,10 +2368,6 @@
               {
                 "target": "_domainNameAndVersion",
                 "type": "internal"
-              },
-              {
-                "target": "address",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -2406,10 +2390,6 @@
             "calls": [
               {
                 "target": "_initializeOwner",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -2483,10 +2463,6 @@
             "calls": [
               {
                 "target": "owner",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -2687,12 +2663,7 @@
                 "type": "address"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": true,
             "sourceCode": "function _selfImplementation() internal view virtual returns (address) {\n        return address(uint160(__self));\n    }",
@@ -2710,12 +2681,7 @@
                 "type": "bool"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": true,
             "sourceCode": "function _onImplementation() internal view virtual returns (bool) {\n        return __self == uint160(address(this));\n    }",
@@ -3001,10 +2967,6 @@
               }
             ],
             "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              },
               {
                 "target": "eip712Domain",
                 "type": "internal"
@@ -3303,7 +3265,7 @@
       {
         "name": "ERC4337Factory",
         "kind": "contract",
-        "category": "other",
+        "category": "Solady/accounts",
         "filePath": "solady/src/accounts/ERC4337Factory.sol",
         "inherits": [],
         "implements": [],
@@ -3365,10 +3327,6 @@
               {
                 "target": "LibClone.predictDeterministicAddressERC1967",
                 "type": "library"
-              },
-              {
-                "target": "address",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -3413,7 +3371,7 @@
       {
         "name": "ERC6551",
         "kind": "abstract",
-        "category": "other",
+        "category": "Solady/accounts",
         "filePath": "solady/src/accounts/ERC6551.sol",
         "inherits": [
           "UUPSUpgradeable",
@@ -3784,10 +3742,6 @@
               {
                 "target": "_domainNameAndVersion",
                 "type": "internal"
-              },
-              {
-                "target": "address",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -3972,12 +3926,7 @@
                 "type": "address"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": true,
             "sourceCode": "function _selfImplementation() internal view virtual returns (address) {\n        return address(uint160(__self));\n    }",
@@ -3995,12 +3944,7 @@
                 "type": "bool"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": true,
             "sourceCode": "function _onImplementation() internal view virtual returns (bool) {\n        return __self == uint160(address(this));\n    }",
@@ -4304,10 +4248,6 @@
               }
             ],
             "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              },
               {
                 "target": "eip712Domain",
                 "type": "internal"
@@ -4619,7 +4559,7 @@
       {
         "name": "ERC6551Proxy",
         "kind": "contract",
-        "category": "proxy",
+        "category": "Solady/accounts",
         "filePath": "solady/src/accounts/ERC6551Proxy.sol",
         "inherits": [],
         "implements": [],
@@ -4633,7 +4573,7 @@
       {
         "name": "ERC7821",
         "kind": "contract",
-        "category": "other",
+        "category": "Solady/accounts",
         "filePath": "solady/src/accounts/ERC7821.sol",
         "inherits": [
           "Receiver"
@@ -4788,10 +4728,6 @@
             ],
             "returnValues": [],
             "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              },
               {
                 "target": "_execute",
                 "type": "internal"
@@ -5044,10 +4980,6 @@
               {
                 "target": "delegationOf",
                 "type": "internal"
-              },
-              {
-                "target": "address",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -5097,12 +5029,7 @@
                 "type": "bytes"
               }
             ],
-            "calls": [
-              {
-                "target": "abi.encodePacked",
-                "type": "external"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": false,
             "sourceCode": "function proxyInitCode(address initialImplementation, address initialAdmin)\n        internal\n        pure\n        returns (bytes memory)\n    {\n        return abi.encodePacked(\n            EIP7702_PROXY_CREATION_CODE,\n            uint256(uint160(initialImplementation)),\n            uint256(uint160(initialAdmin))\n        );\n    }",
@@ -6144,7 +6071,7 @@
       {
         "name": "Receiver",
         "kind": "abstract",
-        "category": "other",
+        "category": "Solady/accounts",
         "filePath": "solady/src/accounts/Receiver.sol",
         "inherits": [],
         "implements": [],
@@ -6205,7 +6132,7 @@
       {
         "name": "Timelock",
         "kind": "contract",
-        "category": "governance",
+        "category": "Solady/accounts",
         "filePath": "solady/src/accounts/Timelock.sol",
         "inherits": [
           "ERC7821",
@@ -6260,10 +6187,6 @@
             "calls": [
               {
                 "target": "_initializeTimelockAuthorizationCheck",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               },
               {
@@ -6765,10 +6688,6 @@
             "returnValues": [],
             "calls": [
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "_checkRole",
                 "type": "internal"
               }
@@ -7244,7 +7163,7 @@
       {
         "name": "EnumerableRoles",
         "kind": "abstract",
-        "category": "access",
+        "category": "Solady/auth",
         "filePath": "solady/src/auth/EnumerableRoles.sol",
         "inherits": [],
         "implements": [],
@@ -7683,7 +7602,7 @@
       {
         "name": "Ownable",
         "kind": "abstract",
-        "category": "access",
+        "category": "Solady/auth",
         "filePath": "solady/src/auth/Ownable.sol",
         "inherits": [],
         "implements": [],
@@ -7725,10 +7644,6 @@
             "calls": [
               {
                 "target": "_setOwner",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -8002,7 +7917,7 @@
       {
         "name": "OwnableRoles",
         "kind": "abstract",
-        "category": "access",
+        "category": "Solady/auth",
         "filePath": "solady/src/auth/OwnableRoles.sol",
         "inherits": [
           "Ownable"
@@ -8233,10 +8148,6 @@
             "calls": [
               {
                 "target": "_setOwner",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -8677,7 +8588,7 @@
       {
         "name": "TimedRoles",
         "kind": "abstract",
-        "category": "access",
+        "category": "Solady/auth",
         "filePath": "solady/src/auth/TimedRoles.sol",
         "inherits": [],
         "implements": [],
@@ -9062,7 +8973,7 @@
       {
         "name": "ERC1155",
         "kind": "abstract",
-        "category": "token",
+        "category": "Solady/tokens",
         "filePath": "solady/src/tokens/ERC1155.sol",
         "inherits": [],
         "implements": [],
@@ -9374,10 +9285,6 @@
                 "type": "internal"
               },
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "_single",
                 "type": "internal"
               },
@@ -9436,10 +9343,6 @@
                 "type": "internal"
               },
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "_useAfterTokenTransfer",
                 "type": "internal"
               },
@@ -9484,10 +9387,6 @@
               {
                 "target": "_burn",
                 "type": "internal"
-              },
-              {
-                "target": "address",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -9525,10 +9424,6 @@
               },
               {
                 "target": "_beforeTokenTransfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               },
               {
@@ -9572,10 +9467,6 @@
               {
                 "target": "_batchBurn",
                 "type": "internal"
-              },
-              {
-                "target": "address",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -9613,10 +9504,6 @@
               },
               {
                 "target": "_beforeTokenTransfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               },
               {
@@ -9688,10 +9575,6 @@
             "calls": [
               {
                 "target": "_safeTransfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -9796,10 +9679,6 @@
             "calls": [
               {
                 "target": "_safeBatchTransfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -10251,7 +10130,7 @@
       {
         "name": "ERC20",
         "kind": "abstract",
-        "category": "token",
+        "category": "Solady/tokens",
         "filePath": "solady/src/tokens/ERC20.sol",
         "inherits": [],
         "implements": [],
@@ -10385,10 +10264,6 @@
             "calls": [
               {
                 "target": "_givePermit2InfiniteAllowance",
-                "type": "internal"
-              },
-              {
-                "target": "type",
                 "type": "internal"
               }
             ],
@@ -10711,10 +10586,6 @@
                 "type": "internal"
               },
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "_afterTokenTransfer",
                 "type": "internal"
               }
@@ -10742,10 +10613,6 @@
             "calls": [
               {
                 "target": "_beforeTokenTransfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               },
               {
@@ -11001,7 +10868,7 @@
       {
         "name": "ERC20Votes",
         "kind": "abstract",
-        "category": "token",
+        "category": "Solady/tokens",
         "filePath": "solady/src/tokens/ERC20Votes.sol",
         "inherits": [
           "ERC20"
@@ -11515,10 +11382,6 @@
               {
                 "target": "_givePermit2InfiniteAllowance",
                 "type": "internal"
-              },
-              {
-                "target": "type",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -11853,10 +11716,6 @@
             "returnValues": [],
             "calls": [
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "_checkpointPushDiff",
                 "type": "internal"
               },
@@ -12141,10 +12000,6 @@
                 "type": "internal"
               },
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "_afterTokenTransfer",
                 "type": "internal"
               }
@@ -12173,10 +12028,6 @@
             "calls": [
               {
                 "target": "_beforeTokenTransfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               },
               {
@@ -12405,7 +12256,7 @@
       {
         "name": "ERC2981",
         "kind": "abstract",
-        "category": "other",
+        "category": "Solady/tokens",
         "filePath": "solady/src/tokens/ERC2981.sol",
         "inherits": [],
         "implements": [],
@@ -12595,7 +12446,7 @@
       {
         "name": "ERC4626",
         "kind": "abstract",
-        "category": "other",
+        "category": "Solady/tokens",
         "filePath": "solady/src/tokens/ERC4626.sol",
         "inherits": [
           "ERC20"
@@ -12690,10 +12541,6 @@
               },
               {
                 "target": "asset",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -13005,12 +12852,7 @@
                 "type": "uint256"
               }
             ],
-            "calls": [
-              {
-                "target": "type",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": true,
             "sourceCode": "function maxDeposit(address to) public view virtual returns (uint256 maxAssets) {\n        to = to; // Silence unused variable warning.\n        maxAssets = type(uint256).max;\n    }",
@@ -13035,12 +12877,7 @@
                 "type": "uint256"
               }
             ],
-            "calls": [
-              {
-                "target": "type",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": true,
             "sourceCode": "function maxMint(address to) public view virtual returns (uint256 maxShares) {\n        to = to; // Silence unused variable warning.\n        maxShares = type(uint256).max;\n    }",
@@ -13417,10 +13254,6 @@
             "calls": [
               {
                 "target": "_givePermit2InfiniteAllowance",
-                "type": "internal"
-              },
-              {
-                "target": "type",
                 "type": "internal"
               }
             ],
@@ -13853,10 +13686,6 @@
                 "type": "internal"
               },
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "_mint",
                 "type": "internal"
               },
@@ -14085,10 +13914,6 @@
                 "type": "internal"
               },
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "_afterTokenTransfer",
                 "type": "internal"
               }
@@ -14117,10 +13942,6 @@
             "calls": [
               {
                 "target": "_beforeTokenTransfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               },
               {
@@ -14382,7 +14203,7 @@
       {
         "name": "ERC6909",
         "kind": "abstract",
-        "category": "other",
+        "category": "Solady/tokens",
         "filePath": "solady/src/tokens/ERC6909.sol",
         "inherits": [],
         "implements": [],
@@ -14781,10 +14602,6 @@
                 "type": "internal"
               },
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "_afterTokenTransfer",
                 "type": "internal"
               }
@@ -14816,10 +14633,6 @@
             "calls": [
               {
                 "target": "_beforeTokenTransfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               },
               {
@@ -15083,7 +14896,7 @@
       {
         "name": "ERC721",
         "kind": "abstract",
-        "category": "token",
+        "category": "Solady/tokens",
         "filePath": "solady/src/tokens/ERC721.sol",
         "inherits": [],
         "implements": [],
@@ -15617,10 +15430,6 @@
                 "type": "internal"
               },
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "_afterTokenTransfer",
                 "type": "internal"
               }
@@ -15652,10 +15461,6 @@
             "calls": [
               {
                 "target": "_beforeTokenTransfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               },
               {
@@ -15725,10 +15530,6 @@
               {
                 "target": "_checkOnERC721Received",
                 "type": "internal"
-              },
-              {
-                "target": "address",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -15750,10 +15551,6 @@
             "calls": [
               {
                 "target": "_burn",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -15784,10 +15581,6 @@
               },
               {
                 "target": "_beforeTokenTransfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               },
               {
@@ -15866,10 +15659,6 @@
             "calls": [
               {
                 "target": "_approve",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -15950,10 +15739,6 @@
             "calls": [
               {
                 "target": "_transfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -16056,10 +15841,6 @@
             "calls": [
               {
                 "target": "_transfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               },
               {
@@ -16359,7 +16140,7 @@
       {
         "name": "WETH",
         "kind": "contract",
-        "category": "other",
+        "category": "Solady/tokens",
         "filePath": "solady/src/tokens/WETH.sol",
         "inherits": [
           "ERC20"
@@ -16549,10 +16330,6 @@
             "calls": [
               {
                 "target": "_givePermit2InfiniteAllowance",
-                "type": "internal"
-              },
-              {
-                "target": "type",
                 "type": "internal"
               }
             ],
@@ -16885,10 +16662,6 @@
                 "type": "internal"
               },
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "_afterTokenTransfer",
                 "type": "internal"
               }
@@ -16917,10 +16690,6 @@
             "calls": [
               {
                 "target": "_beforeTokenTransfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               },
               {
@@ -17114,7 +16883,7 @@
       {
         "name": "ERC1155",
         "kind": "abstract",
-        "category": "token",
+        "category": "Solady/tokens",
         "filePath": "solady/src/tokens/ext/zksync/ERC1155.sol",
         "inherits": [],
         "implements": [],
@@ -17426,10 +17195,6 @@
                 "type": "internal"
               },
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "_single",
                 "type": "internal"
               },
@@ -17488,10 +17253,6 @@
                 "type": "internal"
               },
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "_useAfterTokenTransfer",
                 "type": "internal"
               },
@@ -17536,10 +17297,6 @@
               {
                 "target": "_burn",
                 "type": "internal"
-              },
-              {
-                "target": "address",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -17577,10 +17334,6 @@
               },
               {
                 "target": "_beforeTokenTransfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               },
               {
@@ -17624,10 +17377,6 @@
               {
                 "target": "_batchBurn",
                 "type": "internal"
-              },
-              {
-                "target": "address",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -17665,10 +17414,6 @@
               },
               {
                 "target": "_beforeTokenTransfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               },
               {
@@ -17740,10 +17485,6 @@
             "calls": [
               {
                 "target": "_safeTransfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -17848,10 +17589,6 @@
             "calls": [
               {
                 "target": "_safeBatchTransfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -18303,7 +18040,7 @@
       {
         "name": "ERC721",
         "kind": "abstract",
-        "category": "token",
+        "category": "Solady/tokens",
         "filePath": "solady/src/tokens/ext/zksync/ERC721.sol",
         "inherits": [],
         "implements": [],
@@ -18837,10 +18574,6 @@
                 "type": "internal"
               },
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "_afterTokenTransfer",
                 "type": "internal"
               }
@@ -18872,10 +18605,6 @@
             "calls": [
               {
                 "target": "_beforeTokenTransfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               },
               {
@@ -18945,10 +18674,6 @@
               {
                 "target": "_checkOnERC721Received",
                 "type": "internal"
-              },
-              {
-                "target": "address",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -18970,10 +18695,6 @@
             "calls": [
               {
                 "target": "_burn",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -19004,10 +18725,6 @@
               },
               {
                 "target": "_beforeTokenTransfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               },
               {
@@ -19086,10 +18803,6 @@
             "calls": [
               {
                 "target": "_approve",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -19170,10 +18883,6 @@
             "calls": [
               {
                 "target": "_transfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -19276,10 +18985,6 @@
             "calls": [
               {
                 "target": "_transfer",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               },
               {
@@ -19835,12 +19540,7 @@
                 "type": "bytes32"
               }
             ],
-            "calls": [
-              {
-                "target": "blockhash",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": false,
             "sourceCode": "function blockHash(uint256 blockNumber) internal view returns (bytes32 result) {\n        unchecked {\n            // If `blockNumber + 256` overflows:\n            // - Typical chain height (`block.number > 255`) -> `staticcall` -> 0.\n            // - Very early chain (`block.number <= 255`) -> `blockhash` -> 0.\n            if (block.number <= blockNumber + 256) return blockhash(blockNumber);\n        }\n        /// @solidity memory-safe-assembly\n        assembly {\n            mstore(0x20, blockNumber)\n            mstore(0x00, 0)\n            pop(staticcall(gas(), HISTORY_STORAGE_ADDRESS, 0x20, 0x20, 0x00, 0x20))\n            result := mload(0x00)\n        }\n    }",
@@ -19942,10 +19642,6 @@
               {
                 "target": "predictDeterministicAddress",
                 "type": "internal"
-              },
-              {
-                "target": "address",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -19992,7 +19688,7 @@
       {
         "name": "CallContextChecker",
         "kind": "contract",
-        "category": "utils",
+        "category": "Solady/utils",
         "filePath": "solady/src/utils/CallContextChecker.sol",
         "inherits": [],
         "implements": [],
@@ -20027,12 +19723,7 @@
                 "type": "address"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": true,
             "sourceCode": "function _selfImplementation() internal view virtual returns (address) {\n        return address(uint160(__self));\n    }",
@@ -20049,12 +19740,7 @@
                 "type": "bool"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": true,
             "sourceCode": "function _onImplementation() internal view virtual returns (bool) {\n        return __self == uint160(address(this));\n    }",
@@ -21343,7 +21029,7 @@
       {
         "name": "DeploylessPredeployQueryer",
         "kind": "contract",
-        "category": "utils",
+        "category": "Solady/utils",
         "filePath": "solady/src/utils/DeploylessPredeployQueryer.sol",
         "inherits": [],
         "implements": [],
@@ -21918,10 +21604,6 @@
             "calls": [
               {
                 "target": "slice",
-                "type": "internal"
-              },
-              {
-                "target": "type",
                 "type": "internal"
               }
             ],
@@ -23213,10 +22895,6 @@
             "calls": [
               {
                 "target": "slice",
-                "type": "internal"
-              },
-              {
-                "target": "type",
                 "type": "internal"
               }
             ],
@@ -29401,7 +29079,7 @@
       {
         "name": "EIP712",
         "kind": "abstract",
-        "category": "utils",
+        "category": "Solady/utils",
         "filePath": "solady/src/utils/EIP712.sol",
         "inherits": [],
         "implements": [],
@@ -29445,10 +29123,6 @@
             "calls": [
               {
                 "target": "_domainNameAndVersion",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -29697,7 +29371,7 @@
       {
         "name": "ERC1967Factory",
         "kind": "contract",
-        "category": "utils",
+        "category": "Solady/utils",
         "filePath": "solady/src/utils/ERC1967Factory.sol",
         "inherits": [],
         "implements": [],
@@ -33031,10 +32705,6 @@
             ],
             "calls": [
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "contains",
                 "type": "internal"
               }
@@ -33065,10 +32735,6 @@
               }
             ],
             "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              },
               {
                 "target": "contains",
                 "type": "internal"
@@ -34065,10 +33731,6 @@
             ],
             "calls": [
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "contains",
                 "type": "internal"
               }
@@ -34099,10 +33761,6 @@
               }
             ],
             "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              },
               {
                 "target": "contains",
                 "type": "internal"
@@ -35099,10 +34757,6 @@
             ],
             "calls": [
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "contains",
                 "type": "internal"
               }
@@ -35133,10 +34787,6 @@
               }
             ],
             "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              },
               {
                 "target": "contains",
                 "type": "internal"
@@ -37919,10 +37569,6 @@
             ],
             "calls": [
               {
-                "target": "type",
-                "type": "internal"
-              },
-              {
                 "target": "sqrt",
                 "type": "internal"
               },
@@ -37953,10 +37599,6 @@
               }
             ],
             "calls": [
-              {
-                "target": "type",
-                "type": "internal"
-              },
               {
                 "target": "cbrt",
                 "type": "internal"
@@ -39141,7 +38783,7 @@
       {
         "name": "Initializable",
         "kind": "abstract",
-        "category": "utils",
+        "category": "Solady/utils",
         "filePath": "solady/src/utils/Initializable.sol",
         "inherits": [],
         "implements": [],
@@ -41194,10 +40836,6 @@
               {
                 "target": "lastIndexOf",
                 "type": "internal"
-              },
-              {
-                "target": "type",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -41367,10 +41005,6 @@
             "calls": [
               {
                 "target": "slice",
-                "type": "internal"
-              },
-              {
-                "target": "type",
                 "type": "internal"
               }
             ],
@@ -41887,12 +41521,7 @@
                 "type": "address"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": false,
             "sourceCode": "function msbToAddress(bytes32 x) internal pure returns (address) {\n        return address(bytes20(x));\n    }",
@@ -41914,12 +41543,7 @@
                 "type": "address"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": false,
             "sourceCode": "function lsbToAddress(bytes32 x) internal pure returns (address) {\n        return address(uint160(uint256(x)));\n    }",
@@ -44279,10 +43903,6 @@
               {
                 "target": "erc1967Bootstrap",
                 "type": "internal"
-              },
-              {
-                "target": "address",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -44313,10 +43933,6 @@
               },
               {
                 "target": "predictDeterministicAddress",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -44385,10 +44001,6 @@
             "calls": [
               {
                 "target": "predictDeterministicAddressERC1967Bootstrap",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -50659,10 +50271,6 @@
               {
                 "target": "LibBytes.lastIndexOf",
                 "type": "library"
-              },
-              {
-                "target": "type",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -50853,10 +50461,6 @@
               {
                 "target": "LibBytes.slice",
                 "type": "library"
-              },
-              {
-                "target": "type",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -52735,10 +52339,6 @@
                 "type": "internal"
               },
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "_compat",
                 "type": "internal"
               }
@@ -53862,7 +53462,7 @@
       {
         "name": "Lifebuoy",
         "kind": "contract",
-        "category": "utils",
+        "category": "Solady/utils",
         "filePath": "solady/src/utils/Lifebuoy.sol",
         "inherits": [],
         "implements": [],
@@ -55825,7 +55425,7 @@
       {
         "name": "Multicallable",
         "kind": "abstract",
-        "category": "utils",
+        "category": "Solady/utils",
         "filePath": "solady/src/utils/Multicallable.sol",
         "inherits": [],
         "implements": [],
@@ -57010,7 +56610,7 @@
       {
         "name": "ReentrancyGuard",
         "kind": "abstract",
-        "category": "utils",
+        "category": "Solady/utils",
         "filePath": "solady/src/utils/ReentrancyGuard.sol",
         "inherits": [],
         "implements": [],
@@ -57029,7 +56629,7 @@
       {
         "name": "ReentrancyGuardTransient",
         "kind": "abstract",
-        "category": "utils",
+        "category": "Solady/utils",
         "filePath": "solady/src/utils/ReentrancyGuardTransient.sol",
         "inherits": [],
         "implements": [],
@@ -57193,10 +56793,6 @@
               {
                 "target": "predictCounterfactualAddress",
                 "type": "internal"
-              },
-              {
-                "target": "address",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -57258,10 +56854,6 @@
             "calls": [
               {
                 "target": "predictDeterministicAddress",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -60796,12 +60388,7 @@
                 "type": "bool"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": false,
             "sourceCode": "function isValidSignatureNow(address signer, bytes32 hash, bytes memory signature)\n        internal\n        view\n        returns (bool isValid)\n    {\n        if (signer == address(0)) return isValid;\n        /// @solidity memory-safe-assembly\n        assembly {\n            let m := mload(0x40)\n            for {} 1 {} {\n                if iszero(extcodesize(signer)) {\n                    switch mload(signature)\n                    case 64 {\n                        let vs := mload(add(signature, 0x40))\n                        mstore(0x20, add(shr(255, vs), 27)) // `v`.\n                        mstore(0x60, shr(1, shl(1, vs))) // `s`.\n                    }\n                    case 65 {\n                        mstore(0x20, byte(0, mload(add(signature, 0x60)))) // `v`.\n                        mstore(0x60, mload(add(signature, 0x40))) // `s`.\n                    }\n                    default { break }\n                    mstore(0x00, hash)\n                    mstore(0x40, mload(add(signature, 0x20))) // `r`.\n                    let recovered := mload(staticcall(gas(), 1, 0x00, 0x80, 0x01, 0x20))\n                    isValid := gt(returndatasize(), shl(96, xor(signer, recovered)))\n                    mstore(0x60, 0) // Restore the zero slot.\n                    mstore(0x40, m) // Restore the free memory pointer.\n                    break\n                }\n                let f := shl(224, 0x1626ba7e)\n                mstore(m, f) // `bytes4(keccak256(\"isValidSignature(bytes32,bytes)\"))`.\n                mstore(add(m, 0x04), hash)\n                let d := add(m, 0x24)\n                mstore(d, 0x40) // The offset of the `signature` in the calldata.\n                // Copy the `signature` over.\n                let n := add(0x20, mload(signature))\n                let copied := staticcall(gas(), 4, signature, n, add(m, 0x44), n)\n                isValid := staticcall(gas(), signer, m, add(returndatasize(), 0x44), d, 0x20)\n                isValid := and(eq(mload(d), f), and(isValid, copied))\n                break\n            }\n        }\n    }",
@@ -60831,12 +60418,7 @@
                 "type": "bool"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": false,
             "sourceCode": "function isValidSignatureNowCalldata(address signer, bytes32 hash, bytes calldata signature)\n        internal\n        view\n        returns (bool isValid)\n    {\n        if (signer == address(0)) return isValid;\n        /// @solidity memory-safe-assembly\n        assembly {\n            let m := mload(0x40)\n            for {} 1 {} {\n                if iszero(extcodesize(signer)) {\n                    switch signature.length\n                    case 64 {\n                        let vs := calldataload(add(signature.offset, 0x20))\n                        mstore(0x20, add(shr(255, vs), 27)) // `v`.\n                        mstore(0x40, calldataload(signature.offset)) // `r`.\n                        mstore(0x60, shr(1, shl(1, vs))) // `s`.\n                    }\n                    case 65 {\n                        mstore(0x20, byte(0, calldataload(add(signature.offset, 0x40)))) // `v`.\n                        calldatacopy(0x40, signature.offset, 0x40) // `r`, `s`.\n                    }\n                    default { break }\n                    mstore(0x00, hash)\n                    let recovered := mload(staticcall(gas(), 1, 0x00, 0x80, 0x01, 0x20))\n                    isValid := gt(returndatasize(), shl(96, xor(signer, recovered)))\n                    mstore(0x60, 0) // Restore the zero slot.\n                    mstore(0x40, m) // Restore the free memory pointer.\n                    break\n                }\n                let f := shl(224, 0x1626ba7e)\n                mstore(m, f) // `bytes4(keccak256(\"isValidSignature(bytes32,bytes)\"))`.\n                mstore(add(m, 0x04), hash)\n                let d := add(m, 0x24)\n                mstore(d, 0x40) // The offset of the `signature` in the calldata.\n                mstore(add(m, 0x44), signature.length)\n                // Copy the `signature` over.\n                calldatacopy(add(m, 0x64), signature.offset, signature.length)\n                isValid := staticcall(gas(), signer, m, add(signature.length, 0x64), d, 0x20)\n                isValid := and(eq(mload(d), f), isValid)\n                break\n            }\n        }\n    }",
@@ -60870,12 +60452,7 @@
                 "type": "bool"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": false,
             "sourceCode": "function isValidSignatureNow(address signer, bytes32 hash, bytes32 r, bytes32 vs)\n        internal\n        view\n        returns (bool isValid)\n    {\n        if (signer == address(0)) return isValid;\n        /// @solidity memory-safe-assembly\n        assembly {\n            let m := mload(0x40)\n            for {} 1 {} {\n                if iszero(extcodesize(signer)) {\n                    mstore(0x00, hash)\n                    mstore(0x20, add(shr(255, vs), 27)) // `v`.\n                    mstore(0x40, r) // `r`.\n                    mstore(0x60, shr(1, shl(1, vs))) // `s`.\n                    let recovered := mload(staticcall(gas(), 1, 0x00, 0x80, 0x01, 0x20))\n                    isValid := gt(returndatasize(), shl(96, xor(signer, recovered)))\n                    mstore(0x60, 0) // Restore the zero slot.\n                    mstore(0x40, m) // Restore the free memory pointer.\n                    break\n                }\n                let f := shl(224, 0x1626ba7e)\n                mstore(m, f) // `bytes4(keccak256(\"isValidSignature(bytes32,bytes)\"))`.\n                mstore(add(m, 0x04), hash)\n                let d := add(m, 0x24)\n                mstore(d, 0x40) // The offset of the `signature` in the calldata.\n                mstore(add(m, 0x44), 65) // Length of the signature.\n                mstore(add(m, 0x64), r) // `r`.\n                mstore(add(m, 0x84), shr(1, shl(1, vs))) // `s`.\n                mstore8(add(m, 0xa4), add(shr(255, vs), 27)) // `v`.\n                isValid := staticcall(gas(), signer, m, 0xa5, d, 0x20)\n                isValid := and(eq(mload(d), f), isValid)\n                break\n            }\n        }\n    }",
@@ -60913,12 +60490,7 @@
                 "type": "bool"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": false,
             "sourceCode": "function isValidSignatureNow(address signer, bytes32 hash, uint8 v, bytes32 r, bytes32 s)\n        internal\n        view\n        returns (bool isValid)\n    {\n        if (signer == address(0)) return isValid;\n        /// @solidity memory-safe-assembly\n        assembly {\n            let m := mload(0x40)\n            for {} 1 {} {\n                if iszero(extcodesize(signer)) {\n                    mstore(0x00, hash)\n                    mstore(0x20, and(v, 0xff)) // `v`.\n                    mstore(0x40, r) // `r`.\n                    mstore(0x60, s) // `s`.\n                    let recovered := mload(staticcall(gas(), 1, 0x00, 0x80, 0x01, 0x20))\n                    isValid := gt(returndatasize(), shl(96, xor(signer, recovered)))\n                    mstore(0x60, 0) // Restore the zero slot.\n                    mstore(0x40, m) // Restore the free memory pointer.\n                    break\n                }\n                let f := shl(224, 0x1626ba7e)\n                mstore(m, f) // `bytes4(keccak256(\"isValidSignature(bytes32,bytes)\"))`.\n                mstore(add(m, 0x04), hash)\n                let d := add(m, 0x24)\n                mstore(d, 0x40) // The offset of the `signature` in the calldata.\n                mstore(add(m, 0x44), 65) // Length of the signature.\n                mstore(add(m, 0x64), r) // `r`.\n                mstore(add(m, 0x84), s) // `s`.\n                mstore8(add(m, 0xa4), v) // `v`.\n                isValid := staticcall(gas(), signer, m, 0xa5, d, 0x20)\n                isValid := and(eq(mload(d), f), isValid)\n                break\n            }\n        }\n    }",
@@ -61185,7 +60757,7 @@
       {
         "name": "UUPSUpgradeable",
         "kind": "abstract",
-        "category": "utils",
+        "category": "Solady/utils",
         "filePath": "solady/src/utils/UUPSUpgradeable.sol",
         "inherits": [
           "CallContextChecker"
@@ -61300,12 +60872,7 @@
                 "type": "address"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": true,
             "sourceCode": "function _selfImplementation() internal view virtual returns (address) {\n        return address(uint160(__self));\n    }",
@@ -61323,12 +60890,7 @@
                 "type": "bool"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": true,
             "sourceCode": "function _onImplementation() internal view virtual returns (bool) {\n        return __self == uint160(address(this));\n    }",
@@ -61441,7 +61003,7 @@
       {
         "name": "UpgradeableBeacon",
         "kind": "contract",
-        "category": "utils",
+        "category": "Solady/utils",
         "filePath": "solady/src/utils/UpgradeableBeacon.sol",
         "inherits": [],
         "implements": [],
@@ -61550,10 +61112,6 @@
             "calls": [
               {
                 "target": "_setOwner",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -61865,12 +61423,7 @@
                 "type": "bytes"
               }
             ],
-            "calls": [
-              {
-                "target": "abi.encode",
-                "type": "external"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": false,
             "sourceCode": "function encodeAuth(WebAuthnAuth memory auth) internal pure returns (bytes memory) {\n        return abi.encode(auth);\n    }",
@@ -62555,7 +62108,7 @@
       {
         "name": "ERC1967BeaconProxy",
         "kind": "contract",
-        "category": "utils",
+        "category": "Solady/utils",
         "filePath": "solady/src/utils/ext/zksync/ERC1967BeaconProxy.sol",
         "inherits": [],
         "implements": [],
@@ -62580,7 +62133,7 @@
       {
         "name": "ERC1967Factory",
         "kind": "contract",
-        "category": "utils",
+        "category": "Solady/utils",
         "filePath": "solady/src/utils/ext/zksync/ERC1967Factory.sol",
         "inherits": [],
         "implements": [],
@@ -63230,10 +62783,6 @@
             ],
             "calls": [
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "_validateSalt",
                 "type": "internal"
               }
@@ -63467,7 +63016,7 @@
       {
         "name": "ERC1967Proxy",
         "kind": "contract",
-        "category": "utils",
+        "category": "Solady/utils",
         "filePath": "solady/src/utils/ext/zksync/ERC1967Proxy.sol",
         "inherits": [],
         "implements": [],
@@ -63567,12 +63116,7 @@
                 "type": "address"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [
               "SingleUseETHVaultCreated"
             ],
@@ -63603,10 +63147,6 @@
             "calls": [
               {
                 "target": "forceSafeTransferETH",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -63665,10 +63205,6 @@
             "calls": [
               {
                 "target": "forceSafeTransferETH",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               }
             ],
@@ -64056,12 +63592,7 @@
                 "type": "bool"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": false,
             "sourceCode": "function isValidSignatureNow(address signer, bytes32 hash, bytes memory signature)\n        internal\n        view\n        returns (bool isValid)\n    {\n        if (signer == address(0)) return isValid;\n        /// @solidity memory-safe-assembly\n        assembly {\n            function copy(dst_, src_, n_) {\n                for { let i_ := 0 } lt(i_, n_) { i_ := add(0x20, i_) } {\n                    mstore(add(dst_, i_), mload(add(src_, i_)))\n                }\n            }\n            let m := mload(0x40)\n            for {} 1 {} {\n                if iszero(extcodesize(signer)) {\n                    switch mload(signature)\n                    case 64 {\n                        let vs := mload(add(signature, 0x40))\n                        mstore(0x20, add(shr(255, vs), 27)) // `v`.\n                        mstore(0x60, shr(1, shl(1, vs))) // `s`.\n                    }\n                    case 65 {\n                        mstore(0x20, byte(0, mload(add(signature, 0x60)))) // `v`.\n                        mstore(0x60, mload(add(signature, 0x40))) // `s`.\n                    }\n                    default { break }\n                    mstore(0x00, hash)\n                    mstore(0x40, mload(add(signature, 0x20))) // `r`.\n                    let recovered := mload(staticcall(gas(), 1, 0x00, 0x80, 0x01, 0x20))\n                    isValid := gt(returndatasize(), shl(96, xor(signer, recovered)))\n                    mstore(0x60, 0) // Restore the zero slot.\n                    mstore(0x40, m) // Restore the free memory pointer.\n                    break\n                }\n                let f := shl(224, 0x1626ba7e)\n                mstore(m, f) // `bytes4(keccak256(\"isValidSignature(bytes32,bytes)\"))`.\n                mstore(add(m, 0x04), hash)\n                let d := add(m, 0x24)\n                mstore(d, 0x40) // The offset of the `signature` in the calldata.\n                // Copy the `signature` over.\n                let n := add(0x20, mload(signature))\n                copy(add(m, 0x44), signature, n)\n                isValid := staticcall(gas(), signer, m, add(n, 0x44), d, 0x20)\n                isValid := and(eq(mload(d), f), isValid)\n                break\n            }\n        }\n    }",
@@ -64091,12 +63622,7 @@
                 "type": "bool"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": false,
             "sourceCode": "function isValidSignatureNowCalldata(address signer, bytes32 hash, bytes calldata signature)\n        internal\n        view\n        returns (bool isValid)\n    {\n        if (signer == address(0)) return isValid;\n        /// @solidity memory-safe-assembly\n        assembly {\n            let m := mload(0x40)\n            for {} 1 {} {\n                if iszero(extcodesize(signer)) {\n                    switch signature.length\n                    case 64 {\n                        let vs := calldataload(add(signature.offset, 0x20))\n                        mstore(0x20, add(shr(255, vs), 27)) // `v`.\n                        mstore(0x40, calldataload(signature.offset)) // `r`.\n                        mstore(0x60, shr(1, shl(1, vs))) // `s`.\n                    }\n                    case 65 {\n                        mstore(0x20, byte(0, calldataload(add(signature.offset, 0x40)))) // `v`.\n                        calldatacopy(0x40, signature.offset, 0x40) // `r`, `s`.\n                    }\n                    default { break }\n                    mstore(0x00, hash)\n                    let recovered := mload(staticcall(gas(), 1, 0x00, 0x80, 0x01, 0x20))\n                    isValid := gt(returndatasize(), shl(96, xor(signer, recovered)))\n                    mstore(0x60, 0) // Restore the zero slot.\n                    mstore(0x40, m) // Restore the free memory pointer.\n                    break\n                }\n                let f := shl(224, 0x1626ba7e)\n                mstore(m, f) // `bytes4(keccak256(\"isValidSignature(bytes32,bytes)\"))`.\n                mstore(add(m, 0x04), hash)\n                let d := add(m, 0x24)\n                mstore(d, 0x40) // The offset of the `signature` in the calldata.\n                mstore(add(m, 0x44), signature.length)\n                // Copy the `signature` over.\n                calldatacopy(add(m, 0x64), signature.offset, signature.length)\n                isValid := staticcall(gas(), signer, m, add(signature.length, 0x64), d, 0x20)\n                isValid := and(eq(mload(d), f), isValid)\n                break\n            }\n        }\n    }",
@@ -64130,12 +63656,7 @@
                 "type": "bool"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": false,
             "sourceCode": "function isValidSignatureNow(address signer, bytes32 hash, bytes32 r, bytes32 vs)\n        internal\n        view\n        returns (bool isValid)\n    {\n        if (signer == address(0)) return isValid;\n        /// @solidity memory-safe-assembly\n        assembly {\n            let m := mload(0x40)\n            for {} 1 {} {\n                if iszero(extcodesize(signer)) {\n                    mstore(0x00, hash)\n                    mstore(0x20, add(shr(255, vs), 27)) // `v`.\n                    mstore(0x40, r) // `r`.\n                    mstore(0x60, shr(1, shl(1, vs))) // `s`.\n                    let recovered := mload(staticcall(gas(), 1, 0x00, 0x80, 0x01, 0x20))\n                    isValid := gt(returndatasize(), shl(96, xor(signer, recovered)))\n                    mstore(0x60, 0) // Restore the zero slot.\n                    mstore(0x40, m) // Restore the free memory pointer.\n                    break\n                }\n                let f := shl(224, 0x1626ba7e)\n                mstore(m, f) // `bytes4(keccak256(\"isValidSignature(bytes32,bytes)\"))`.\n                mstore(add(m, 0x04), hash)\n                let d := add(m, 0x24)\n                mstore(d, 0x40) // The offset of the `signature` in the calldata.\n                mstore(add(m, 0x44), 65) // Length of the signature.\n                mstore(add(m, 0x64), r) // `r`.\n                mstore(add(m, 0x84), shr(1, shl(1, vs))) // `s`.\n                mstore8(add(m, 0xa4), add(shr(255, vs), 27)) // `v`.\n                isValid := staticcall(gas(), signer, m, 0xa5, d, 0x20)\n                isValid := and(eq(mload(d), f), isValid)\n                break\n            }\n        }\n    }",
@@ -64173,12 +63694,7 @@
                 "type": "bool"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": false,
             "sourceCode": "function isValidSignatureNow(address signer, bytes32 hash, uint8 v, bytes32 r, bytes32 s)\n        internal\n        view\n        returns (bool isValid)\n    {\n        if (signer == address(0)) return isValid;\n        /// @solidity memory-safe-assembly\n        assembly {\n            let m := mload(0x40)\n            for {} 1 {} {\n                if iszero(extcodesize(signer)) {\n                    mstore(0x00, hash)\n                    mstore(0x20, and(v, 0xff)) // `v`.\n                    mstore(0x40, r) // `r`.\n                    mstore(0x60, s) // `s`.\n                    let recovered := mload(staticcall(gas(), 1, 0x00, 0x80, 0x01, 0x20))\n                    isValid := gt(returndatasize(), shl(96, xor(signer, recovered)))\n                    mstore(0x60, 0) // Restore the zero slot.\n                    mstore(0x40, m) // Restore the free memory pointer.\n                    break\n                }\n                let f := shl(224, 0x1626ba7e)\n                mstore(m, f) // `bytes4(keccak256(\"isValidSignature(bytes32,bytes)\"))`.\n                mstore(add(m, 0x04), hash)\n                let d := add(m, 0x24)\n                mstore(d, 0x40) // The offset of the `signature` in the calldata.\n                mstore(add(m, 0x44), 65) // Length of the signature.\n                mstore(add(m, 0x64), r) // `r`.\n                mstore(add(m, 0x84), s) // `s`.\n                mstore8(add(m, 0xa4), v) // `v`.\n                isValid := staticcall(gas(), signer, m, 0xa5, d, 0x20)\n                isValid := and(eq(mload(d), f), isValid)\n                break\n            }\n        }\n    }",
@@ -64385,7 +63901,7 @@
       {
         "name": "SingleUseETHVault",
         "kind": "contract",
-        "category": "utils",
+        "category": "Solady/utils",
         "filePath": "solady/src/utils/ext/zksync/SingleUseETHVault.sol",
         "inherits": [],
         "implements": [],
@@ -64408,7 +63924,7 @@
       {
         "name": "UpgradeableBeacon",
         "kind": "contract",
-        "category": "utils",
+        "category": "Solady/utils",
         "filePath": "solady/src/utils/ext/zksync/UpgradeableBeacon.sol",
         "inherits": [],
         "implements": [],
@@ -65422,10 +64938,6 @@
             "calls": [
               {
                 "target": "slice",
-                "type": "internal"
-              },
-              {
-                "target": "type",
                 "type": "internal"
               }
             ],
@@ -66717,10 +66229,6 @@
             "calls": [
               {
                 "target": "slice",
-                "type": "internal"
-              },
-              {
-                "target": "type",
                 "type": "internal"
               }
             ],
@@ -73460,10 +72968,6 @@
             ],
             "calls": [
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "contains",
                 "type": "internal"
               }
@@ -73494,10 +72998,6 @@
               }
             ],
             "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              },
               {
                 "target": "contains",
                 "type": "internal"
@@ -74494,10 +73994,6 @@
             ],
             "calls": [
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "contains",
                 "type": "internal"
               }
@@ -74528,10 +74024,6 @@
               }
             ],
             "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              },
               {
                 "target": "contains",
                 "type": "internal"
@@ -75528,10 +75020,6 @@
             ],
             "calls": [
               {
-                "target": "address",
-                "type": "internal"
-              },
-              {
                 "target": "contains",
                 "type": "internal"
               }
@@ -75562,10 +75050,6 @@
               }
             ],
             "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              },
               {
                 "target": "contains",
                 "type": "internal"
@@ -78571,10 +78055,6 @@
               {
                 "target": "lastIndexOf",
                 "type": "internal"
-              },
-              {
-                "target": "type",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -78744,10 +78224,6 @@
             "calls": [
               {
                 "target": "slice",
-                "type": "internal"
-              },
-              {
-                "target": "type",
                 "type": "internal"
               }
             ],
@@ -79264,12 +78740,7 @@
                 "type": "address"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": false,
             "sourceCode": "function msbToAddress(bytes32 x) internal pure returns (address) {\n        return address(bytes20(x));\n    }",
@@ -79291,12 +78762,7 @@
                 "type": "address"
               }
             ],
-            "calls": [
-              {
-                "target": "address",
-                "type": "internal"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": false,
             "sourceCode": "function lsbToAddress(bytes32 x) internal pure returns (address) {\n        return address(uint160(uint256(x)));\n    }",
@@ -82098,10 +81564,6 @@
               {
                 "target": "LibBytes.lastIndexOf",
                 "type": "library"
-              },
-              {
-                "target": "type",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -82292,10 +81754,6 @@
               {
                 "target": "LibBytes.slice",
                 "type": "library"
-              },
-              {
-                "target": "type",
-                "type": "internal"
               }
             ],
             "emits": [],
@@ -84171,10 +83629,6 @@
             "calls": [
               {
                 "target": "get",
-                "type": "internal"
-              },
-              {
-                "target": "address",
                 "type": "internal"
               },
               {
@@ -86785,12 +86239,7 @@
                 "type": "bytes"
               }
             ],
-            "calls": [
-              {
-                "target": "abi.encode",
-                "type": "external"
-              }
-            ],
+            "calls": [],
             "emits": [],
             "isVirtual": false,
             "sourceCode": "function encodeAuth(WebAuthnAuth memory auth) internal pure returns (bytes memory) {\n        return abi.encode(auth);\n    }",
@@ -86892,7 +86341,7 @@
       {
         "name": "CWIA",
         "kind": "abstract",
-        "category": "utils",
+        "category": "Solady/utils",
         "filePath": "solady/src/utils/legacy/CWIA.sol",
         "inherits": [],
         "implements": [],

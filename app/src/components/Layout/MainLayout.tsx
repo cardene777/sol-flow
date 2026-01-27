@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
-import { DiagramCanvas } from '@/components/Canvas/DiagramCanvas';
+import { DiagramCanvas, type DiagramCanvasHandle, type TempEdge } from '@/components/Canvas/DiagramCanvas';
 import { FunctionFlowModal } from '@/components/FunctionFlow/FunctionFlowModal';
-import type { CallGraph, ExternalFunction, ContractCategory } from '@/types/callGraph';
+import type { CallGraph, ExternalFunction, ContractCategory, UserEdge } from '@/types/callGraph';
 import type { LayoutMode } from '@/utils/transformToReactFlow';
 
 interface MainLayoutProps {
@@ -17,8 +17,18 @@ interface MainLayoutProps {
   onImportClick: () => void;
   onProjectManagerClick: () => void;
   onReload: () => void;
+  onRenameProject?: (newName: string) => void;
   currentProjectId: string | null;
+  currentLibraryId: string | null;
   savedProjectsCount: number;
+  // Edit mode
+  isEditMode?: boolean;
+  onEditModeChange?: (enabled: boolean) => void;
+  tempEdges?: TempEdge[];
+  onAddTempEdge?: (edge: TempEdge) => void;
+  onClearTempEdges?: () => void;
+  onAddUserEdge?: (edge: UserEdge) => void;
+  onDeleteEdge?: (edgeId: string) => void;
 }
 
 export function MainLayout({
@@ -30,14 +40,37 @@ export function MainLayout({
   onImportClick,
   onProjectManagerClick,
   onReload,
+  onRenameProject,
   currentProjectId,
+  currentLibraryId,
   savedProjectsCount,
+  isEditMode = false,
+  onEditModeChange,
+  tempEdges = [],
+  onAddTempEdge,
+  onClearTempEdges,
+  onAddUserEdge,
+  onDeleteEdge,
 }: MainLayoutProps) {
+  // Generate a unique key for the canvas to force re-render when project/library changes
+  const canvasKey = currentProjectId || currentLibraryId || 'default';
+
+  // Ref for diagram canvas export functions
+  const diagramRef = useRef<DiagramCanvasHandle>(null);
+
+  // Export handlers
+  const handleExportPng = useCallback(() => {
+    diagramRef.current?.exportAsPng();
+  }, []);
+
+  const handleExportSvg = useCallback(() => {
+    diagramRef.current?.exportAsSvg();
+  }, []);
   // Category filter state (undefined = show all)
   const [visibleCategories, setVisibleCategories] = useState<ContractCategory[] | undefined>(undefined);
 
-  // Layout mode state
-  const [layoutMode, setLayoutMode] = useState<LayoutMode>('grid');
+  // Layout mode state (default to hierarchy for better visualization)
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>('hierarchy');
 
   const handleCategoryToggle = useCallback((category: ContractCategory) => {
     setVisibleCategories((prev) => {
@@ -77,10 +110,15 @@ export function MainLayout({
         onImportClick={onImportClick}
         onProjectManagerClick={onProjectManagerClick}
         onReload={onReload}
+        onExportPng={handleExportPng}
+        onExportSvg={handleExportSvg}
+        onRenameProject={onRenameProject}
         currentProjectId={currentProjectId}
         savedProjectsCount={savedProjectsCount}
         layoutMode={layoutMode}
         onLayoutModeChange={setLayoutMode}
+        isEditMode={isEditMode}
+        onEditModeChange={onEditModeChange}
       />
 
       {/* Main Content */}
@@ -100,6 +138,8 @@ export function MainLayout({
         {/* Canvas */}
         <main className="flex-1 overflow-hidden relative">
           <DiagramCanvas
+            key={canvasKey}
+            ref={diagramRef}
             callGraph={callGraph}
             selectedContract={selectedContract}
             selectedFunction={selectedFunction?.name ?? null}
@@ -108,6 +148,13 @@ export function MainLayout({
             enableCategoryGroups={true}
             visibleCategories={visibleCategories}
             layoutMode={layoutMode}
+            isEditMode={isEditMode}
+            isLibrary={!!currentLibraryId}
+            tempEdges={tempEdges}
+            onAddTempEdge={onAddTempEdge}
+            onClearTempEdges={onClearTempEdges}
+            onAddUserEdge={onAddUserEdge}
+            onDeleteEdge={onDeleteEdge}
           />
         </main>
       </div>

@@ -335,6 +335,13 @@ function extractFunctionCall(node: any): FunctionCall | null {
     if (objExpr?.type === 'Identifier') {
       const objName = objExpr.name;
 
+      // Skip Solidity built-in globals (abi, block, msg, tx, etc.)
+      // These are not function calls, just built-in operations
+      const builtinGlobals = ['abi', 'block', 'msg', 'tx', 'type'];
+      if (builtinGlobals.includes(objName)) {
+        return null;
+      }
+
       // Library call pattern: LibName.func()
       if (objName[0] === objName[0].toUpperCase()) {
         return {
@@ -365,8 +372,23 @@ function extractFunctionCall(node: any): FunctionCall | null {
   if (expr.type === 'Identifier') {
     const name = expr.name;
 
-    // Skip common built-ins
-    if (['require', 'assert', 'revert', 'keccak256', 'abi', 'block', 'msg', 'tx'].includes(name)) {
+    // Skip Solidity built-ins, reserved words, and type keywords
+    const builtins = [
+      // Built-in functions
+      'require', 'assert', 'revert', 'keccak256', 'sha256', 'ripemd160',
+      'ecrecover', 'addmod', 'mulmod', 'selfdestruct', 'suicide',
+      // Global variables
+      'abi', 'block', 'msg', 'tx', 'gasleft', 'blockhash', 'now',
+      // Type keywords and casting
+      'type', 'address', 'payable', 'bytes', 'string', 'bool',
+      'int', 'uint', 'bytes1', 'bytes2', 'bytes3', 'bytes4',
+      'bytes8', 'bytes16', 'bytes20', 'bytes32',
+      'int8', 'int16', 'int32', 'int64', 'int128', 'int256',
+      'uint8', 'uint16', 'uint32', 'uint64', 'uint128', 'uint256',
+      // Other reserved
+      'this', 'super', 'new', 'delete',
+    ];
+    if (builtins.includes(name)) {
       return null;
     }
 
@@ -431,50 +453,98 @@ function getTypeName(typeName: any | null): string {
   return 'unknown';
 }
 
+/**
+ * Determine category dynamically from directory structure.
+ * Extracts the first meaningful directory name after common prefixes.
+ *
+ * Examples:
+ * - @openzeppelin/contracts/access/Ownable.sol → 'access'
+ * - @avalanche-icm/teleporter/TeleporterMessenger.sol → 'teleporter'
+ * - src/MyProject/Core/Contract.sol → 'Core'
+ */
 function determineCategory(
   name: string,
   inherits: string[],
   kind: ContractKind,
   filePath: string
 ): ContractCategory {
+  // Interface and library are special categories
   if (kind === 'interface') return 'interface';
   if (kind === 'library') return 'library';
 
-  const lowerPath = filePath.toLowerCase();
-  const lowerName = name.toLowerCase();
+  // Handle specific library patterns with remappings
+  // @openzeppelin/contracts@5.0.2/access/Ownable.sol → "OpenZeppelin/access"
+  // @openzeppelin/contracts-upgradeable@5.0.2/proxy/... → "OZ-Upgradeable/proxy"
+  // @teleporter/TeleporterMessenger.sol → "teleporter"
+  // @utilities/SafeERC20TransferFrom.sol → "utilities"
 
-  // Detect from file path (OpenZeppelin directory structure)
-  if (lowerPath.includes('/access/')) return 'access';
-  if (lowerPath.includes('/account/')) return 'account';
-  if (lowerPath.includes('/finance/')) return 'finance';
-  if (lowerPath.includes('/governance/')) return 'governance';
-  if (lowerPath.includes('/metatx/')) return 'metatx';
-  if (lowerPath.includes('/proxy/')) return 'proxy';
-  if (lowerPath.includes('/token/')) return 'token';
-  if (lowerPath.includes('/utils/')) return 'utils';
-
-  // Fallback to name-based detection
-  if (
-    lowerName.includes('erc20') ||
-    lowerName.includes('erc721') ||
-    lowerName.includes('erc1155') ||
-    lowerName.includes('token')
-  ) {
-    return 'token';
+  // OpenZeppelin patterns
+  const ozMatch = filePath.match(/^@openzeppelin\/contracts(?:-upgradeable)?(?:@[\d.]+)?\/(.+)\//);
+  if (ozMatch) {
+    const subCategory = ozMatch[1]; // e.g., "access", "token/ERC20", "proxy"
+    const isUpgradeable = filePath.includes('-upgradeable');
+    const prefix = isUpgradeable ? 'OZ-Upgradeable' : 'OpenZeppelin';
+    // Take only the first directory level for cleaner categories
+    const firstDir = subCategory.split('/')[0];
+    return `${prefix}/${firstDir}`;
   }
 
-  if (
-    lowerName.includes('ownable') ||
-    lowerName.includes('access') ||
-    lowerName.includes('role')
-  ) {
-    return 'access';
+  // Avalanche ICM remappings: @teleporter, @utilities, @subnet-evm, @mocks, @ictt, @validator-manager
+  const avalancheRemappings: Record<string, string> = {
+    '@teleporter': 'teleporter',
+    '@utilities': 'utilities',
+    '@subnet-evm': 'subnet-evm',
+    '@mocks': 'mocks',
+    '@ictt': 'ictt',
+    '@validator-manager': 'validator-manager',
+    '@avalanche-icm/teleporter': 'teleporter',
+    '@avalanche-icm/ictt': 'ictt',
+    '@avalanche-icm/validator-manager': 'validator-manager',
+    '@avalanche-icm/utilities': 'utilities',
+  };
+
+  for (const [prefix, category] of Object.entries(avalancheRemappings)) {
+    if (filePath.startsWith(prefix)) {
+      return category;
+    }
   }
 
-  if (lowerName.includes('proxy') || lowerName.includes('upgradeable')) return 'proxy';
-  if (lowerName.includes('pausable') || lowerName.includes('reentrancy') || lowerName.includes('context')) return 'utils';
-  if (lowerName.includes('governor') || lowerName.includes('timelock') || lowerName.includes('votes')) return 'governance';
+  // Solady pattern
+  if (filePath.startsWith('solady/')) {
+    const match = filePath.match(/^solady\/(?:src\/)?([^/]+)\//);
+    if (match) {
+      return `Solady/${match[1]}`;
+    }
+    return 'Solady';
+  }
 
+  // Split path into segments for generic handling
+  const segments = filePath.split('/').filter(s => s.length > 0);
+
+  // Skip common prefixes to find the meaningful category directory
+  const skipPrefixes = [
+    'contracts', 'src', 'lib', 'node_modules',
+  ];
+
+  // Find the first meaningful directory
+  for (let i = 0; i < segments.length - 1; i++) {
+    const segment = segments[i];
+    const lowerSegment = segment.toLowerCase();
+
+    // Skip common non-meaningful directories
+    if (skipPrefixes.includes(lowerSegment)) continue;
+
+    // Skip segments starting with @ (scoped packages) or containing version
+    if (segment.startsWith('@') || segment.includes('@')) continue;
+
+    // Skip file extensions
+    if (segment.endsWith('.sol')) continue;
+
+    // Found a meaningful directory name
+    return segment;
+  }
+
+  // Fallback: use 'other' if no category could be determined
   return 'other';
 }
 

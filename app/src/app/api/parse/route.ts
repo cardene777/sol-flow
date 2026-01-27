@@ -58,6 +58,22 @@ export async function POST(request: NextRequest) {
     // Resolve external library dependencies
     const allContracts = resolveLibraryDependencies(uploadedContracts);
 
+    // Debug: Check TeleporterMessenger source code
+    const teleporter = allContracts.find(c => c.name === 'TeleporterMessenger');
+    if (teleporter) {
+      const sendFunc = teleporter.externalFunctions.find(f => f.name === 'sendCrossChainMessage');
+      console.log('[Parse API] TeleporterMessenger found:', {
+        filePath: teleporter.filePath,
+        isExternalLibrary: teleporter.isExternalLibrary,
+        externalFunctionCount: teleporter.externalFunctions.length,
+        sendCrossChainMessageHasCode: !!sendFunc?.sourceCode,
+        sourceCodeLength: sendFunc?.sourceCode?.length || 0,
+      });
+    } else {
+      console.log('[Parse API] TeleporterMessenger NOT found in allContracts');
+      console.log('[Parse API] Available contracts:', allContracts.map(c => c.name).join(', '));
+    }
+
     // Build call graph
     const callGraph = buildCallGraph(projectName, allContracts);
 

@@ -109,44 +109,55 @@ function detectProxyPattern(contract: Contract): {
   const lowerPath = contract.filePath.toLowerCase().replace(/\\/g, '/');
   const inheritNames = contract.inherits.map((i) => i.toLowerCase());
 
-  // EIP-7546 Detection (Meta Contract / Borderless)
-  // Dictionary pattern - check first since Dictionary.sol is in /functions/
-  if (
-    lowerName.includes('dictionary') ||
-    lowerName === 'dictionarycore' ||
-    lowerPath.includes('/dictionary/') ||
-    eventNames.includes('DictionaryUpgraded') ||
-    eventNames.includes('ImplementationSet') ||
-    functionNames.includes('setImplementation') ||
-    functionNames.includes('bulkSetImplementation')
-  ) {
-    return { pattern: 'eip7546', role: 'dictionary' };
-  }
-
-  // EIP-7546 Proxy pattern
-  if (
-    functionNames.includes('getDictionary') ||
-    lowerName === 'borderlessproxy' ||
-    lowerName.includes('borderlessproxy') ||
-    inheritNames.some((i) => i.includes('borderlessproxy') || i === 'proxy') ||
-    (lowerPath.includes('/proxy/') && lowerPath.includes('/functions/'))
-  ) {
-    return { pattern: 'eip7546', role: 'proxy' };
-  }
-
-  // Check if this is in /functions/ directory (implementation)
+  // Check if this is in /functions/ directory (ERC-7546 specific pattern)
   // Use regex to match /functions/ more reliably
   const functionsPattern = /[/\\]functions[/\\]/i;
   const hasFunctionsDir = functionsPattern.test(contract.filePath);
 
-  // Debug log
-  console.log(`[ERC7546 Check] ${contract.name}:`);
-  console.log(`  filePath: ${contract.filePath}`);
-  console.log(`  hasFunctionsDir: ${hasFunctionsDir}`);
-  console.log(`  isLib: ${lowerName.includes('lib')}`);
+  // EIP-7546 Detection (Meta Contract / Borderless)
+  // Must have specific ERC-7546 structure: /functions/ directory OR specific dictionary/borderless naming
+  //
+  // IMPORTANT: Do NOT detect ERC-7546 based on common function names like setImplementation
+  // because other proxy patterns (UUPS, Transparent) also have these functions.
+  // ERC-7546 detection should be based on:
+  // 1. Directory structure (/functions/, /dictionary/)
+  // 2. Specific naming (Dictionary, DictionaryCore, BorderlessProxy)
+  // 3. ERC-7546 specific events (DictionaryUpgraded)
+  // 4. ERC-7546 specific functions (getDictionary, bulkSetImplementation)
 
+  // Dictionary pattern - strict detection
+  const isErc7546Dictionary =
+    // Name-based detection
+    lowerName === 'dictionary' ||
+    lowerName === 'dictionarycore' ||
+    lowerName.includes('dictionarycore') ||
+    // Path-based detection (ERC-7546 specific directory structure)
+    lowerPath.includes('/dictionary/') ||
+    // Event-based detection (ERC-7546 specific)
+    eventNames.includes('DictionaryUpgraded') ||
+    // Function-based detection (ERC-7546 specific - bulkSetImplementation is unique to ERC-7546)
+    functionNames.includes('bulkSetImplementation') ||
+    // Combination: getDictionary function indicates ERC-7546 ecosystem
+    (functionNames.includes('setImplementation') && functionNames.includes('getImplementation') && hasFunctionsDir);
+
+  if (isErc7546Dictionary) {
+    return { pattern: 'eip7546', role: 'dictionary' };
+  }
+
+  // EIP-7546 Proxy pattern - strict detection
+  const isErc7546Proxy =
+    functionNames.includes('getDictionary') ||
+    lowerName === 'borderlessproxy' ||
+    lowerName.includes('borderlessproxy') ||
+    inheritNames.some((i) => i.includes('borderlessproxy')) ||
+    (lowerPath.includes('/proxy/') && hasFunctionsDir);
+
+  if (isErc7546Proxy) {
+    return { pattern: 'eip7546', role: 'proxy' };
+  }
+
+  // EIP-7546 Implementation - must be in /functions/ directory
   if (hasFunctionsDir && !lowerName.includes('lib')) {
-    console.log(`  -> Detected as ERC7546 implementation`);
     return { pattern: 'eip7546', role: 'implementation' };
   }
 

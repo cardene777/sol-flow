@@ -1,30 +1,52 @@
 import fs from 'fs';
 import path from 'path';
-import type { Contract, ImportInfo } from '@/types/callGraph';
+import type { Contract } from '@/types/callGraph';
 import { parseSolidityFile } from './solidityParser';
+import {
+  STANDARD_REMAPPINGS,
+  normalizeVersionedPath,
+  findRemapping,
+  type Remapping,
+} from '@/config/remappings';
 
-// Library directory path (relative to project root)
-const LIBRARY_BASE_PATH = path.join(process.cwd(), '..', 'library');
+// Library directory path - try multiple possible locations
+function getLibraryBasePath(): string {
+  // Try relative to current working directory
+  const cwdRelative = path.join(process.cwd(), '..', 'library');
+  if (fs.existsSync(cwdRelative)) {
+    return cwdRelative;
+  }
 
-// Mapping from import paths to library directories
-const LIBRARY_MAPPINGS: Record<string, string> = {
-  '@openzeppelin/contracts': 'openzeppelin-contracts/contracts',
-  '@openzeppelin/contracts-upgradeable': 'openzeppelin-contracts-upgradeable/contracts',
-  'solady': 'solady',
-};
+  // Try relative to app directory (for production)
+  const appRelative = path.resolve(__dirname, '..', '..', '..', '..', 'library');
+  if (fs.existsSync(appRelative)) {
+    return appRelative;
+  }
+
+  // Fallback to original path
+  console.warn('Library directory not found at expected locations, using fallback');
+  return cwdRelative;
+}
+
+const LIBRARY_BASE_PATH = getLibraryBasePath();
+console.log('[LibraryResolver] Library base path:', LIBRARY_BASE_PATH);
 
 /**
- * Resolve an external import path to a file system path
+ * Resolve an import path to a file system path
+ * e.g., "@teleporter/TeleporterMessenger.sol" -> "/path/to/library/icm-contracts/avalanche/teleporter/TeleporterMessenger.sol"
  */
-function resolveImportPath(importPath: string): string | null {
-  for (const [prefix, localPath] of Object.entries(LIBRARY_MAPPINGS)) {
-    if (importPath.startsWith(prefix)) {
-      const relativePath = importPath.slice(prefix.length);
-      const fullPath = path.join(LIBRARY_BASE_PATH, localPath, relativePath);
-      return fullPath;
-    }
+function resolveImportPath(importPath: string): { fullPath: string; remapping: Remapping } | null {
+  const normalized = normalizeVersionedPath(importPath);
+  const remapping = findRemapping(normalized);
+
+  if (!remapping) {
+    return null;
   }
-  return null;
+
+  const relativePath = normalized.slice(remapping.alias.length);
+  const fullPath = path.join(LIBRARY_BASE_PATH, remapping.target, relativePath);
+
+  return { fullPath, remapping };
 }
 
 /**
@@ -85,29 +107,43 @@ export function resolveLibraryDependencies(
     pendingImports.clear();
 
     for (const importPath of currentBatch) {
-      if (processedPaths.has(importPath)) {
+      // Normalize for consistency
+      const normalizedImportPath = normalizeVersionedPath(importPath);
+
+      if (processedPaths.has(importPath) || processedPaths.has(normalizedImportPath)) {
         continue;
       }
       processedPaths.add(importPath);
+      processedPaths.add(normalizedImportPath);
 
-      const resolvedPath = resolveImportPath(importPath);
-      if (!resolvedPath) {
-        console.log(`Could not resolve library path: ${importPath}`);
+      const resolved = resolveImportPath(importPath);
+      if (!resolved) {
+        console.log(`[LibraryResolver] Could not resolve library path: ${importPath}`);
+        console.log(`  - Normalized: ${normalizeVersionedPath(importPath)}`);
+        console.log(`  - Remapping found: ${findRemapping(importPath)?.alias || 'NONE'}`);
         continue;
       }
 
-      const content = readLibraryFile(resolvedPath);
+      console.log(`[LibraryResolver] Resolving: ${importPath}`);
+      console.log(`  - Full path: ${resolved.fullPath}`);
+
+      const content = readLibraryFile(resolved.fullPath);
       if (!content) {
-        console.log(`Could not read library file: ${resolvedPath}`);
+        console.log(`[LibraryResolver] Could not read library file: ${resolved.fullPath}`);
         continue;
       }
 
-      // Parse the library file
-      const { contracts: libraryContracts } = parseSolidityFile(importPath, content);
+      console.log(`[LibraryResolver] Successfully read: ${resolved.fullPath} (${content.length} bytes)`);
+
+      // Parse the library file - use the original import path as filePath
+      // This ensures the path matches what user code imports
+      const { contracts: libraryContracts } = parseSolidityFile(normalizedImportPath, content);
 
       for (const contract of libraryContracts) {
-        // Mark as external library
-        contract.filePath = importPath; // Keep the original import path for display
+        // Keep the import path format for display and matching
+        contract.filePath = normalizedImportPath;
+        contract.isExternalLibrary = true;
+        contract.librarySource = resolved.remapping.librarySource;
         allContracts.push(contract);
 
         // Collect nested external imports
@@ -126,10 +162,22 @@ export function resolveLibraryDependencies(
     console.log(`Stopped resolving libraries at depth ${maxDepth}. Remaining: ${pendingImports.size} imports`);
   }
 
+  const libraryContracts = allContracts.filter(c => c.isExternalLibrary);
   console.log(`=== Library Resolution ===`);
+  console.log(`Library base path: ${LIBRARY_BASE_PATH}`);
   console.log(`Uploaded contracts: ${uploadedContracts.length}`);
-  console.log(`Total contracts (with libraries): ${allContracts.length}`);
-  console.log(`Library contracts added: ${allContracts.length - uploadedContracts.length}`);
+  console.log(`Library contracts resolved: ${libraryContracts.length}`);
+  console.log(`Total contracts: ${allContracts.length}`);
+  if (libraryContracts.length > 0) {
+    console.log(`Library contracts by source:`);
+    const bySrc = new Map<string, number>();
+    for (const c of libraryContracts) {
+      bySrc.set(c.librarySource || 'unknown', (bySrc.get(c.librarySource || 'unknown') || 0) + 1);
+    }
+    for (const [src, count] of bySrc) {
+      console.log(`  - ${src}: ${count}`);
+    }
+  }
   console.log(`==========================`);
 
   return allContracts;

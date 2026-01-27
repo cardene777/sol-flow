@@ -45,6 +45,42 @@ const LIBRARIES: Record<string, LibraryConfig> = {
     basePath: 'src',
     excludePaths: ['test'],
   },
+  'sample-uups': {
+    id: 'sample-uups',
+    name: 'UUPS Proxy Sample',
+    version: '1.0.0',
+    repo: 'local',
+    branch: 'main',
+    basePath: 'samples/uups',
+    excludePaths: [],
+  },
+  'sample-transparent': {
+    id: 'sample-transparent',
+    name: 'Transparent Proxy Sample',
+    version: '1.0.0',
+    repo: 'local',
+    branch: 'main',
+    basePath: 'samples/transparent',
+    excludePaths: [],
+  },
+  'sample-diamond': {
+    id: 'sample-diamond',
+    name: 'Diamond Proxy Sample',
+    version: '1.0.0',
+    repo: 'local',
+    branch: 'main',
+    basePath: 'samples/diamond',
+    excludePaths: [],
+  },
+  'sample-beacon': {
+    id: 'sample-beacon',
+    name: 'Beacon Proxy Sample',
+    version: '1.0.0',
+    repo: 'local',
+    branch: 'main',
+    basePath: 'samples/beacon',
+    excludePaths: [],
+  },
 };
 
 async function fetchGitHubDirectory(

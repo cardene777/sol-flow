@@ -4,12 +4,15 @@ import { useState, useCallback, useEffect } from 'react';
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { UploadModal } from '@/components/Upload/UploadModal';
 import { ProjectManager, type LibraryId } from '@/components/Projects/ProjectManager';
-import type { CallGraph, ExternalFunction } from '@/types/callGraph';
+import type { CallGraph, ExternalFunction, UserEdge } from '@/types/callGraph';
+import type { TempEdge } from '@/components/Canvas/DiagramCanvas';
 import {
   getSavedProjects,
   saveProject,
   loadProject,
   deleteProject,
+  renameProject,
+  updateProjectCallGraph,
   type SavedProject,
 } from '@/lib/storage';
 
@@ -43,6 +46,9 @@ export default function Home() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showProjectManager, setShowProjectManager] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  // Edit mode state
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [tempEdges, setTempEdges] = useState<TempEdge[]>([]);
 
   // Load saved projects list and current project
   useEffect(() => {
@@ -66,8 +72,17 @@ export default function Home() {
         }
 
         // Check for last selected library (default to openzeppelin)
-        const lastLibraryId = (localStorage.getItem(CURRENT_LIBRARY_KEY) || 'openzeppelin') as LibraryId;
-        const response = await fetch(`/api/libraries/${lastLibraryId}`);
+        let lastLibraryId = (localStorage.getItem(CURRENT_LIBRARY_KEY) || 'openzeppelin') as LibraryId;
+        let response = await fetch(`/api/libraries/${lastLibraryId}`);
+
+        // Fallback to openzeppelin if the saved library doesn't exist
+        if (!response.ok && lastLibraryId !== 'openzeppelin') {
+          console.warn(`Library ${lastLibraryId} not found, falling back to openzeppelin`);
+          lastLibraryId = 'openzeppelin';
+          localStorage.setItem(CURRENT_LIBRARY_KEY, 'openzeppelin');
+          response = await fetch(`/api/libraries/openzeppelin`);
+        }
+
         if (response.ok) {
           const data = await response.json();
           setCallGraph(data.callGraph);
@@ -112,6 +127,8 @@ export default function Home() {
       setCurrentLibraryId(null);
       setSelectedContract(null);
       setSelectedFunction(null);
+      setIsEditMode(false);
+      setTempEdges([]);
       localStorage.setItem(CURRENT_PROJECT_KEY, projectId);
       localStorage.removeItem(CURRENT_LIBRARY_KEY);
     }
@@ -133,6 +150,17 @@ export default function Home() {
         .then(res => res.json())
         .then(data => setCallGraph(data.callGraph))
         .catch(console.error);
+    }
+  }, [currentProjectId]);
+
+  // Rename the current project
+  const handleRenameProject = useCallback((newName: string) => {
+    if (!currentProjectId) return;
+
+    if (renameProject(currentProjectId, newName)) {
+      // Update local state
+      setCallGraph(prev => ({ ...prev, projectName: newName }));
+      setSavedProjects(getSavedProjects());
     }
   }, [currentProjectId]);
 
@@ -158,22 +186,99 @@ export default function Home() {
     setCallGraph(prev => ({ ...prev }));
     setSelectedContract(null);
     setSelectedFunction(null);
+    // Clear temp edges on reload
+    setTempEdges([]);
   }, []);
+
+  // Edit mode handlers
+  const handleEditModeChange = useCallback((enabled: boolean) => {
+    setIsEditMode(enabled);
+  }, []);
+
+  const handleAddTempEdge = useCallback((edge: TempEdge) => {
+    setTempEdges(prev => [...prev, edge]);
+  }, []);
+
+  const handleClearTempEdges = useCallback(() => {
+    setTempEdges([]);
+  }, []);
+
+  const handleAddUserEdge = useCallback((edge: UserEdge) => {
+    if (!currentProjectId) return;
+
+    setCallGraph(prev => {
+      const newCallGraph = {
+        ...prev,
+        userEdges: [...(prev.userEdges || []), edge],
+      };
+      // Save to localStorage
+      updateProjectCallGraph(currentProjectId, newCallGraph);
+      return newCallGraph;
+    });
+  }, [currentProjectId]);
+
+  const handleDeleteEdge = useCallback((edgeId: string) => {
+    // Temp edges can be deleted anytime (even for libraries)
+    if (edgeId.startsWith('temp-')) {
+      const actualId = edgeId.replace('temp-', '');
+      setTempEdges(prev => prev.filter(e => e.id !== actualId));
+      return;
+    }
+
+    // Other edge operations require a user project
+    if (!currentProjectId) return;
+
+    // Check if it's a user edge
+    if (edgeId.startsWith('user-')) {
+      setCallGraph(prev => {
+        const newCallGraph = {
+          ...prev,
+          userEdges: (prev.userEdges || []).filter(e => e.id !== edgeId),
+        };
+        updateProjectCallGraph(currentProjectId, newCallGraph);
+        return newCallGraph;
+      });
+      return;
+    }
+
+    // It's a system edge - add to deleted list
+    setCallGraph(prev => {
+      const newCallGraph = {
+        ...prev,
+        deletedEdgeIds: [...(prev.deletedEdgeIds || []), edgeId],
+      };
+      updateProjectCallGraph(currentProjectId, newCallGraph);
+      return newCallGraph;
+    });
+  }, [currentProjectId]);
 
   // Load a built-in library
   const handleLoadLibrary = useCallback(async (libraryId: LibraryId) => {
+    // Clear selection state
     setSelectedContract(null);
     setSelectedFunction(null);
     setCurrentProjectId(null);
     setCurrentLibraryId(libraryId);
+    setIsEditMode(false);
+    setTempEdges([]);
+
+    // Update localStorage
     localStorage.removeItem(CURRENT_PROJECT_KEY);
     localStorage.setItem(CURRENT_LIBRARY_KEY, libraryId);
+
+    // Set a loading state by updating the callGraph projectName
+    setCallGraph(prev => ({
+      ...prev,
+      projectName: 'Loading...',
+    }));
 
     try {
       const response = await fetch(`/api/libraries/${libraryId}`);
       if (response.ok) {
         const data = await response.json();
         setCallGraph(data.callGraph);
+      } else {
+        console.error('Failed to load library: Response not OK', response.status);
       }
     } catch (e) {
       console.error('Failed to load library:', e);
@@ -192,8 +297,17 @@ export default function Home() {
         onImportClick={handleImportClick}
         onProjectManagerClick={handleProjectManagerClick}
         onReload={handleReload}
+        onRenameProject={handleRenameProject}
         currentProjectId={currentProjectId}
+        currentLibraryId={currentLibraryId}
         savedProjectsCount={savedProjects.length}
+        isEditMode={isEditMode}
+        onEditModeChange={handleEditModeChange}
+        tempEdges={tempEdges}
+        onAddTempEdge={handleAddTempEdge}
+        onClearTempEdges={handleClearTempEdges}
+        onAddUserEdge={handleAddUserEdge}
+        onDeleteEdge={handleDeleteEdge}
       />
 
       {showUploadModal && (

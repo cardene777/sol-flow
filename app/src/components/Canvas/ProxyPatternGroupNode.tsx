@@ -62,24 +62,28 @@ function ProxyPatternGroupNodeComponent({ data }: NodeProps<ProxyPatternGroupNod
   return (
     <div
       className={clsx(
-        'rounded-2xl border-2 border-dashed',
+        'rounded-2xl border-3 border-dashed',
         style.borderColor,
         style.bgColor,
         'pointer-events-none'
       )}
       style={{ width: '100%', height: '100%' }}
     >
-      {/* Header */}
+      {/* Header - Large and prominent */}
       <div className={clsx(
-        'absolute -top-3 left-4 px-3 py-1 rounded-full text-xs font-bold tracking-wider',
-        'bg-navy-800 border',
-        style.borderColor,
-        style.textColor
+        'absolute -top-4 left-6 px-5 py-2 rounded-xl',
+        'bg-navy-800 border-2 shadow-lg',
+        style.borderColor
       )}>
-        <span className="mr-1.5">{style.icon}</span>
-        {label}
-        <span className="ml-2 text-slate-500 font-normal">
-          ({contractCount} contracts)
+        <span className={clsx('text-2xl mr-2')}>{style.icon}</span>
+        <span className={clsx(
+          'text-lg font-bold tracking-wide',
+          style.textColor
+        )}>
+          {label}
+        </span>
+        <span className="ml-3 text-sm text-slate-500">
+          {contractCount} contracts
         </span>
       </div>
     </div>

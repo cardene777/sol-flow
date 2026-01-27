@@ -17,6 +17,7 @@ export interface LibraryInfo {
 
 // Available pre-parsed libraries
 export const AVAILABLE_LIBRARIES: LibraryInfo[] = [
+  // Standalone libraries
   {
     id: 'openzeppelin',
     name: 'OpenZeppelin Contracts',
@@ -34,6 +35,56 @@ export const AVAILABLE_LIBRARIES: LibraryInfo[] = [
     name: 'Solady',
     version: 'latest',
     fileName: 'solady-parsed.json',
+  },
+  // Avalanche ICM libraries
+  {
+    id: 'avalanche-teleporter',
+    name: 'Avalanche Teleporter',
+    version: '1.0.0',
+    fileName: 'avalanche-teleporter-parsed.json',
+  },
+  {
+    id: 'avalanche-ictt',
+    name: 'Avalanche ICTT',
+    version: '1.0.0',
+    fileName: 'avalanche-ictt-parsed.json',
+  },
+  {
+    id: 'avalanche-validator-manager',
+    name: 'Avalanche Validator Manager',
+    version: '1.0.0',
+    fileName: 'avalanche-validator-manager-parsed.json',
+  },
+  {
+    id: 'avalanche-utilities',
+    name: 'Avalanche Utilities',
+    version: '1.0.0',
+    fileName: 'avalanche-utilities-parsed.json',
+  },
+  // Proxy pattern samples
+  {
+    id: 'sample-uups',
+    name: 'UUPS Proxy Sample',
+    version: '1.0.0',
+    fileName: 'sample-uups-parsed.json',
+  },
+  {
+    id: 'sample-transparent',
+    name: 'Transparent Proxy Sample',
+    version: '1.0.0',
+    fileName: 'sample-transparent-parsed.json',
+  },
+  {
+    id: 'sample-diamond',
+    name: 'Diamond Proxy Sample',
+    version: '1.0.0',
+    fileName: 'sample-diamond-parsed.json',
+  },
+  {
+    id: 'sample-beacon',
+    name: 'Beacon Proxy Sample',
+    version: '1.0.0',
+    fileName: 'sample-beacon-parsed.json',
   },
 ];
 

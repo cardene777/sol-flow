@@ -44,7 +44,7 @@ export function FunctionItem({ func, onClick, isSelected }: FunctionItemProps) {
       }}
       className={clsx(
         'nodrag nowheel nopan',
-        'function-item w-full flex items-center gap-2 px-2 py-1 rounded text-left',
+        'function-item w-full flex items-center gap-2 px-2 py-2 rounded text-left',
         'hover:bg-navy-500/50 transition-colors cursor-pointer select-none',
         isSelected && 'bg-navy-500/70 ring-1 ring-mint/50'
       )}

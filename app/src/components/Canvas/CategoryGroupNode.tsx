@@ -1,122 +1,123 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import clsx from 'clsx';
 import type { ContractCategory } from '@/types/callGraph';
 
 export interface CategoryGroupNodeData {
-  category: ContractCategory | 'proxy-role' | 'dictionary-role';
+  category: ContractCategory;
   subCategory?: string;
   label: string;
   contractCount: number;
   isInsideProxyPattern?: boolean;
 }
 
-// Category colors and styles (aligned with OpenZeppelin structure)
-// Using hex colors for reliable border rendering
-type CategoryStyleKey = ContractCategory | 'proxy-role' | 'dictionary-role';
-export const categoryStyles: Record<CategoryStyleKey, { bg: string; borderColor: string; text: string; icon: string }> = {
-  access: {
-    bg: 'rgba(59, 130, 246, 0.15)',
-    borderColor: '#3b82f6',
-    text: 'text-blue-400',
-    icon: '🔐',
-  },
-  account: {
-    bg: 'rgba(6, 182, 212, 0.15)',
-    borderColor: '#06b6d4',
-    text: 'text-cyan-400',
-    icon: '👤',
-  },
-  finance: {
-    bg: 'rgba(16, 185, 129, 0.15)',
-    borderColor: '#10b981',
-    text: 'text-emerald-400',
-    icon: '💰',
-  },
-  governance: {
-    bg: 'rgba(168, 85, 247, 0.15)',
-    borderColor: '#a855f7',
-    text: 'text-purple-400',
-    icon: '🏛️',
-  },
-  metatx: {
-    bg: 'rgba(236, 72, 153, 0.15)',
-    borderColor: '#ec4899',
-    text: 'text-pink-400',
-    icon: '📡',
-  },
-  proxy: {
-    bg: 'rgba(245, 158, 11, 0.15)',
-    borderColor: '#f59e0b',
-    text: 'text-amber-400',
-    icon: '🔄',
-  },
-  'proxy-role': {
-    bg: 'rgba(245, 158, 11, 0.15)',
-    borderColor: '#f59e0b',
-    text: 'text-amber-400',
-    icon: '🔀',
-  },
-  'dictionary-role': {
-    bg: 'rgba(168, 85, 247, 0.15)',
-    borderColor: '#a855f7',
-    text: 'text-purple-400',
-    icon: '📖',
-  },
-  token: {
-    bg: 'rgba(34, 197, 94, 0.15)',
-    borderColor: '#22c55e',
-    text: 'text-green-400',
-    icon: '🪙',
-  },
-  utils: {
-    bg: 'rgba(100, 116, 139, 0.15)',
-    borderColor: '#64748b',
-    text: 'text-slate-300',
-    icon: '🔧',
-  },
-  interface: {
-    bg: 'rgba(99, 102, 241, 0.15)',
-    borderColor: '#6366f1',
-    text: 'text-indigo-400',
-    icon: '📋',
-  },
-  library: {
-    bg: 'rgba(234, 179, 8, 0.15)',
-    borderColor: '#eab308',
-    text: 'text-yellow-400',
-    icon: '📚',
-  },
-  other: {
-    bg: 'rgba(100, 116, 139, 0.15)',
-    borderColor: '#64748b',
-    text: 'text-slate-400',
-    icon: '📦',
-  },
+// Style definition for categories
+interface CategoryStyle {
+  bg: string;
+  borderColor: string;
+  textColor: string;
+  icon: string;
+}
+
+// Preset styles for well-known categories (OpenZeppelin, common patterns)
+const PRESET_STYLES: Record<string, CategoryStyle> = {
+  // OpenZeppelin categories (with prefix)
+  'openzeppelin/access': { bg: 'rgba(59, 130, 246, 0.15)', borderColor: '#3b82f6', textColor: '#60a5fa', icon: '🔐' },
+  'openzeppelin/token': { bg: 'rgba(34, 197, 94, 0.15)', borderColor: '#22c55e', textColor: '#4ade80', icon: '🪙' },
+  'openzeppelin/proxy': { bg: 'rgba(245, 158, 11, 0.15)', borderColor: '#f59e0b', textColor: '#fbbf24', icon: '🔄' },
+  'openzeppelin/utils': { bg: 'rgba(100, 116, 139, 0.15)', borderColor: '#64748b', textColor: '#94a3b8', icon: '🔧' },
+  'openzeppelin/governance': { bg: 'rgba(168, 85, 247, 0.15)', borderColor: '#a855f7', textColor: '#c084fc', icon: '🏛️' },
+  'openzeppelin/finance': { bg: 'rgba(16, 185, 129, 0.15)', borderColor: '#10b981', textColor: '#34d399', icon: '💰' },
+  'openzeppelin/metatx': { bg: 'rgba(236, 72, 153, 0.15)', borderColor: '#ec4899', textColor: '#f472b6', icon: '📡' },
+  'openzeppelin/interfaces': { bg: 'rgba(99, 102, 241, 0.15)', borderColor: '#6366f1', textColor: '#818cf8', icon: '📋' },
+  'openzeppelin/vendor': { bg: 'rgba(100, 116, 139, 0.15)', borderColor: '#64748b', textColor: '#94a3b8', icon: '📦' },
+  // OZ Upgradeable categories
+  'oz-upgradeable/access': { bg: 'rgba(99, 102, 241, 0.15)', borderColor: '#6366f1', textColor: '#818cf8', icon: '🔐' },
+  'oz-upgradeable/token': { bg: 'rgba(52, 211, 153, 0.15)', borderColor: '#34d399', textColor: '#6ee7b7', icon: '🪙' },
+  'oz-upgradeable/proxy': { bg: 'rgba(251, 191, 36, 0.15)', borderColor: '#fbbf24', textColor: '#fcd34d', icon: '🔄' },
+  'oz-upgradeable/utils': { bg: 'rgba(148, 163, 184, 0.15)', borderColor: '#94a3b8', textColor: '#cbd5e1', icon: '🔧' },
+  'oz-upgradeable/governance': { bg: 'rgba(192, 132, 252, 0.15)', borderColor: '#c084fc', textColor: '#d8b4fe', icon: '🏛️' },
+  // Legacy categories (for backwards compatibility)
+  access: { bg: 'rgba(59, 130, 246, 0.15)', borderColor: '#3b82f6', textColor: '#60a5fa', icon: '🔐' },
+  account: { bg: 'rgba(6, 182, 212, 0.15)', borderColor: '#06b6d4', textColor: '#22d3ee', icon: '👤' },
+  finance: { bg: 'rgba(16, 185, 129, 0.15)', borderColor: '#10b981', textColor: '#34d399', icon: '💰' },
+  governance: { bg: 'rgba(168, 85, 247, 0.15)', borderColor: '#a855f7', textColor: '#c084fc', icon: '🏛️' },
+  metatx: { bg: 'rgba(236, 72, 153, 0.15)', borderColor: '#ec4899', textColor: '#f472b6', icon: '📡' },
+  proxy: { bg: 'rgba(245, 158, 11, 0.15)', borderColor: '#f59e0b', textColor: '#fbbf24', icon: '🔄' },
+  token: { bg: 'rgba(34, 197, 94, 0.15)', borderColor: '#22c55e', textColor: '#4ade80', icon: '🪙' },
+  utils: { bg: 'rgba(100, 116, 139, 0.15)', borderColor: '#64748b', textColor: '#94a3b8', icon: '🔧' },
+  utilities: { bg: 'rgba(100, 116, 139, 0.15)', borderColor: '#64748b', textColor: '#94a3b8', icon: '🔧' },
+  interface: { bg: 'rgba(99, 102, 241, 0.15)', borderColor: '#6366f1', textColor: '#818cf8', icon: '📋' },
+  interfaces: { bg: 'rgba(99, 102, 241, 0.15)', borderColor: '#6366f1', textColor: '#818cf8', icon: '📋' },
+  library: { bg: 'rgba(234, 179, 8, 0.15)', borderColor: '#eab308', textColor: '#facc15', icon: '📚' },
+  other: { bg: 'rgba(100, 116, 139, 0.15)', borderColor: '#64748b', textColor: '#94a3b8', icon: '📦' },
+  // Avalanche ICM categories
+  teleporter: { bg: 'rgba(239, 68, 68, 0.15)', borderColor: '#ef4444', textColor: '#f87171', icon: '📡' },
+  ictt: { bg: 'rgba(249, 115, 22, 0.15)', borderColor: '#f97316', textColor: '#fb923c', icon: '🪙' },
+  'validator-manager': { bg: 'rgba(139, 92, 246, 0.15)', borderColor: '#8b5cf6', textColor: '#a78bfa', icon: '👥' },
+  'subnet-evm': { bg: 'rgba(236, 72, 153, 0.15)', borderColor: '#ec4899', textColor: '#f472b6', icon: '⛓️' },
+  mocks: { bg: 'rgba(100, 116, 139, 0.15)', borderColor: '#64748b', textColor: '#94a3b8', icon: '🎭' },
+  // Proxy roles (ERC-7546 and other patterns)
+  'proxy-role': { bg: 'rgba(245, 158, 11, 0.15)', borderColor: '#f59e0b', textColor: '#fbbf24', icon: '🔀' },
+  'dictionary-role': { bg: 'rgba(6, 182, 212, 0.15)', borderColor: '#06b6d4', textColor: '#22d3ee', icon: '📖' },
+  'implementation-role': { bg: 'rgba(168, 85, 247, 0.15)', borderColor: '#a855f7', textColor: '#c084fc', icon: '⚡' },
+  'beacon-role': { bg: 'rgba(6, 182, 212, 0.15)', borderColor: '#06b6d4', textColor: '#22d3ee', icon: '📡' },
+  'facet-role': { bg: 'rgba(236, 72, 153, 0.15)', borderColor: '#ec4899', textColor: '#f472b6', icon: '💎' },
+  'other-role': { bg: 'rgba(100, 116, 139, 0.15)', borderColor: '#64748b', textColor: '#94a3b8', icon: '📦' },
+  // Solady categories
+  'solady/auth': { bg: 'rgba(234, 179, 8, 0.15)', borderColor: '#eab308', textColor: '#facc15', icon: '🔐' },
+  'solady/tokens': { bg: 'rgba(234, 179, 8, 0.15)', borderColor: '#eab308', textColor: '#facc15', icon: '🪙' },
+  'solady/utils': { bg: 'rgba(234, 179, 8, 0.15)', borderColor: '#eab308', textColor: '#facc15', icon: '🔧' },
+  'solady/accounts': { bg: 'rgba(234, 179, 8, 0.15)', borderColor: '#eab308', textColor: '#facc15', icon: '👤' },
+  solady: { bg: 'rgba(234, 179, 8, 0.15)', borderColor: '#eab308', textColor: '#facc15', icon: '⚡' },
+  auth: { bg: 'rgba(59, 130, 246, 0.15)', borderColor: '#3b82f6', textColor: '#60a5fa', icon: '🔐' },
+  tokens: { bg: 'rgba(34, 197, 94, 0.15)', borderColor: '#22c55e', textColor: '#4ade80', icon: '🪙' },
 };
 
-// Human-readable category labels
-export const categoryLabels: Record<CategoryStyleKey, string> = {
-  access: 'Access Control',
-  account: 'Account',
-  finance: 'Finance',
-  governance: 'Governance',
-  metatx: 'Meta Transactions',
-  proxy: 'Proxy',
-  'proxy-role': 'Proxy',
-  'dictionary-role': 'Dictionary',
-  token: 'Token',
-  utils: 'Utilities',
-  interface: 'Interfaces',
-  library: 'Libraries',
-  other: 'Other',
-};
+// Generate a consistent color from a string (for unknown categories)
+function stringToColor(str: string): { h: number; s: number; l: number } {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  // Use golden ratio for better distribution
+  const h = Math.abs(hash * 137.508) % 360;
+  return { h, s: 65, l: 55 };
+}
+
+// Get style for a category (preset or generated)
+export function getCategoryStyle(category: string): CategoryStyle {
+  const lowerCategory = category.toLowerCase();
+
+  // Check for preset style
+  if (PRESET_STYLES[lowerCategory]) {
+    return PRESET_STYLES[lowerCategory];
+  }
+
+  // Generate color from category name
+  const { h, s, l } = stringToColor(category);
+  const borderColor = `hsl(${h}, ${s}%, ${l}%)`;
+  const textColor = `hsl(${h}, ${s}%, ${l + 15}%)`;
+  const bg = `hsla(${h}, ${s}%, ${l}%, 0.15)`;
+
+  // Pick an icon based on first letter or common patterns
+  const icons = ['📁', '📂', '🗂️', '💼', '🏷️', '🔷', '🔶', '⬡', '◆', '●'];
+  const iconIndex = Math.abs(category.charCodeAt(0)) % icons.length;
+
+  return { bg, borderColor, textColor, icon: icons[iconIndex] };
+}
+
+// For backwards compatibility - export categoryStyles as a function that returns styles
+export const categoryStyles = new Proxy({} as Record<string, CategoryStyle>, {
+  get: (_, prop: string) => getCategoryStyle(prop),
+  has: () => true,
+});
 
 function CategoryGroupNodeComponent({ data, selected }: NodeProps<CategoryGroupNodeData>) {
   const { category, subCategory, label, contractCount } = data;
-  const style = categoryStyles[category] || categoryStyles.other;
+  const style = useMemo(() => getCategoryStyle(category), [category]);
   const isSubCategory = !!subCategory;
 
   return (
@@ -135,17 +136,17 @@ function CategoryGroupNodeComponent({ data, selected }: NodeProps<CategoryGroupN
       }}
     >
       {/* Header */}
-      <div className="absolute top-0 left-3 -translate-y-1/2 px-2 py-0.5 bg-navy-800 rounded border border-navy-600 flex items-center gap-1.5">
-        <span className="text-xs">{style.icon}</span>
+      <div className="absolute top-0 left-4 -translate-y-1/2 px-4 py-2 bg-navy-800 rounded-xl border-2 border-navy-600 flex items-center gap-3 shadow-lg">
+        <span className="text-2xl">{style.icon}</span>
         {isSubCategory && (
-          <span className="text-[9px] text-slate-500 font-mono">
-            {categoryLabels[category]} /
+          <span className="text-base text-slate-500 font-mono">
+            {category} /
           </span>
         )}
-        <span className={clsx('text-[10px] font-medium font-mono', style.text)}>
+        <span className="text-xl font-bold font-mono" style={{ color: style.textColor }}>
           {label}
         </span>
-        <span className="text-[9px] text-slate-500 bg-navy-700 px-1 py-0.5 rounded">
+        <span className="text-base text-slate-400 bg-navy-700 px-2 py-1 rounded-lg font-medium">
           {contractCount}
         </span>
       </div>

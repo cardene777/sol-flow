@@ -9,6 +9,7 @@ export interface ContractNodeData {
   contract: Contract;
   isSelected: boolean;
   selectedFunction: string | null;
+  nodeHeight: number;  // Dynamic height based on function count
 }
 
 export interface LibraryNodeData {
@@ -48,42 +49,160 @@ interface CategoryBounds {
   groupId?: string;  // Group ID for sub-categories (e.g., "token-erc20")
 }
 
-// Layout constants - must match ContractNode fixed size (280x200)
+// Layout constants
 const NODE_WIDTH = 280;
-const NODE_HEIGHT = 200;
-const NODE_GAP_X = 60;
-const NODE_GAP_Y = 50;
-const CATEGORY_PADDING = 25;
+const NODE_MIN_HEIGHT = 160;  // Minimum height for contracts with few/no functions
+const NODE_MAX_HEIGHT = 3000;  // Maximum height for very large contracts (effectively no limit)
+const NODE_GAP_X = 60;  // Horizontal gap between cards
+const NODE_GAP_Y = 60;  // Vertical gap between rows
+const CATEGORY_PADDING = 60;  // Padding inside category groups
 
-// Category display order (OpenZeppelin structure)
-const CATEGORY_ORDER: ContractCategory[] = [
-  'token',
-  'access',
-  'governance',
-  'proxy',
-  'finance',
-  'account',
-  'metatx',
-  'utils',
-  'interface',
-  'library',
-  'other',
+/**
+ * Calculate the height of a contract node based on its functions
+ * Used for layout calculations - should be >= actual rendered height
+ *
+ * IMPORTANT: This must ALWAYS return a value >= actual rendered height
+ * to prevent cards from overflowing category boundaries.
+ * We use very generous multipliers to ensure this.
+ */
+export function calculateNodeHeight(contract: Contract): number {
+  const totalExternalFunctions = contract.externalFunctions.length;
+  const hasInternalFunctions = contract.internalFunctions.length > 0;
+  const hasProxyIndicator = !!contract.proxyPattern;
+  const hasLibraryIndicator = !!contract.isExternalLibrary;
+  const hasNoFunctions = totalExternalFunctions === 0 && !hasInternalFunctions;
+
+  // Split external functions into view/pure and state-changing
+  const viewFunctions = contract.externalFunctions.filter(
+    f => f.stateMutability === 'view' || f.stateMutability === 'pure'
+  );
+  const writeFunctions = contract.externalFunctions.filter(
+    f => f.stateMutability !== 'view' && f.stateMutability !== 'pure'
+  );
+
+  // Base height: header (~60px) + footer (~40px) + content padding (20px)
+  let height = 120;
+
+  // External library indicator adds a row at the top
+  if (hasLibraryIndicator) {
+    height += 30;
+  }
+
+  // Proxy indicator adds a row at the top
+  if (hasProxyIndicator) {
+    height += 40;
+  }
+
+  // External/Public section
+  if (totalExternalFunctions > 0) {
+    // Section header "External / Public"
+    height += 40;
+
+    // view/pure sub-section (if has view functions)
+    if (viewFunctions.length > 0) {
+      height += 28;  // sub-header "view / pure"
+      height += viewFunctions.length * 48;  // Each function item (generous)
+    }
+
+    // state-changing sub-section (if has write functions)
+    if (writeFunctions.length > 0) {
+      height += 28;  // sub-header "state-changing"
+      height += writeFunctions.length * 48;  // Each function item (generous)
+    }
+  }
+
+  // Internal/Private section (collapsed toggle button)
+  if (hasInternalFunctions) {
+    height += 60;
+  }
+
+  // Empty state message
+  if (hasNoFunctions) {
+    height += 80;
+  }
+
+  // Add generous buffer for spacing, margins, borders, shadows, and font rendering variations
+  height += 50;
+
+  return Math.max(NODE_MIN_HEIGHT, Math.min(NODE_MAX_HEIGHT, height));
+}
+
+// Well-known categories that should appear first (in order)
+const WELL_KNOWN_CATEGORIES = [
+  'token', 'access', 'governance', 'proxy', 'finance', 'account', 'metatx', 'utils',
+  'teleporter', 'ictt', 'validator-manager', 'utilities',
 ];
 
-// Category labels
-const CATEGORY_LABELS: Record<ContractCategory, string> = {
-  access: 'Access Control',
-  account: 'Account',
-  finance: 'Finance',
-  governance: 'Governance',
-  metatx: 'Meta TX',
-  proxy: 'Proxy',
-  token: 'Token',
-  utils: 'Utilities',
-  interface: 'Interface',
-  library: 'Library',
-  other: 'Other',
-};
+// Categories that should always appear last
+const LAST_CATEGORIES = ['interface', 'library', 'other'];
+
+/**
+ * Get sorted category order from contracts.
+ * Well-known categories appear first, then alphabetically sorted unknown ones,
+ * then interface/library/other at the end.
+ */
+function getCategoryOrder(contracts: Contract[]): ContractCategory[] {
+  const categories = new Set<ContractCategory>();
+  for (const c of contracts) {
+    categories.add(c.category);
+  }
+
+  const result: ContractCategory[] = [];
+  const unknown: ContractCategory[] = [];
+
+  // Add well-known categories first (in order)
+  for (const cat of WELL_KNOWN_CATEGORIES) {
+    if (categories.has(cat)) {
+      result.push(cat);
+      categories.delete(cat);
+    }
+  }
+
+  // Separate last categories
+  for (const cat of LAST_CATEGORIES) {
+    categories.delete(cat);
+  }
+
+  // Sort remaining unknown categories alphabetically
+  for (const cat of categories) {
+    unknown.push(cat);
+  }
+  unknown.sort((a, b) => a.localeCompare(b));
+  result.push(...unknown);
+
+  // Add last categories at the end
+  for (const cat of LAST_CATEGORIES) {
+    if (contracts.some(c => c.category === cat)) {
+      result.push(cat);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Get display label for a category.
+ * Capitalizes first letter and replaces hyphens/underscores with spaces.
+ */
+function getCategoryLabel(category: ContractCategory): string {
+  // Special cases
+  const specialLabels: Record<string, string> = {
+    'access': 'Access Control',
+    'metatx': 'Meta TX',
+    'utils': 'Utilities',
+    'ictt': 'ICTT',
+    'validator-manager': 'Validator Manager',
+  };
+
+  if (specialLabels[category.toLowerCase()]) {
+    return specialLabels[category.toLowerCase()];
+  }
+
+  // Default: capitalize and replace hyphens/underscores
+  return category
+    .replace(/[-_]/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
 
 // Sub-category threshold - split category if more than this many contracts
 const SUB_CATEGORY_THRESHOLD = 10;
@@ -218,13 +337,14 @@ function getSubCategoryLabel(category: ContractCategory, subCategory: SubCategor
   if (subCats && subCats[subCategory]) {
     return subCats[subCategory].label;
   }
-  return CATEGORY_LABELS[category];
+  return getCategoryLabel(category);
 }
 
 export interface TransformOptions {
   enableCategoryGroups?: boolean;
   visibleCategories?: ContractCategory[];
   layoutMode?: LayoutMode;  // 'grid' (default) or 'dagre'
+  measuredHeights?: Map<string, number>;  // Actual DOM-measured heights from first render
 }
 
 /**
@@ -315,8 +435,9 @@ interface GroupInfo {
 function groupContractsWithSubCategories(contracts: Contract[]): GroupInfo[] {
   const byCategory = groupByCategory(contracts);
   const groups: GroupInfo[] = [];
+  const categoryOrder = getCategoryOrder(contracts);
 
-  for (const category of CATEGORY_ORDER) {
+  for (const category of categoryOrder) {
     const catContracts = byCategory.get(category);
     if (!catContracts || catContracts.length === 0) continue;
 
@@ -352,7 +473,7 @@ function groupContractsWithSubCategories(contracts: Contract[]): GroupInfo[] {
       groups.push({
         id: category,
         category,
-        label: CATEGORY_LABELS[category],
+        label: getCategoryLabel(category),
         contracts: catContracts,
       });
     }
@@ -367,7 +488,8 @@ function groupContractsWithSubCategories(contracts: Contract[]): GroupInfo[] {
  */
 function calculateHierarchicalPositions(
   contracts: Contract[],
-  dependencies: Dependency[]
+  dependencies: Dependency[],
+  nodeHeights?: Map<string, number>
 ): Map<string, { x: number; y: number }> {
   const positions = new Map<string, { x: number; y: number }>();
 
@@ -390,9 +512,10 @@ function calculateHierarchicalPositions(
   });
   g.setDefaultEdgeLabel(() => ({}));
 
-  // Add nodes
+  // Add nodes with dynamic heights
   for (const contract of contracts) {
-    g.setNode(contract.name, { width: NODE_WIDTH, height: NODE_HEIGHT });
+    const height = nodeHeights?.get(contract.name) || NODE_MIN_HEIGHT;
+    g.setNode(contract.name, { width: NODE_WIDTH, height });
   }
 
   // Add edges (only within this group)
@@ -413,16 +536,18 @@ function calculateHierarchicalPositions(
   for (const contract of contracts) {
     const node = g.node(contract.name);
     if (node) {
+      const height = nodeHeights?.get(contract.name) || NODE_MIN_HEIGHT;
       minX = Math.min(minX, node.x - NODE_WIDTH / 2);
-      minY = Math.min(minY, node.y - NODE_HEIGHT / 2);
+      minY = Math.min(minY, node.y - height / 2);
     }
   }
 
   for (const contract of contracts) {
     const node = g.node(contract.name);
     if (node) {
+      const height = nodeHeights?.get(contract.name) || NODE_MIN_HEIGHT;
       const x = Math.round(node.x - NODE_WIDTH / 2 - minX);
-      const y = Math.round(node.y - NODE_HEIGHT / 2 - minY);
+      const y = Math.round(node.y - height / 2 - minY);
       positions.set(contract.name, { x, y });
     }
   }
@@ -431,21 +556,26 @@ function calculateHierarchicalPositions(
 }
 
 /**
- * Calculate group dimensions based on hierarchical positions
+ * Calculate group dimensions based on hierarchical positions with dynamic heights
  */
 function calculateHierarchicalGroupDimensions(
-  positions: Map<string, { x: number; y: number }>
+  positions: Map<string, { x: number; y: number }>,
+  nodeHeights?: Map<string, number>,
+  contracts?: Contract[]
 ): { width: number; height: number } {
   let maxX = 0, maxY = 0;
 
-  for (const pos of positions.values()) {
+  for (const [name, pos] of positions.entries()) {
+    const height = nodeHeights?.get(name) || NODE_MIN_HEIGHT;
     maxX = Math.max(maxX, pos.x + NODE_WIDTH);
-    maxY = Math.max(maxY, pos.y + NODE_HEIGHT);
+    maxY = Math.max(maxY, pos.y + height);
   }
 
+  // Add extra buffer for header, borders, shadows, and any rendering variations
+  const EXTRA_HEIGHT_BUFFER = 80;
   return {
     width: maxX + CATEGORY_PADDING * 2,
-    height: maxY + CATEGORY_PADDING * 2,
+    height: maxY + CATEGORY_PADDING * 2 + EXTRA_HEIGHT_BUFFER,
   };
 }
 
@@ -561,19 +691,20 @@ function createEdges(
       continue;
     }
 
-    // For inheritance/implements, show within same category or base
+    // For inheritance/implements, ALWAYS show (these are important relationships)
     if (dep.type === 'inherits' || dep.type === 'implements') {
       const involvesBase = sourceGroup === 'base' || targetGroup === 'base';
-      if ((sourceCategory && targetCategory && sourceCategory === targetCategory) || involvesBase) {
-        const sourceOffset = getSourceOffset(dep.from, direction);
-        const targetOffset = getTargetOffset(dep.to, oppositeDir[direction]);
-        const edge = createSingleEdge(dep, sourcePos, targetPos, false, 0.4, sourceOffset, targetOffset);
-        if (edge) edges.push(edge);
-        continue;
-      }
+      const sameCategory = sourceCategory && targetCategory && sourceCategory === targetCategory;
+      // Use higher opacity for same-category or base, lower for cross-category
+      const opacity = (sameCategory || involvesBase) ? 0.5 : 0.3;
+      const sourceOffset = getSourceOffset(dep.from, direction);
+      const targetOffset = getTargetOffset(dep.to, oppositeDir[direction]);
+      const edge = createSingleEdge(dep, sourcePos, targetPos, false, opacity, sourceOffset, targetOffset);
+      if (edge) edges.push(edge);
+      continue;
     }
 
-    // Different categories: hide by default
+    // Other edge types (uses, delegatecall, etc.) between different categories: hide by default
     // These will only show when a contract is selected (handled above)
   }
 
@@ -696,7 +827,7 @@ export function transformToReactFlow(
   selectedFunction: string | null,
   options: TransformOptions = {}
 ): { nodes: Node[]; edges: Edge[] } {
-  const { visibleCategories, layoutMode = 'grid' } = options;
+  const { visibleCategories, layoutMode = 'grid', measuredHeights } = options;
   const nodes: Node[] = [];
   const nodePositions = new Map<string, NodePosition>();
   const categoryBoundsMap = new Map<ContractCategory, CategoryBounds>();
@@ -718,23 +849,48 @@ export function transformToReactFlow(
     contractCategories.set(c.name, c.category);
   }
 
-  // === STEP 0: Identify ERC7546 contracts and their dependencies ===
-  const erc7546Dependencies = findErc7546Dependencies(contracts, callGraph.dependencies);
-  const isErc7546Related = (c: Contract) =>
-    c.proxyPattern === 'eip7546' || erc7546Dependencies.has(c.name);
+  // === STEP 0: Identify contracts with proxy patterns ===
+  // Group by proxy pattern type
+  const proxyPatternTypes: ProxyPatternType[] = ['eip7546', 'uups', 'transparent', 'diamond', 'beacon'];
+  const contractsByPattern = new Map<ProxyPatternType, Contract[]>();
 
-  const erc7546RelatedContracts = contracts.filter(isErc7546Related);
-  const nonErc7546Contracts = contracts.filter(c => !isErc7546Related(c));
+  for (const pattern of proxyPatternTypes) {
+    const patternContracts = contracts.filter(c => c.proxyPattern === pattern);
+    if (patternContracts.length > 0) {
+      contractsByPattern.set(pattern, patternContracts);
+    }
+  }
+
+  // For ERC-7546, also include dependencies
+  const erc7546Dependencies = findErc7546Dependencies(contracts, callGraph.dependencies);
+  const erc7546Contracts = contractsByPattern.get('eip7546') || [];
+  const erc7546Related = contracts.filter(c =>
+    c.proxyPattern === 'eip7546' || erc7546Dependencies.has(c.name)
+  );
+  if (erc7546Related.length > erc7546Contracts.length) {
+    contractsByPattern.set('eip7546', erc7546Related);
+  }
+
+  // Get all contracts that are part of any proxy pattern group
+  const proxyPatternContractNames = new Set<string>();
+  for (const patternContracts of contractsByPattern.values()) {
+    for (const c of patternContracts) {
+      proxyPatternContractNames.add(c.name);
+    }
+  }
+
+  const nonProxyPatternContracts = contracts.filter(c => !proxyPatternContractNames.has(c.name));
 
   // Layout constants
-  const startX = 80;
-  let currentY = 80;
-  const COLUMN_GAP = 40;
-  const SUB_CATEGORY_GAP = 30;
+  const startX = 100;
+  let currentY = 100;
+  const COLUMN_GAP = 80;           // Gap between category columns
+  const ROW_GAP = 80;              // Gap between rows (vertical layout)
+  const SUB_CATEGORY_GAP = 70;     // Gap between sub-category groups
   const CONTRACTS_PER_ROW = 2;
-  const PROXY_GROUP_PADDING = 50;
-  const ERC7546_INNER_GAP = 30;
-  const ERC7546_SECTION_GAP = 60;
+  const PROXY_GROUP_PADDING = 80;
+  const ERC7546_INNER_GAP = 60;
+  const ERC7546_SECTION_GAP = 100;
 
   interface GroupPosition {
     group: GroupInfo;
@@ -744,186 +900,331 @@ export function transformToReactFlow(
     height: number;
   }
 
-  // === STEP 1: Layout ERC7546 related contracts ===
-  if (erc7546RelatedContracts.length > 0) {
-    // Group by role:
-    // - Proxy: proxyRole='proxy' OR category='proxy'
-    // - Dictionary: proxyRole='dictionary'
-    // - Implementation: others (excluding category='proxy')
-    const proxyRoleContracts = erc7546RelatedContracts.filter(
-      c => c.proxyRole === 'proxy' || c.category === 'proxy'
-    );
-    const dictionaryRoleContracts = erc7546RelatedContracts.filter(
-      c => c.proxyRole === 'dictionary' && c.category !== 'proxy'
-    );
-    const implementationContracts = erc7546RelatedContracts.filter(
-      c => c.proxyRole !== 'proxy' && c.proxyRole !== 'dictionary' && c.category !== 'proxy'
-    );
+  // === Pre-calculate all node heights ===
+  // Use measured heights if available (from actual DOM), otherwise use calculated estimates
+  const nodeHeights = new Map<string, number>();
+  for (const contract of contracts) {
+    const measured = measuredHeights?.get(contract.name);
+    // Add generous buffer to measured heights to ensure no overflow
+    // The buffer accounts for rendering variations, margins, borders, shadows,
+    // font loading, and any potential reflow issues
+    const height = measured ? measured + 50 : calculateNodeHeight(contract);
+    nodeHeights.set(contract.name, height);
+  }
 
-    // Sort within each group
-    proxyRoleContracts.sort((a, b) => a.name.localeCompare(b.name));
-    dictionaryRoleContracts.sort((a, b) => a.name.localeCompare(b.name));
+  // === STEP 1: Layout all proxy pattern groups ===
+  // Calculate dimensions helper with dynamic heights
+  const calcDimensions = (contractList: Contract[], maxCols: number) => {
+    const cols = Math.min(contractList.length, maxCols);
+    const rows = Math.ceil(contractList.length / maxCols);
+    const width = cols * NODE_WIDTH + (cols - 1) * NODE_GAP_X + CATEGORY_PADDING * 2;
 
-    // Group implementations by their original category
-    const implByCategory = new Map<ContractCategory, Contract[]>();
-    for (const c of implementationContracts) {
-      const list = implByCategory.get(c.category) || [];
-      list.push(c);
-      implByCategory.set(c.category, list);
+    // Calculate height based on max height per row
+    let totalHeight = 0;
+    for (let row = 0; row < rows; row++) {
+      let maxRowHeight = 0;
+      for (let col = 0; col < cols; col++) {
+        const idx = row * maxCols + col;
+        if (idx < contractList.length) {
+          const h = nodeHeights.get(contractList[idx].name) || NODE_MIN_HEIGHT;
+          maxRowHeight = Math.max(maxRowHeight, h);
+        }
+      }
+      totalHeight += maxRowHeight;
+      if (row < rows - 1) totalHeight += NODE_GAP_Y;
     }
-    for (const list of implByCategory.values()) {
+
+    // Add padding
+    // CATEGORY_PADDING at top (where contracts start) + CATEGORY_PADDING at bottom
+    // Header badge overlaps the top edge, so no extra space needed
+    const height = totalHeight + CATEGORY_PADDING * 2;
+    return { cols, rows, width, height };
+  };
+
+  // Calculate row-based positions for contracts (returns positions relative to group)
+  const calcContractPositions = (contractList: Contract[], maxCols: number) => {
+    const positions: { contract: Contract; x: number; y: number; height: number }[] = [];
+    let currentY = CATEGORY_PADDING;
+    const rows = Math.ceil(contractList.length / maxCols);
+
+    for (let row = 0; row < rows; row++) {
+      // Find max height in this row
+      let maxRowHeight = 0;
+      const rowContracts: Contract[] = [];
+      for (let col = 0; col < maxCols; col++) {
+        const idx = row * maxCols + col;
+        if (idx < contractList.length) {
+          const contract = contractList[idx];
+          rowContracts.push(contract);
+          const h = nodeHeights.get(contract.name) || NODE_MIN_HEIGHT;
+          maxRowHeight = Math.max(maxRowHeight, h);
+        }
+      }
+
+      // Position contracts in this row
+      for (let col = 0; col < rowContracts.length; col++) {
+        const contract = rowContracts[col];
+        const h = nodeHeights.get(contract.name) || NODE_MIN_HEIGHT;
+        positions.push({
+          contract,
+          x: CATEGORY_PADDING + col * (NODE_WIDTH + NODE_GAP_X),
+          y: currentY,
+          height: h,
+        });
+      }
+
+      currentY += maxRowHeight + NODE_GAP_Y;
+    }
+
+    return positions;
+  };
+
+  // Role labels for display (no emoji - CategoryGroupNode adds icon from style)
+  const ROLE_LABELS: Record<string, string> = {
+    proxy: 'Proxy',
+    implementation: 'Implementation',
+    dictionary: 'Dictionary',
+    beacon: 'Beacon',
+    facet: 'Facet',
+    interface: 'Interface',
+    library: 'Library',
+  };
+
+  // Pattern labels for display
+  const PATTERN_LABELS: Record<ProxyPatternType, string> = {
+    eip7546: 'ERC-7546',
+    uups: 'UUPS',
+    transparent: 'Transparent Proxy',
+    diamond: 'Diamond (EIP-2535)',
+    beacon: 'Beacon Proxy',
+  };
+
+  // Process each proxy pattern group
+  for (const patternType of proxyPatternTypes) {
+    const patternContracts = contractsByPattern.get(patternType);
+    if (!patternContracts || patternContracts.length === 0) continue;
+
+    // Group contracts by role
+    const byRole = new Map<string, Contract[]>();
+    for (const c of patternContracts) {
+      const role = c.proxyRole || 'other';
+      const list = byRole.get(role) || [];
+      list.push(c);
+      byRole.set(role, list);
+    }
+
+    // Sort each role group
+    for (const list of byRole.values()) {
       list.sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    // Layout interface
-    interface Erc7546CategoryLayout {
+    // Define role order for each pattern
+    const roleOrder = patternType === 'diamond'
+      ? ['proxy', 'facet', 'library', 'interface', 'implementation', 'other']
+      : patternType === 'beacon'
+        ? ['beacon', 'proxy', 'implementation', 'other']
+        : patternType === 'eip7546'
+          ? ['proxy', 'dictionary', 'implementation', 'other']
+          : ['proxy', 'implementation', 'other'];
+
+    // Layout roles vertically for ERC7546: Proxy -> Dictionary -> Implementations (by category, side by side)
+    interface RoleLayout {
+      role: string;
+      category?: ContractCategory;  // For implementation sub-groups
       label: string;
-      category: ContractCategory | 'proxy-role' | 'dictionary-role';
       contracts: Contract[];
       x: number;
       y: number;
       width: number;
       height: number;
     }
-    const erc7546CategoryLayouts: Erc7546CategoryLayout[] = [];
-
-    // Calculate dimensions helper
-    const calcDimensions = (contracts: Contract[], maxCols: number) => {
-      const cols = Math.min(contracts.length, maxCols);
-      const rows = Math.ceil(contracts.length / maxCols);
-      const width = cols * NODE_WIDTH + (cols - 1) * NODE_GAP_X + CATEGORY_PADDING * 2;
-      const height = rows * NODE_HEIGHT + (rows - 1) * NODE_GAP_Y + CATEGORY_PADDING * 2;
-      return { cols, rows, width, height };
-    };
-
-    let layoutY = 0;
+    const roleLayouts: RoleLayout[] = [];
+    let currentRoleY = 0;
     let maxWidth = 0;
 
-    // 1. Proxy row (top)
-    let proxyLayout: Erc7546CategoryLayout | null = null;
-    if (proxyRoleContracts.length > 0) {
-      const { width, height } = calcDimensions(proxyRoleContracts, 5);
-      proxyLayout = {
-        label: 'Proxy',
-        category: 'proxy-role',
-        contracts: proxyRoleContracts,
-        x: 0,
-        y: layoutY,
-        width,
-        height,
-      };
-      layoutY += height + ERC7546_INNER_GAP;
-      maxWidth = Math.max(maxWidth, width);
+    // For ERC7546: vertical layout (Proxy on top, Dictionary below, Implementations at bottom)
+    const useVerticalLayout = patternType === 'eip7546';
+
+    if (useVerticalLayout) {
+      // Vertical layout for ERC7546
+      for (const role of roleOrder) {
+        const roleContracts = byRole.get(role);
+        if (!roleContracts || roleContracts.length === 0) continue;
+
+        if (role === 'implementation' && roleContracts.length > 2) {
+          // Group implementations by category, laid out horizontally within this row
+          const byCategory = new Map<ContractCategory, Contract[]>();
+          for (const c of roleContracts) {
+            const list = byCategory.get(c.category) || [];
+            list.push(c);
+            byCategory.set(c.category, list);
+          }
+
+          const implCategoryOrder = getCategoryOrder(roleContracts);
+          let implX = 0;
+          let implMaxHeight = 0;
+
+          for (const category of implCategoryOrder) {
+            const catContracts = byCategory.get(category);
+            if (!catContracts || catContracts.length === 0) continue;
+
+            catContracts.sort((a, b) => a.name.localeCompare(b.name));
+            const maxCols = catContracts.length <= 2 ? catContracts.length : 2;
+            const { width, height } = calcDimensions(catContracts, maxCols);
+
+            roleLayouts.push({
+              role: 'implementation',
+              category,
+              label: getCategoryLabel(category),
+              contracts: catContracts,
+              x: implX,
+              y: currentRoleY,
+              width,
+              height,
+            });
+
+            implX += width + COLUMN_GAP;
+            implMaxHeight = Math.max(implMaxHeight, height);
+          }
+
+          maxWidth = Math.max(maxWidth, implX > 0 ? implX - COLUMN_GAP : 0);
+          currentRoleY += implMaxHeight + ROW_GAP;
+        } else {
+          // Single role group (Proxy, Dictionary, or small implementation)
+          roleContracts.sort((a, b) => a.name.localeCompare(b.name));
+          const maxCols = roleContracts.length <= 3 ? roleContracts.length : 3;
+          const { width, height } = calcDimensions(roleContracts, maxCols);
+
+          roleLayouts.push({
+            role,
+            label: ROLE_LABELS[role] || role,
+            contracts: roleContracts,
+            x: 0,
+            y: currentRoleY,
+            width,
+            height,
+          });
+
+          maxWidth = Math.max(maxWidth, width);
+          currentRoleY += height + ROW_GAP;
+        }
+      }
+    } else {
+      // Horizontal layout for other patterns (UUPS, Transparent, etc.)
+      let currentRoleX = 0;
+      let maxRoleHeight = 0;
+
+      for (const role of roleOrder) {
+        const roleContracts = byRole.get(role);
+        if (!roleContracts || roleContracts.length === 0) continue;
+
+        if (role === 'implementation' && roleContracts.length > 2) {
+          const byCategory = new Map<ContractCategory, Contract[]>();
+          for (const c of roleContracts) {
+            const list = byCategory.get(c.category) || [];
+            list.push(c);
+            byCategory.set(c.category, list);
+          }
+
+          const implCategoryOrder = getCategoryOrder(roleContracts);
+
+          for (const category of implCategoryOrder) {
+            const catContracts = byCategory.get(category);
+            if (!catContracts || catContracts.length === 0) continue;
+
+            catContracts.sort((a, b) => a.name.localeCompare(b.name));
+            const maxCols = catContracts.length <= 2 ? catContracts.length : 2;
+            const { width, height } = calcDimensions(catContracts, maxCols);
+
+            roleLayouts.push({
+              role: 'implementation',
+              category,
+              label: getCategoryLabel(category),
+              contracts: catContracts,
+              x: currentRoleX,
+              y: 0,
+              width,
+              height,
+            });
+
+            currentRoleX += width + COLUMN_GAP;
+            maxRoleHeight = Math.max(maxRoleHeight, height);
+          }
+        } else {
+          const maxCols = roleContracts.length <= 2 ? roleContracts.length : 2;
+          const { width, height } = calcDimensions(roleContracts, maxCols);
+
+          roleLayouts.push({
+            role,
+            label: ROLE_LABELS[role] || role,
+            contracts: roleContracts,
+            x: currentRoleX,
+            y: 0,
+            width,
+            height,
+          });
+
+          currentRoleX += width + COLUMN_GAP;
+          maxRoleHeight = Math.max(maxRoleHeight, height);
+        }
+      }
+
+      maxWidth = currentRoleX > 0 ? currentRoleX - COLUMN_GAP : 0;
+      currentRoleY = maxRoleHeight;
     }
 
-    // 2. Dictionary row (middle)
-    let dictionaryLayout: Erc7546CategoryLayout | null = null;
-    if (dictionaryRoleContracts.length > 0) {
-      const { width, height } = calcDimensions(dictionaryRoleContracts, 5);
-      dictionaryLayout = {
-        label: 'Dictionary',
-        category: 'dictionary-role',
-        contracts: dictionaryRoleContracts,
-        x: 0,
-        y: layoutY,
-        width,
-        height,
-      };
-      layoutY += height + ERC7546_INNER_GAP;
-      maxWidth = Math.max(maxWidth, width);
-    }
+    // Calculate total group dimensions
+    // Note: Pattern group header is positioned outside with -top-4, so no extra space needed
+    const totalInnerHeight = currentRoleY > 0 ? currentRoleY - ROW_GAP : 0;
+    const groupWidth = maxWidth + PROXY_GROUP_PADDING * 2;
+    const groupHeight = totalInnerHeight + PROXY_GROUP_PADDING * 2;
 
-    // 3. Implementation rows (bottom, horizontal by category)
-    const implLayouts: Erc7546CategoryLayout[] = [];
-    let implX = 0;
-    let maxImplHeight = 0;
-
-    const implCategories = Array.from(implByCategory.keys()).sort(
-      (a, b) => CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b)
-    );
-
-    for (const category of implCategories) {
-      const catContracts = implByCategory.get(category)!;
-      const { width, height } = calcDimensions(catContracts, CONTRACTS_PER_ROW);
-      implLayouts.push({
-        label: CATEGORY_LABELS[category],
-        category,
-        contracts: catContracts,
-        x: implX,
-        y: layoutY,
-        width,
-        height,
-      });
-      implX += width + COLUMN_GAP;
-      maxImplHeight = Math.max(maxImplHeight, height);
-    }
-
-    const implTotalWidth = implX > 0 ? implX - COLUMN_GAP : 0;
-    maxWidth = Math.max(maxWidth, implTotalWidth);
-    const implTotalHeight = maxImplHeight;
-
-    // Calculate total ERC7546 group dimensions
-    const erc7546InnerHeight = layoutY + implTotalHeight;
-    const erc7546GroupWidth = maxWidth + PROXY_GROUP_PADDING * 2;
-    const erc7546GroupHeight = erc7546InnerHeight + PROXY_GROUP_PADDING * 2 + 30;  // +30 for header
-
-    // Set positions relative to ERC7546 group
-    const contentStartX = PROXY_GROUP_PADDING;
-    const contentStartY = PROXY_GROUP_PADDING + 30;  // After header
-
-    if (proxyLayout) {
-      proxyLayout.x = contentStartX + proxyLayout.x;
-      proxyLayout.y = contentStartY + proxyLayout.y;
-      erc7546CategoryLayouts.push(proxyLayout);
-    }
-
-    if (dictionaryLayout) {
-      dictionaryLayout.x = contentStartX + dictionaryLayout.x;
-      dictionaryLayout.y = contentStartY + dictionaryLayout.y;
-      erc7546CategoryLayouts.push(dictionaryLayout);
-    }
-
-    for (const layout of implLayouts) {
-      layout.x = contentStartX + layout.x;
-      layout.y = contentStartY + layout.y;
-      erc7546CategoryLayouts.push(layout);
-    }
-
-    // Create ERC7546 group node (background)
-    const erc7546GroupId = 'proxy-pattern-eip7546';
+    // Create pattern group node (outer container)
+    const patternGroupId = `proxy-pattern-${patternType}`;
     nodes.push({
-      id: erc7546GroupId,
+      id: patternGroupId,
       type: 'proxyPatternGroupNode',
       position: { x: startX, y: currentY },
       data: {
-        patternType: 'eip7546',
-        label: 'ERC-7546',
-        contractCount: erc7546RelatedContracts.length,
+        patternType,
+        label: PATTERN_LABELS[patternType],
+        contractCount: patternContracts.length,
       } as ProxyPatternGroupNodeData,
       style: {
-        width: `${erc7546GroupWidth}px`,
-        height: `${erc7546GroupHeight}px`,
+        width: `${groupWidth}px`,
+        height: `${groupHeight}px`,
       },
       selectable: false,
       draggable: true,
       zIndex: -1,
     });
 
-    // Create category group nodes inside ERC7546
-    for (const layout of erc7546CategoryLayouts) {
-      const groupNodeId = `erc7546-category-${layout.category}`;
-      const groupAbsX = startX + layout.x;
-      const groupAbsY = currentY + layout.y;
+    // Create role group nodes inside pattern group
+    const contentStartX = PROXY_GROUP_PADDING;
+    const contentStartY = PROXY_GROUP_PADDING; // Role group header is also positioned outside
 
-      // Category group node
+    for (const layout of roleLayouts) {
+      // Include category in ID for implementation sub-groups to ensure uniqueness
+      const roleGroupId = layout.category
+        ? `${patternType}-role-${layout.role}-${layout.category}`
+        : `${patternType}-role-${layout.role}`;
+      const groupAbsX = startX + contentStartX + layout.x;
+      const groupAbsY = currentY + contentStartY + layout.y;
+
+      // Determine category for styling - use role-specific category for proxy/dictionary
+      const roleCategory = layout.category
+        ? layout.category
+        : (layout.role === 'dictionary' ? 'dictionary-role' : `${layout.role}-role`) as ContractCategory;
+
+      // Role group node
       nodes.push({
-        id: groupNodeId,
+        id: roleGroupId,
         type: 'categoryGroupNode',
-        position: { x: layout.x, y: layout.y },
-        parentId: erc7546GroupId,
+        position: { x: contentStartX + layout.x, y: contentStartY + layout.y },
+        parentId: patternGroupId,
         extent: 'parent',
         data: {
-          category: layout.category as ContractCategory,
+          category: roleCategory,
           label: layout.label,
           contractCount: layout.contracts.length,
         } as CategoryGroupNodeData,
@@ -935,61 +1236,57 @@ export function transformToReactFlow(
         draggable: false,
       });
 
-      // Position contracts inside this category
-      // Proxy and Dictionary use 5 cols, Implementation categories use 2 cols
-      const maxCols = (layout.category === 'proxy-role' || layout.category === 'dictionary-role') ? 5 : CONTRACTS_PER_ROW;
-      layout.contracts.forEach((contract, idx) => {
-        const row = Math.floor(idx / maxCols);
-        const col = idx % maxCols;
-        const relativePosition = {
-          x: CATEGORY_PADDING + col * (NODE_WIDTH + NODE_GAP_X),
-          y: CATEGORY_PADDING + row * (NODE_HEIGHT + NODE_GAP_Y),
-        };
+      // Position contracts inside this role group with dynamic heights
+      const maxCols = layout.contracts.length <= 2 ? layout.contracts.length : 2;
+      const contractPositions = calcContractPositions(layout.contracts, maxCols);
 
+      for (const pos of contractPositions) {
+        const relativePosition = { x: pos.x, y: pos.y };
         const absolutePosition = {
-          x: groupAbsX + relativePosition.x,
-          y: groupAbsY + relativePosition.y,
+          x: groupAbsX + pos.x,
+          y: groupAbsY + pos.y,
         };
-        nodePositions.set(contract.name, absolutePosition);
-        contractGroups.set(contract.name, groupNodeId);
+        nodePositions.set(pos.contract.name, absolutePosition);
+        contractGroups.set(pos.contract.name, roleGroupId);
 
         nodes.push({
-          id: contract.name,
+          id: pos.contract.name,
           type: 'contractNode',
           position: relativePosition,
-          parentId: groupNodeId,
+          parentId: roleGroupId,
           extent: 'parent',
           data: {
-            contract,
-            isSelected: selectedContract === contract.name,
-            selectedFunction: selectedContract === contract.name ? selectedFunction : null,
+            contract: pos.contract,
+            isSelected: selectedContract === pos.contract.name,
+            selectedFunction: selectedContract === pos.contract.name ? selectedFunction : null,
+            nodeHeight: pos.height,
           } as ContractNodeData,
           draggable: false,
         });
-      });
+      }
     }
 
-    currentY += erc7546GroupHeight + ERC7546_SECTION_GAP;
+    currentY += groupHeight + ERC7546_SECTION_GAP;
   }
 
-  // === STEP 2: Handle non-ERC7546 contracts with category groups ===
+  // === STEP 2: Handle non-proxy-pattern contracts with category groups ===
   const groupPositions: GroupPosition[] = [];
 
-  if (nonErc7546Contracts.length > 0) {
+  if (nonProxyPatternContracts.length > 0) {
     // Analyze inheritance patterns
-    const inheritanceInfo = analyzeInheritance(nonErc7546Contracts, callGraph.dependencies);
+    const inheritanceInfo = analyzeInheritance(nonProxyPatternContracts, callGraph.dependencies);
 
     // Identify base contracts
     const baseContracts = new Set<string>();
-    for (const contract of nonErc7546Contracts) {
+    for (const contract of nonProxyPatternContracts) {
       if (isBaseContract(contract.name, inheritanceInfo)) {
         baseContracts.add(contract.name);
       }
     }
 
     // Separate base and category contracts
-    const categoryContracts = nonErc7546Contracts.filter(c => !baseContracts.has(c.name));
-    const baseContractList = nonErc7546Contracts.filter(c => baseContracts.has(c.name));
+    const categoryContracts = nonProxyPatternContracts.filter(c => !baseContracts.has(c.name));
+    const baseContractList = nonProxyPatternContracts.filter(c => baseContracts.has(c.name));
 
     // Position base contracts
     if (baseContractList.length > 0) {
@@ -1002,7 +1299,11 @@ export function transformToReactFlow(
       });
 
       let baseX = startX;
+      let maxBaseHeight = 0;
       for (const contract of baseContractList) {
+        const height = nodeHeights.get(contract.name) || NODE_MIN_HEIGHT;
+        maxBaseHeight = Math.max(maxBaseHeight, height);
+
         const position = { x: baseX, y: currentY };
         nodePositions.set(contract.name, position);
         contractGroups.set(contract.name, 'base');
@@ -1015,6 +1316,7 @@ export function transformToReactFlow(
             contract,
             isSelected: selectedContract === contract.name,
             selectedFunction: selectedContract === contract.name ? selectedFunction : null,
+            nodeHeight: height,
           } as ContractNodeData,
           zIndex: 10,
         });
@@ -1022,7 +1324,7 @@ export function transformToReactFlow(
         baseX += NODE_WIDTH + NODE_GAP_X;
       }
 
-      currentY += NODE_HEIGHT + 80;
+      currentY += maxBaseHeight + 80;
     }
 
     // Group remaining contracts by category
@@ -1038,14 +1340,17 @@ export function transformToReactFlow(
     const groupHierarchyPositions = new Map<string, Map<string, { x: number; y: number }>>();
     if (layoutMode === 'hierarchy') {
       for (const group of groups) {
-        const positions = calculateHierarchicalPositions(group.contracts, callGraph.dependencies);
+        const positions = calculateHierarchicalPositions(group.contracts, callGraph.dependencies, nodeHeights);
         groupHierarchyPositions.set(group.id, positions);
       }
     }
 
+    // Get dynamic category order
+    const nonProxyCategoryOrder = getCategoryOrder(categoryContracts);
+
     // Position category columns
     let currentX = startX;
-    for (const category of CATEGORY_ORDER) {
+    for (const category of nonProxyCategoryOrder) {
       const categoryGroups = categoryColumns.get(category);
       if (!categoryGroups || categoryGroups.length === 0) continue;
 
@@ -1059,20 +1364,18 @@ export function transformToReactFlow(
         if (layoutMode === 'hierarchy') {
           const hierarchyPositions = groupHierarchyPositions.get(group.id);
           if (hierarchyPositions && hierarchyPositions.size > 0) {
-            const dims = calculateHierarchicalGroupDimensions(hierarchyPositions);
+            const dims = calculateHierarchicalGroupDimensions(hierarchyPositions, nodeHeights, group.contracts);
             width = dims.width;
             height = dims.height;
           } else {
-            const cols = Math.min(group.contracts.length, CONTRACTS_PER_ROW);
-            const rows = Math.ceil(group.contracts.length / CONTRACTS_PER_ROW);
-            width = cols * NODE_WIDTH + (cols - 1) * NODE_GAP_X + CATEGORY_PADDING * 2;
-            height = rows * NODE_HEIGHT + (rows - 1) * NODE_GAP_Y + CATEGORY_PADDING * 2;
+            const dims = calcDimensions(group.contracts, CONTRACTS_PER_ROW);
+            width = dims.width;
+            height = dims.height;
           }
         } else {
-          const cols = Math.min(group.contracts.length, CONTRACTS_PER_ROW);
-          const rows = Math.ceil(group.contracts.length / CONTRACTS_PER_ROW);
-          width = cols * NODE_WIDTH + (cols - 1) * NODE_GAP_X + CATEGORY_PADDING * 2;
-          height = rows * NODE_HEIGHT + (rows - 1) * NODE_GAP_Y + CATEGORY_PADDING * 2;
+          const dims = calcDimensions(group.contracts, CONTRACTS_PER_ROW);
+          width = dims.width;
+          height = dims.height;
         }
 
         groupPositions.push({
@@ -1131,59 +1434,72 @@ export function transformToReactFlow(
 
       const hierarchyPositions = groupHierarchyPositions.get(group.id);
 
-      group.contracts.forEach((contract, idx) => {
-        let relativePosition: { x: number; y: number };
-
-        if (layoutMode === 'hierarchy' && hierarchyPositions) {
+      if (layoutMode === 'hierarchy' && hierarchyPositions && hierarchyPositions.size > 0) {
+        // Hierarchy layout - use dagre positions
+        for (const contract of group.contracts) {
           const hierPos = hierarchyPositions.get(contract.name);
-          if (hierPos) {
-            relativePosition = {
-              x: CATEGORY_PADDING + hierPos.x,
-              y: CATEGORY_PADDING + hierPos.y,
-            };
-          } else {
-            const row = Math.floor(idx / CONTRACTS_PER_ROW);
-            const col = idx % CONTRACTS_PER_ROW;
-            relativePosition = {
-              x: CATEGORY_PADDING + col * (NODE_WIDTH + NODE_GAP_X),
-              y: CATEGORY_PADDING + row * (NODE_HEIGHT + NODE_GAP_Y),
-            };
-          }
-        } else {
-          const row = Math.floor(idx / CONTRACTS_PER_ROW);
-          const col = idx % CONTRACTS_PER_ROW;
-          relativePosition = {
-            x: CATEGORY_PADDING + col * (NODE_WIDTH + NODE_GAP_X),
-            y: CATEGORY_PADDING + row * (NODE_HEIGHT + NODE_GAP_Y),
+          const height = nodeHeights.get(contract.name) || NODE_MIN_HEIGHT;
+
+          const relativePosition = hierPos
+            ? { x: CATEGORY_PADDING + hierPos.x, y: CATEGORY_PADDING + hierPos.y }
+            : { x: CATEGORY_PADDING, y: CATEGORY_PADDING };
+
+          const absolutePosition = {
+            x: pos.x - CATEGORY_PADDING + relativePosition.x,
+            y: pos.y - CATEGORY_PADDING + relativePosition.y,
           };
+          nodePositions.set(contract.name, absolutePosition);
+          contractGroups.set(contract.name, group.id);
+
+          nodes.push({
+            id: contract.name,
+            type: 'contractNode',
+            position: relativePosition,
+            parentId: groupNodeId,
+            extent: 'parent',
+            data: {
+              contract,
+              isSelected: selectedContract === contract.name,
+              selectedFunction: selectedContract === contract.name ? selectedFunction : null,
+              nodeHeight: height,
+            } as ContractNodeData,
+            draggable: false,
+          });
         }
+      } else {
+        // Grid layout - use dynamic height positions
+        const contractPositions = calcContractPositions(group.contracts, CONTRACTS_PER_ROW);
 
-        const absolutePosition = {
-          x: pos.x - CATEGORY_PADDING + relativePosition.x,
-          y: pos.y - CATEGORY_PADDING + relativePosition.y,
-        };
-        nodePositions.set(contract.name, absolutePosition);
-        contractGroups.set(contract.name, group.id);
+        for (const cpos of contractPositions) {
+          const relativePosition = { x: cpos.x, y: cpos.y };
+          const absolutePosition = {
+            x: pos.x - CATEGORY_PADDING + cpos.x,
+            y: pos.y - CATEGORY_PADDING + cpos.y,
+          };
+          nodePositions.set(cpos.contract.name, absolutePosition);
+          contractGroups.set(cpos.contract.name, group.id);
 
-        nodes.push({
-          id: contract.name,
-          type: 'contractNode',
-          position: relativePosition,
-          parentId: groupNodeId,
-          extent: 'parent',
-          data: {
-            contract,
-            isSelected: selectedContract === contract.name,
-            selectedFunction: selectedContract === contract.name ? selectedFunction : null,
-          } as ContractNodeData,
-          draggable: false,
-        });
-      });
+          nodes.push({
+            id: cpos.contract.name,
+            type: 'contractNode',
+            position: relativePosition,
+            parentId: groupNodeId,
+            extent: 'parent',
+            data: {
+              contract: cpos.contract,
+              isSelected: selectedContract === cpos.contract.name,
+              selectedFunction: selectedContract === cpos.contract.name ? selectedFunction : null,
+              nodeHeight: cpos.height,
+            } as ContractNodeData,
+            draggable: false,
+          });
+        }
+      }
     }
   }
 
-  // Create edges
-  const edges = createEdges(
+  // Create edges from dependencies
+  let edges = createEdges(
     callGraph.dependencies,
     nodePositions,
     categoryBoundsMap,
@@ -1191,6 +1507,70 @@ export function transformToReactFlow(
     contractGroups,
     selectedContract
   );
+
+  // Filter out deleted edges
+  if (callGraph.deletedEdgeIds && callGraph.deletedEdgeIds.length > 0) {
+    const deletedSet = new Set(callGraph.deletedEdgeIds);
+    edges = edges.filter(e => !deletedSet.has(e.id));
+  }
+
+  // Add user edges
+  if (callGraph.userEdges && callGraph.userEdges.length > 0) {
+    for (const userEdge of callGraph.userEdges) {
+      const sourcePos = nodePositions.get(userEdge.from);
+      const targetPos = nodePositions.get(userEdge.to);
+      if (!sourcePos || !targetPos) continue;
+
+      // Use stored handles if available, otherwise calculate from positions
+      let sourceHandle = userEdge.sourceHandle;
+      let targetHandle = userEdge.targetHandle;
+
+      if (!sourceHandle || !targetHandle) {
+        const dx = targetPos.x - sourcePos.x;
+        const dy = targetPos.y - sourcePos.y;
+        const direction = Math.abs(dx) > Math.abs(dy)
+          ? (dx > 0 ? 'right' : 'left')
+          : (dy > 0 ? 'bottom' : 'top');
+        const oppositeDirection: Record<string, string> = {
+          right: 'left', left: 'right', bottom: 'top', top: 'bottom'
+        };
+        sourceHandle = sourceHandle || `${direction}-source`;
+        targetHandle = targetHandle || `${oppositeDirection[direction]}-target`;
+      }
+
+      const styles: Record<string, { stroke: string; dash?: string }> = {
+        inherits: { stroke: '#60a5fa' },
+        implements: { stroke: '#818cf8' },
+        uses: { stroke: '#fbbf24', dash: '5,5' },
+        delegatecall: { stroke: '#f472b6', dash: '8,4' },
+        registers: { stroke: '#a78bfa', dash: '3,3' },
+        imports: { stroke: '#94a3b8', dash: '2,2' },
+      };
+
+      const s = styles[userEdge.type] || styles.uses;
+
+      edges.push({
+        id: userEdge.id,
+        source: userEdge.from,
+        target: userEdge.to,
+        type: 'dependencyEdge',
+        sourceHandle,
+        targetHandle,
+        data: {
+          type: userEdge.type,
+          label: userEdge.label || userEdge.type,
+          isUserEdge: true,
+        },
+        style: {
+          stroke: s.stroke,
+          strokeWidth: 2,
+          strokeDasharray: s.dash,
+          opacity: 0.8,
+        },
+        markerEnd: { type: MarkerType.ArrowClosed, color: s.stroke },
+      });
+    }
+  }
 
   return { nodes, edges };
 }

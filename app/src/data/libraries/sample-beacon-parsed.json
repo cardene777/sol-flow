@@ -1,0 +1,904 @@
+{
+  "id": "sample-beacon",
+  "name": "Beacon Proxy Sample",
+  "version": "1.0.0",
+  "generatedAt": "2026-01-27T03:58:24.713Z",
+  "callGraph": {
+    "version": "1.0.0",
+    "generatedAt": "2026-01-27T03:58:24.713Z",
+    "projectName": "Beacon Proxy Sample",
+    "structure": {
+      "name": "contracts",
+      "type": "directory",
+      "path": "contracts",
+      "children": [
+        {
+          "name": "MyBeacon.sol",
+          "type": "file",
+          "path": "MyBeacon.sol",
+          "contractName": "MyBeacon"
+        },
+        {
+          "name": "MyBeaconProxy.sol",
+          "type": "file",
+          "path": "MyBeaconProxy.sol",
+          "contractName": "MyBeaconProxy"
+        },
+        {
+          "name": "NFTCollectionV1.sol",
+          "type": "file",
+          "path": "NFTCollectionV1.sol",
+          "contractName": "NFTCollectionV1"
+        },
+        {
+          "name": "NFTCollectionV2.sol",
+          "type": "file",
+          "path": "NFTCollectionV2.sol",
+          "contractName": "NFTCollectionV2"
+        }
+      ]
+    },
+    "contracts": [
+      {
+        "name": "MyBeacon",
+        "filePath": "MyBeacon.sol",
+        "kind": "contract",
+        "inherits": [
+          "UpgradeableBeacon"
+        ],
+        "implements": [],
+        "category": "other",
+        "externalFunctions": [],
+        "internalFunctions": [
+          {
+            "name": "constructor",
+            "visibility": "default",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "implementation_",
+                "type": "address"
+              },
+              {
+                "name": "initialOwner",
+                "type": "address"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "isVirtual": false,
+            "sourceCode": "constructor(address implementation_, address initialOwner) UpgradeableBeacon(implementation_, initialOwner) {}",
+            "startLine": 12
+          }
+        ],
+        "events": [],
+        "stateVariables": [],
+        "usesLibraries": [],
+        "imports": [
+          {
+            "path": "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          }
+        ],
+        "proxyPattern": "beacon",
+        "proxyRole": "beacon"
+      },
+      {
+        "name": "MyBeaconProxy",
+        "filePath": "MyBeaconProxy.sol",
+        "kind": "contract",
+        "inherits": [
+          "BeaconProxy"
+        ],
+        "implements": [],
+        "category": "other",
+        "externalFunctions": [],
+        "internalFunctions": [
+          {
+            "name": "constructor",
+            "visibility": "default",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "beacon",
+                "type": "address"
+              },
+              {
+                "name": "data",
+                "type": "bytes"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "isVirtual": false,
+            "sourceCode": "constructor(address beacon, bytes memory data) BeaconProxy(beacon, data) {}",
+            "startLine": 11
+          }
+        ],
+        "events": [],
+        "stateVariables": [],
+        "usesLibraries": [],
+        "imports": [
+          {
+            "path": "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          }
+        ],
+        "proxyPattern": "beacon",
+        "proxyRole": "proxy"
+      },
+      {
+        "name": "NFTCollectionV1",
+        "filePath": "NFTCollectionV1.sol",
+        "kind": "contract",
+        "inherits": [
+          "Initializable",
+          "ERC721Upgradeable",
+          "ERC721URIStorageUpgradeable",
+          "OwnableUpgradeable"
+        ],
+        "implements": [],
+        "category": "other",
+        "externalFunctions": [
+          {
+            "name": "initialize",
+            "signature": "initialize(string,string,uint256,uint256,address)",
+            "selector": "",
+            "visibility": "public",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "name_",
+                "type": "string"
+              },
+              {
+                "name": "symbol_",
+                "type": "string"
+              },
+              {
+                "name": "maxSupply_",
+                "type": "uint256"
+              },
+              {
+                "name": "mintPrice_",
+                "type": "uint256"
+              },
+              {
+                "name": "initialOwner",
+                "type": "address"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function initialize(\n        string memory name_,\n        string memory symbol_,\n        uint256 maxSupply_,\n        uint256 mintPrice_,\n        address initialOwner\n    ) public initializer {\n        __ERC721_init(name_, symbol_);\n        __ERC721URIStorage_init();\n        __Ownable_init(initialOwner);\n        maxSupply = maxSupply_;\n        mintPrice = mintPrice_;\n    }",
+            "startLine": 26
+          },
+          {
+            "name": "mint",
+            "signature": "mint(address,string)",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "payable",
+            "parameters": [
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "uri",
+                "type": "string"
+              }
+            ],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function mint(address to, string memory uri) external payable returns (uint256) {\n        require(_nextTokenId < maxSupply, \"NFTCollection: max supply reached\");\n        require(msg.value >= mintPrice, \"NFTCollection: insufficient payment\");\n\n        uint256 tokenId = _nextTokenId++;\n        _safeMint(to, tokenId);\n        _setTokenURI(tokenId, uri);\n\n        emit NFTMinted(to, tokenId, uri);\n        return tokenId;\n    }",
+            "startLine": 40
+          },
+          {
+            "name": "ownerMint",
+            "signature": "ownerMint(address,string)",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "uri",
+                "type": "string"
+              }
+            ],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function ownerMint(address to, string memory uri) external onlyOwner returns (uint256) {\n        require(_nextTokenId < maxSupply, \"NFTCollection: max supply reached\");\n\n        uint256 tokenId = _nextTokenId++;\n        _safeMint(to, tokenId);\n        _setTokenURI(tokenId, uri);\n\n        emit NFTMinted(to, tokenId, uri);\n        return tokenId;\n    }",
+            "startLine": 52
+          },
+          {
+            "name": "totalMinted",
+            "signature": "totalMinted()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "view",
+            "parameters": [],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function totalMinted() external view returns (uint256) {\n        return _nextTokenId;\n    }",
+            "startLine": 63
+          },
+          {
+            "name": "withdraw",
+            "signature": "withdraw()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function withdraw() external onlyOwner {\n        uint256 balance = address(this).balance;\n        require(balance > 0, \"NFTCollection: no balance to withdraw\");\n        (bool success, ) = owner().call{value: balance}(\"\");\n        require(success, \"NFTCollection: withdrawal failed\");\n    }",
+            "startLine": 67
+          },
+          {
+            "name": "tokenURI",
+            "signature": "tokenURI(uint256)",
+            "selector": "",
+            "visibility": "public",
+            "stateMutability": "view",
+            "parameters": [
+              {
+                "name": "tokenId",
+                "type": "uint256"
+              }
+            ],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "string"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function tokenURI(uint256 tokenId) public view override(ERC721Upgradeable, ERC721URIStorageUpgradeable) returns (string memory) {\n        return super.tokenURI(tokenId);\n    }",
+            "startLine": 75
+          },
+          {
+            "name": "supportsInterface",
+            "signature": "supportsInterface(bytes4)",
+            "selector": "",
+            "visibility": "public",
+            "stateMutability": "view",
+            "parameters": [
+              {
+                "name": "interfaceId",
+                "type": "bytes4"
+              }
+            ],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "bool"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function supportsInterface(bytes4 interfaceId) public view override(ERC721Upgradeable, ERC721URIStorageUpgradeable) returns (bool) {\n        return super.supportsInterface(interfaceId);\n    }",
+            "startLine": 79
+          }
+        ],
+        "internalFunctions": [
+          {
+            "name": "constructor",
+            "visibility": "default",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [],
+            "isVirtual": false,
+            "sourceCode": "constructor() {\n        _disableInitializers();\n    }",
+            "startLine": 22
+          }
+        ],
+        "events": [
+          {
+            "name": "NFTMinted",
+            "parameters": [
+              {
+                "name": "to",
+                "type": "address",
+                "indexed": true
+              },
+              {
+                "name": "tokenId",
+                "type": "uint256",
+                "indexed": true
+              },
+              {
+                "name": "uri",
+                "type": "string",
+                "indexed": false
+              }
+            ]
+          }
+        ],
+        "stateVariables": [],
+        "usesLibraries": [],
+        "imports": [
+          {
+            "path": "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          },
+          {
+            "path": "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          },
+          {
+            "path": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          },
+          {
+            "path": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          }
+        ],
+        "proxyPattern": "beacon",
+        "proxyRole": "implementation"
+      },
+      {
+        "name": "NFTCollectionV2",
+        "filePath": "NFTCollectionV2.sol",
+        "kind": "contract",
+        "inherits": [
+          "Initializable",
+          "ERC721Upgradeable",
+          "ERC721URIStorageUpgradeable",
+          "ERC721RoyaltyUpgradeable",
+          "OwnableUpgradeable",
+          "PausableUpgradeable"
+        ],
+        "implements": [],
+        "category": "other",
+        "externalFunctions": [
+          {
+            "name": "initialize",
+            "signature": "initialize(string,string,uint256,uint256,address)",
+            "selector": "",
+            "visibility": "public",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "name_",
+                "type": "string"
+              },
+              {
+                "name": "symbol_",
+                "type": "string"
+              },
+              {
+                "name": "maxSupply_",
+                "type": "uint256"
+              },
+              {
+                "name": "mintPrice_",
+                "type": "uint256"
+              },
+              {
+                "name": "initialOwner",
+                "type": "address"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function initialize(\n        string memory name_,\n        string memory symbol_,\n        uint256 maxSupply_,\n        uint256 mintPrice_,\n        address initialOwner\n    ) public initializer {\n        __ERC721_init(name_, symbol_);\n        __ERC721URIStorage_init();\n        __ERC721Royalty_init();\n        __Ownable_init(initialOwner);\n        __Pausable_init();\n        maxSupply = maxSupply_;\n        mintPrice = mintPrice_;\n    }",
+            "startLine": 41
+          },
+          {
+            "name": "initializeV2",
+            "signature": "initializeV2(uint96)",
+            "selector": "",
+            "visibility": "public",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "royaltyFee",
+                "type": "uint96"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function initializeV2(uint96 royaltyFee) public reinitializer(2) {\n        _setDefaultRoyalty(owner(), royaltyFee);\n    }",
+            "startLine": 57
+          },
+          {
+            "name": "mint",
+            "signature": "mint(address,string)",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "payable",
+            "parameters": [
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "uri",
+                "type": "string"
+              }
+            ],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function mint(address to, string memory uri) external payable whenNotPaused returns (uint256) {\n        if (whitelistOnly) {\n            require(whitelist[msg.sender], \"NFTCollection: not whitelisted\");\n        }\n        require(_nextTokenId < maxSupply, \"NFTCollection: max supply reached\");\n        require(msg.value >= mintPrice, \"NFTCollection: insufficient payment\");\n\n        uint256 tokenId = _nextTokenId++;\n        _safeMint(to, tokenId);\n        _setTokenURI(tokenId, uri);\n\n        emit NFTMinted(to, tokenId, uri);\n        return tokenId;\n    }",
+            "startLine": 61
+          },
+          {
+            "name": "ownerMint",
+            "signature": "ownerMint(address,string)",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "uri",
+                "type": "string"
+              }
+            ],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function ownerMint(address to, string memory uri) external onlyOwner returns (uint256) {\n        require(_nextTokenId < maxSupply, \"NFTCollection: max supply reached\");\n\n        uint256 tokenId = _nextTokenId++;\n        _safeMint(to, tokenId);\n        _setTokenURI(tokenId, uri);\n\n        emit NFTMinted(to, tokenId, uri);\n        return tokenId;\n    }",
+            "startLine": 76
+          },
+          {
+            "name": "batchMint",
+            "signature": "batchMint(address,string[])",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "uris",
+                "type": "string[]"
+              }
+            ],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "uint256[]"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function batchMint(address to, string[] memory uris) external onlyOwner returns (uint256[] memory) {\n        require(_nextTokenId + uris.length <= maxSupply, \"NFTCollection: would exceed max supply\");\n\n        uint256[] memory tokenIds = new uint256[](uris.length);\n        for (uint256 i = 0; i < uris.length; i++) {\n            uint256 tokenId = _nextTokenId++;\n            _safeMint(to, tokenId);\n            _setTokenURI(tokenId, uris[i]);\n            tokenIds[i] = tokenId;\n            emit NFTMinted(to, tokenId, uris[i]);\n        }\n        return tokenIds;\n    }",
+            "startLine": 87
+          },
+          {
+            "name": "setWhitelist",
+            "signature": "setWhitelist(address[],bool)",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "accounts",
+                "type": "address[]"
+              },
+              {
+                "name": "status",
+                "type": "bool"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function setWhitelist(address[] calldata accounts, bool status) external onlyOwner {\n        for (uint256 i = 0; i < accounts.length; i++) {\n            whitelist[accounts[i]] = status;\n            emit WhitelistUpdated(accounts[i], status);\n        }\n    }",
+            "startLine": 101
+          },
+          {
+            "name": "setWhitelistOnly",
+            "signature": "setWhitelistOnly(bool)",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "_whitelistOnly",
+                "type": "bool"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function setWhitelistOnly(bool _whitelistOnly) external onlyOwner {\n        whitelistOnly = _whitelistOnly;\n    }",
+            "startLine": 108
+          },
+          {
+            "name": "setMintPrice",
+            "signature": "setMintPrice(uint256)",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "_mintPrice",
+                "type": "uint256"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function setMintPrice(uint256 _mintPrice) external onlyOwner {\n        mintPrice = _mintPrice;\n    }",
+            "startLine": 112
+          },
+          {
+            "name": "setBaseURI",
+            "signature": "setBaseURI(string)",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "_baseURI",
+                "type": "string"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function setBaseURI(string memory _baseURI) external onlyOwner {\n        baseURI = _baseURI;\n        emit BaseURIUpdated(_baseURI);\n    }",
+            "startLine": 116
+          },
+          {
+            "name": "setDefaultRoyalty",
+            "signature": "setDefaultRoyalty(address,uint96)",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "receiver",
+                "type": "address"
+              },
+              {
+                "name": "feeNumerator",
+                "type": "uint96"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function setDefaultRoyalty(address receiver, uint96 feeNumerator) external onlyOwner {\n        _setDefaultRoyalty(receiver, feeNumerator);\n    }",
+            "startLine": 121
+          },
+          {
+            "name": "pause",
+            "signature": "pause()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function pause() external onlyOwner {\n        _pause();\n    }",
+            "startLine": 125
+          },
+          {
+            "name": "unpause",
+            "signature": "unpause()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function unpause() external onlyOwner {\n        _unpause();\n    }",
+            "startLine": 129
+          },
+          {
+            "name": "totalMinted",
+            "signature": "totalMinted()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "view",
+            "parameters": [],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function totalMinted() external view returns (uint256) {\n        return _nextTokenId;\n    }",
+            "startLine": 133
+          },
+          {
+            "name": "withdraw",
+            "signature": "withdraw()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function withdraw() external onlyOwner {\n        uint256 balance = address(this).balance;\n        require(balance > 0, \"NFTCollection: no balance to withdraw\");\n        (bool success, ) = owner().call{value: balance}(\"\");\n        require(success, \"NFTCollection: withdrawal failed\");\n    }",
+            "startLine": 137
+          },
+          {
+            "name": "tokenURI",
+            "signature": "tokenURI(uint256)",
+            "selector": "",
+            "visibility": "public",
+            "stateMutability": "view",
+            "parameters": [
+              {
+                "name": "tokenId",
+                "type": "uint256"
+              }
+            ],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "string"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function tokenURI(uint256 tokenId) public view override(ERC721Upgradeable, ERC721URIStorageUpgradeable) returns (string memory) {\n        return super.tokenURI(tokenId);\n    }",
+            "startLine": 149
+          },
+          {
+            "name": "supportsInterface",
+            "signature": "supportsInterface(bytes4)",
+            "selector": "",
+            "visibility": "public",
+            "stateMutability": "view",
+            "parameters": [
+              {
+                "name": "interfaceId",
+                "type": "bytes4"
+              }
+            ],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "bool"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function supportsInterface(bytes4 interfaceId) public view override(ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721RoyaltyUpgradeable) returns (bool) {\n        return super.supportsInterface(interfaceId);\n    }",
+            "startLine": 153
+          }
+        ],
+        "internalFunctions": [
+          {
+            "name": "constructor",
+            "visibility": "default",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [],
+            "isVirtual": false,
+            "sourceCode": "constructor() {\n        _disableInitializers();\n    }",
+            "startLine": 37
+          },
+          {
+            "name": "_baseURI",
+            "visibility": "internal",
+            "stateMutability": "view",
+            "parameters": [],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "string"
+              }
+            ],
+            "calls": [],
+            "isVirtual": false,
+            "sourceCode": "function _baseURI() internal view override returns (string memory) {\n        return baseURI;\n    }",
+            "startLine": 145
+          }
+        ],
+        "events": [
+          {
+            "name": "NFTMinted",
+            "parameters": [
+              {
+                "name": "to",
+                "type": "address",
+                "indexed": true
+              },
+              {
+                "name": "tokenId",
+                "type": "uint256",
+                "indexed": true
+              },
+              {
+                "name": "uri",
+                "type": "string",
+                "indexed": false
+              }
+            ]
+          },
+          {
+            "name": "WhitelistUpdated",
+            "parameters": [
+              {
+                "name": "account",
+                "type": "address",
+                "indexed": true
+              },
+              {
+                "name": "status",
+                "type": "bool",
+                "indexed": false
+              }
+            ]
+          },
+          {
+            "name": "BaseURIUpdated",
+            "parameters": [
+              {
+                "name": "newBaseURI",
+                "type": "string",
+                "indexed": false
+              }
+            ]
+          }
+        ],
+        "stateVariables": [],
+        "usesLibraries": [],
+        "imports": [
+          {
+            "path": "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          },
+          {
+            "path": "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          },
+          {
+            "path": "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721RoyaltyUpgradeable.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          },
+          {
+            "path": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          },
+          {
+            "path": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          },
+          {
+            "path": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          }
+        ],
+        "proxyPattern": "beacon",
+        "proxyRole": "implementation"
+      }
+    ],
+    "dependencies": [],
+    "proxyGroups": [],
+    "stats": {
+      "totalContracts": 4,
+      "totalLibraries": 0,
+      "totalInterfaces": 0,
+      "totalFunctions": 28
+    }
+  }
+}

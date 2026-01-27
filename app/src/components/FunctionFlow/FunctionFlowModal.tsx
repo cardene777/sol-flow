@@ -14,6 +14,7 @@ import ReactFlow, {
 import { X, Maximize2, Minimize2, RotateCcw, ZoomIn } from 'lucide-react';
 import type { ExternalFunction, InternalFunction, Contract, CallGraph, FunctionCall, ImportInfo } from '@/types/callGraph';
 import { CodeBlockNode } from './CodeBlockNode';
+import { normalizeVersionedPath, findRemapping, getGitHubUrlForPath } from '@/config/remappings';
 
 interface FunctionFlowModalProps {
   func: ExternalFunction;
@@ -305,8 +306,20 @@ function buildFlowGraph(
         // PRIORITY 1: If we have import info, resolve by path first (most accurate)
         if (importInfo) {
           if (importInfo.isExternal) {
-            // For external imports, search by exact path
-            library = graph.contracts.find(c => c.filePath === importInfo.path);
+            // Normalize the import path (remove version numbers)
+            const normalizedPath = normalizeVersionedPath(importInfo.path);
+
+            // Search for matching contract in the graph
+            library = graph.contracts.find(c => {
+              const normalizedContractPath = normalizeVersionedPath(c.filePath);
+              // Direct match
+              if (normalizedContractPath === normalizedPath) return true;
+              // Match by filename (e.g., TeleporterMessenger.sol)
+              const fileName = normalizedPath.split('/').pop();
+              const contractFileName = normalizedContractPath.split('/').pop();
+              if (fileName === contractFileName && c.name === actualName) return true;
+              return false;
+            });
           } else {
             // For relative imports, resolve the path and search
             const resolvedPath = resolveRelativePath(currentContract.filePath, importInfo.path);
@@ -336,7 +349,7 @@ function buildFlowGraph(
             || library.externalFunctions.find(f => f.name === funcName);
         } else if (importInfo) {
           // Has import but not found in graph - library wasn't resolved
-          externalLibraryPath = importInfo.path;
+          externalLibraryPath = normalizeVersionedPath(importInfo.path);
         } else {
           // No import found, assume external
           externalLibraryPath = `@unknown/${libNameOrAlias}.sol`;

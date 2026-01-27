@@ -4,7 +4,7 @@ import { memo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import { ExternalLink, Github } from 'lucide-react';
 import clsx from 'clsx';
-import { getGitHubUrl, isLibraryContract } from '@/utils/libraryUrls';
+import { getGitHubUrlForPath, isExternalLibrary } from '@/config/remappings';
 
 interface CodeBlockNodeData {
   label: string;
@@ -166,18 +166,22 @@ function CodeBlockNodeComponent({ data }: NodeProps<CodeBlockNodeData>) {
         )}
       </div>
 
-      {/* Code block */}
-      <div className="overflow-x-auto">
-        <pre className="text-xs leading-relaxed">
-          <code className="block">
+      {/* Code block - scrollable horizontally with selectable text */}
+      {/* nowheel prevents ReactFlow from capturing scroll events */}
+      <div className="overflow-x-auto nowheel" style={{ userSelect: 'text' }}>
+        <pre className="text-xs leading-relaxed min-w-max">
+          <code className="block" style={{ userSelect: 'text', cursor: 'text' }}>
             {lines.map((line, index) => (
               <div key={index} className="flex hover:bg-white/5">
-                {/* Line number */}
-                <span className="select-none text-slate-600 text-right pr-4 pl-3 py-0.5 border-r border-white/5 min-w-[50px]">
+                {/* Line number - not selectable, sticky on horizontal scroll */}
+                <span
+                  className="text-slate-600 text-right pr-4 pl-3 py-0.5 border-r border-white/5 min-w-[50px] sticky left-0 bg-navy-900 z-10"
+                  style={{ userSelect: 'none' }}
+                >
                   {startLine + index}
                 </span>
-                {/* Code */}
-                <span className="pl-4 pr-4 py-0.5 whitespace-pre">
+                {/* Code - selectable for copying */}
+                <span className="pl-4 pr-4 py-0.5 whitespace-pre" style={{ userSelect: 'text' }}>
                   <HighlightedLine line={line} />
                 </span>
               </div>
@@ -188,9 +192,9 @@ function CodeBlockNodeComponent({ data }: NodeProps<CodeBlockNodeData>) {
 
       {/* Footer */}
       <div className="px-4 py-2 border-t border-white/10 flex justify-end">
-        {filePath && isLibraryContract(filePath) ? (
+        {filePath && isExternalLibrary(filePath) ? (
           <a
-            href={getGitHubUrl(filePath, startLine) || '#'}
+            href={getGitHubUrlForPath(filePath, startLine) || '#'}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 text-[10px] text-mint hover:text-mint/80 transition-colors bg-mint/10 hover:bg-mint/20 px-2 py-1 rounded"

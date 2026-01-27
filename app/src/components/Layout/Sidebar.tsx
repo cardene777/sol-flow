@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { ChevronRight, ChevronDown, FileCode2, Folder, FolderOpen } from 'lucide-react';
 import clsx from 'clsx';
 import type { CallGraph, DirectoryNode, Contract, ContractCategory } from '@/types/callGraph';
-import { categoryLabels, categoryStyles } from '@/components/Canvas/CategoryGroupNode';
+import { getCategoryStyle } from '@/components/Canvas/CategoryGroupNode';
 
 interface SidebarProps {
   callGraph: CallGraph;
@@ -14,20 +14,26 @@ interface SidebarProps {
   onCategoryToggle?: (category: ContractCategory) => void;
 }
 
-// Category order for display (aligned with OpenZeppelin structure)
-const CATEGORY_ORDER: ContractCategory[] = [
-  'token',
-  'access',
-  'governance',
-  'proxy',
-  'finance',
-  'account',
-  'metatx',
-  'utils',
-  'interface',
-  'library',
-  'other',
-];
+// Well-known categories that should appear first
+const WELL_KNOWN_CATEGORIES = ['token', 'access', 'governance', 'proxy', 'finance', 'account', 'metatx', 'utils'];
+const LAST_CATEGORIES = ['interface', 'library', 'other'];
+
+/**
+ * Get display label for a category (capitalize and format)
+ */
+function getCategoryLabel(category: string): string {
+  const specialLabels: Record<string, string> = {
+    'access': 'Access Control',
+    'metatx': 'Meta TX',
+    'utils': 'Utilities',
+    'ictt': 'ICTT',
+    'validator-manager': 'Validator Manager',
+  };
+  if (specialLabels[category.toLowerCase()]) {
+    return specialLabels[category.toLowerCase()];
+  }
+  return category.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
 
 export function Sidebar({
   callGraph,
@@ -41,8 +47,8 @@ export function Sidebar({
   const [showStructure, setShowStructure] = useState(true);
   const [showCategories, setShowCategories] = useState(true);
 
-  // Get available categories from contracts
-  const availableCategories = useMemo(() => {
+  // Get available categories from contracts with dynamic ordering
+  const { availableCategories, categoryOrder } = useMemo(() => {
     const categories = new Map<ContractCategory, number>();
     for (const contract of callGraph.contracts) {
       if (contract.kind === 'contract' || contract.kind === 'abstract') {
@@ -50,7 +56,35 @@ export function Sidebar({
         categories.set(contract.category, count + 1);
       }
     }
-    return categories;
+
+    // Build ordered list of categories
+    const ordered: ContractCategory[] = [];
+    const unknown: ContractCategory[] = [];
+
+    // Add well-known categories first
+    for (const cat of WELL_KNOWN_CATEGORIES) {
+      if (categories.has(cat)) {
+        ordered.push(cat);
+      }
+    }
+
+    // Add unknown categories (alphabetically sorted)
+    for (const cat of categories.keys()) {
+      if (!WELL_KNOWN_CATEGORIES.includes(cat) && !LAST_CATEGORIES.includes(cat)) {
+        unknown.push(cat);
+      }
+    }
+    unknown.sort((a, b) => a.localeCompare(b));
+    ordered.push(...unknown);
+
+    // Add last categories at the end
+    for (const cat of LAST_CATEGORIES) {
+      if (categories.has(cat)) {
+        ordered.push(cat);
+      }
+    }
+
+    return { availableCategories: categories, categoryOrder: ordered };
   }, [callGraph.contracts]);
 
   return (
@@ -99,10 +133,10 @@ export function Sidebar({
           </button>
           {showCategories && (
             <div className="space-y-1.5">
-              {CATEGORY_ORDER.map((category) => {
+              {categoryOrder.map((category) => {
                 const count = availableCategories.get(category);
                 if (!count) return null;
-                const style = categoryStyles[category];
+                const style = getCategoryStyle(category);
                 const isVisible = !visibleCategories || visibleCategories.includes(category);
                 return (
                   <label
@@ -119,8 +153,8 @@ export function Sidebar({
                       className="w-3.5 h-3.5 rounded border-navy-500 bg-navy-700 text-mint focus:ring-mint/50 focus:ring-offset-0"
                     />
                     <span className="text-sm">{style.icon}</span>
-                    <span className={clsx('text-xs flex-1', style.text)}>
-                      {categoryLabels[category]}
+                    <span className="text-xs flex-1" style={{ color: style.textColor }}>
+                      {getCategoryLabel(category)}
                     </span>
                     <span className="text-[10px] text-slate-500 bg-navy-600 px-1.5 py-0.5 rounded">
                       {count}

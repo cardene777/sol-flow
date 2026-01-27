@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useState, useRef, useEffect } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import clsx from 'clsx';
 import { ChevronDown, ChevronRight } from 'lucide-react';
@@ -11,9 +11,18 @@ import type { ExternalFunction, InternalFunction } from '@/types/callGraph';
 import { useDiagramContext } from './DiagramCanvas';
 
 function ContractNodeComponent({ data, selected }: NodeProps<ContractNodeData>) {
-  const { contract, isSelected, selectedFunction } = data;
-  const { onFunctionClick } = useDiagramContext();
+  const { contract, isSelected, selectedFunction, nodeHeight } = data;
+  const { onFunctionClick, onHeightMeasured } = useDiagramContext();
   const [showInternal, setShowInternal] = useState(false);
+  const nodeRef = useRef<HTMLDivElement>(null);
+
+  // Measure actual height after render and report to parent
+  useEffect(() => {
+    if (nodeRef.current && onHeightMeasured) {
+      const actualHeight = nodeRef.current.getBoundingClientRect().height;
+      onHeightMeasured(contract.name, actualHeight);
+    }
+  }, [contract.name, onHeightMeasured]);
 
   // External functions
   const externalReadFunctions = contract.externalFunctions.filter(
@@ -41,6 +50,8 @@ function ContractNodeComponent({ data, selected }: NodeProps<ContractNodeData>) 
     implementation: '⚡ Impl',
     beacon: '📡 Beacon',
     facet: '💎 Facet',
+    interface: '◇ Interface',
+    library: '📚 Library',
   };
   const proxyRoleColors: Record<string, string> = {
     dictionary: 'bg-emerald-500/30 text-emerald-300 border-emerald-400/50',
@@ -48,6 +59,8 @@ function ContractNodeComponent({ data, selected }: NodeProps<ContractNodeData>) 
     implementation: 'bg-purple-500/30 text-purple-300 border-purple-400/50',
     beacon: 'bg-cyan-500/30 text-cyan-300 border-cyan-400/50',
     facet: 'bg-pink-500/30 text-pink-300 border-pink-400/50',
+    interface: 'bg-slate-500/30 text-slate-300 border-slate-400/50',
+    library: 'bg-amber-500/30 text-amber-300 border-amber-400/50',
   };
   const proxyBorderColors: Record<string, string> = {
     eip7546: 'border-emerald-400',
@@ -73,7 +86,6 @@ function ContractNodeComponent({ data, selected }: NodeProps<ContractNodeData>) 
 
   const handleFunctionClick = useCallback(
     (func: ExternalFunction | InternalFunction) => {
-      console.log('ContractNode handleFunctionClick:', func.name, 'contract:', contract.name);
       // Convert to ExternalFunction format for the modal
       const funcAsExternal: ExternalFunction = {
         name: func.name,
@@ -97,8 +109,9 @@ function ContractNodeComponent({ data, selected }: NodeProps<ContractNodeData>) 
 
   return (
     <div
+      ref={nodeRef}
       className={clsx(
-        'contract-node w-[280px] h-[200px] rounded-xl flex flex-col',
+        'contract-node w-[280px] rounded-xl flex flex-col',
         'bg-navy-600 shadow-node',
         contract.proxyPattern
           ? `border-2 ${proxyBorderColors[contract.proxyPattern] || 'border-mint/20'}`
@@ -119,6 +132,52 @@ function ContractNodeComponent({ data, selected }: NodeProps<ContractNodeData>) 
       {/* Right handles */}
       <Handle id="right-source" type="source" position={Position.Right} className="!bg-mint !w-3 !h-3 !border-2 !border-navy-600" />
       <Handle id="right-target" type="target" position={Position.Right} className="!bg-mint !w-3 !h-3 !border-2 !border-navy-600 !top-[45%]" />
+
+      {/* External Library Indicator */}
+      {contract.isExternalLibrary && (() => {
+        // Extract version from file path (e.g., @openzeppelin/contracts@5.0.2/... -> 5.0.2)
+        const versionMatch = contract.filePath.match(/@(\d+\.\d+\.\d+)/);
+        const version = versionMatch ? versionMatch[1] : '';
+
+        // Get display name with version
+        const getLibraryDisplayName = () => {
+          if (contract.librarySource === 'openzeppelin') {
+            return version ? `OpenZeppelin@${version}` : 'OpenZeppelin';
+          }
+          if (contract.librarySource === 'openzeppelin-upgradeable') {
+            return version ? `OZ Upgradeable@${version}` : 'OZ Upgradeable';
+          }
+          if (contract.librarySource === 'solady') {
+            return 'Solady';
+          }
+          if (contract.librarySource === 'avalanche-icm') {
+            return 'Avalanche ICM';
+          }
+          return 'External Library';
+        };
+
+        return (
+          <div className={clsx(
+            'px-3 py-1 text-[9px] font-bold tracking-wider flex items-center gap-2',
+            contract.librarySource === 'openzeppelin' && 'bg-gradient-to-r from-blue-600/20 to-indigo-600/10',
+            contract.librarySource === 'openzeppelin-upgradeable' && 'bg-gradient-to-r from-indigo-600/20 to-purple-600/10',
+            contract.librarySource === 'solady' && 'bg-gradient-to-r from-yellow-600/20 to-orange-600/10',
+            contract.librarySource === 'avalanche-icm' && 'bg-gradient-to-r from-red-600/20 to-orange-600/10',
+            !contract.librarySource && 'bg-gradient-to-r from-slate-600/20 to-slate-500/10'
+          )}>
+            <span className="text-[10px]">📦</span>
+            <span className={clsx(
+              contract.librarySource === 'openzeppelin' && 'text-blue-300',
+              contract.librarySource === 'openzeppelin-upgradeable' && 'text-indigo-300',
+              contract.librarySource === 'solady' && 'text-yellow-300',
+              contract.librarySource === 'avalanche-icm' && 'text-red-300',
+              !contract.librarySource && 'text-slate-300'
+            )}>
+              {getLibraryDisplayName()}
+            </span>
+          </div>
+        );
+      })()}
 
       {/* Proxy Pattern Indicator */}
       {contract.proxyPattern && (
@@ -160,7 +219,7 @@ function ContractNodeComponent({ data, selected }: NodeProps<ContractNodeData>) 
       </div>
 
       {/* Function Lists - nodrag class prevents ReactFlow from capturing drag events */}
-      <div className="nodrag nopan p-2 space-y-2 flex-1 overflow-y-auto custom-scrollbar">
+      <div className="nodrag nopan p-2 space-y-2">
         {/* External / Public Section */}
         {(externalReadFunctions.length > 0 || externalWriteFunctions.length > 0) && (
           <div>

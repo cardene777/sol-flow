@@ -1,0 +1,510 @@
+{
+  "id": "sample-uups",
+  "name": "UUPS Proxy Sample",
+  "version": "1.0.0",
+  "generatedAt": "2026-01-27T03:58:24.610Z",
+  "callGraph": {
+    "version": "1.0.0",
+    "generatedAt": "2026-01-27T03:58:24.610Z",
+    "projectName": "UUPS Proxy Sample",
+    "structure": {
+      "name": "contracts",
+      "type": "directory",
+      "path": "contracts",
+      "children": [
+        {
+          "name": "CounterV1.sol",
+          "type": "file",
+          "path": "CounterV1.sol",
+          "contractName": "CounterV1"
+        },
+        {
+          "name": "CounterV2.sol",
+          "type": "file",
+          "path": "CounterV2.sol",
+          "contractName": "CounterV2"
+        },
+        {
+          "name": "UUPSProxy.sol",
+          "type": "file",
+          "path": "UUPSProxy.sol",
+          "contractName": "UUPSProxy"
+        }
+      ]
+    },
+    "contracts": [
+      {
+        "name": "CounterV1",
+        "filePath": "CounterV1.sol",
+        "kind": "contract",
+        "inherits": [
+          "Initializable",
+          "UUPSUpgradeable",
+          "OwnableUpgradeable"
+        ],
+        "implements": [],
+        "category": "other",
+        "externalFunctions": [
+          {
+            "name": "initialize",
+            "signature": "initialize(address)",
+            "selector": "",
+            "visibility": "public",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "initialOwner",
+                "type": "address"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function initialize(address initialOwner) public initializer {\n        __Ownable_init(initialOwner);\n        __UUPSUpgradeable_init();\n        count = 0;\n    }",
+            "startLine": 23
+          },
+          {
+            "name": "increment",
+            "signature": "increment()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function increment() external {\n        count += 1;\n        emit CountIncremented(count);\n    }",
+            "startLine": 29
+          },
+          {
+            "name": "decrement",
+            "signature": "decrement()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function decrement() external {\n        require(count > 0, \"Counter: count is already zero\");\n        count -= 1;\n        emit CountDecremented(count);\n    }",
+            "startLine": 34
+          },
+          {
+            "name": "getCount",
+            "signature": "getCount()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "view",
+            "parameters": [],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function getCount() external view returns (uint256) {\n        return count;\n    }",
+            "startLine": 40
+          }
+        ],
+        "internalFunctions": [
+          {
+            "name": "constructor",
+            "visibility": "default",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [],
+            "isVirtual": false,
+            "sourceCode": "constructor() {\n        _disableInitializers();\n    }",
+            "startLine": 19
+          },
+          {
+            "name": "_authorizeUpgrade",
+            "visibility": "internal",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "newImplementation",
+                "type": "address"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "isVirtual": false,
+            "sourceCode": "function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}",
+            "startLine": 44
+          }
+        ],
+        "events": [
+          {
+            "name": "CountIncremented",
+            "parameters": [
+              {
+                "name": "newCount",
+                "type": "uint256",
+                "indexed": false
+              }
+            ]
+          },
+          {
+            "name": "CountDecremented",
+            "parameters": [
+              {
+                "name": "newCount",
+                "type": "uint256",
+                "indexed": false
+              }
+            ]
+          }
+        ],
+        "stateVariables": [],
+        "usesLibraries": [],
+        "imports": [
+          {
+            "path": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          },
+          {
+            "path": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          },
+          {
+            "path": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          }
+        ],
+        "proxyPattern": "uups",
+        "proxyRole": "implementation"
+      },
+      {
+        "name": "CounterV2",
+        "filePath": "CounterV2.sol",
+        "kind": "contract",
+        "inherits": [
+          "Initializable",
+          "UUPSUpgradeable",
+          "OwnableUpgradeable"
+        ],
+        "implements": [],
+        "category": "other",
+        "externalFunctions": [
+          {
+            "name": "initialize",
+            "signature": "initialize(address)",
+            "selector": "",
+            "visibility": "public",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "initialOwner",
+                "type": "address"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function initialize(address initialOwner) public initializer {\n        __Ownable_init(initialOwner);\n        __UUPSUpgradeable_init();\n        count = 0;\n        step = 1;\n    }",
+            "startLine": 25
+          },
+          {
+            "name": "initializeV2",
+            "signature": "initializeV2(uint256)",
+            "selector": "",
+            "visibility": "public",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "_step",
+                "type": "uint256"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function initializeV2(uint256 _step) public reinitializer(2) {\n        step = _step;\n    }",
+            "startLine": 32
+          },
+          {
+            "name": "increment",
+            "signature": "increment()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function increment() external {\n        count += step;\n        emit CountIncremented(count, step);\n    }",
+            "startLine": 36
+          },
+          {
+            "name": "decrement",
+            "signature": "decrement()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function decrement() external {\n        require(count >= step, \"Counter: count would go below zero\");\n        count -= step;\n        emit CountDecremented(count, step);\n    }",
+            "startLine": 41
+          },
+          {
+            "name": "setStep",
+            "signature": "setStep(uint256)",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "_step",
+                "type": "uint256"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function setStep(uint256 _step) external onlyOwner {\n        require(_step > 0, \"Counter: step must be greater than zero\");\n        uint256 oldStep = step;\n        step = _step;\n        emit StepChanged(oldStep, _step);\n    }",
+            "startLine": 47
+          },
+          {
+            "name": "getCount",
+            "signature": "getCount()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "view",
+            "parameters": [],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function getCount() external view returns (uint256) {\n        return count;\n    }",
+            "startLine": 54
+          },
+          {
+            "name": "getStep",
+            "signature": "getStep()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "view",
+            "parameters": [],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function getStep() external view returns (uint256) {\n        return step;\n    }",
+            "startLine": 58
+          },
+          {
+            "name": "reset",
+            "signature": "reset()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function reset() external onlyOwner {\n        count = 0;\n    }",
+            "startLine": 62
+          }
+        ],
+        "internalFunctions": [
+          {
+            "name": "constructor",
+            "visibility": "default",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [],
+            "isVirtual": false,
+            "sourceCode": "constructor() {\n        _disableInitializers();\n    }",
+            "startLine": 21
+          },
+          {
+            "name": "_authorizeUpgrade",
+            "visibility": "internal",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "newImplementation",
+                "type": "address"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "isVirtual": false,
+            "sourceCode": "function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}",
+            "startLine": 66
+          }
+        ],
+        "events": [
+          {
+            "name": "CountIncremented",
+            "parameters": [
+              {
+                "name": "newCount",
+                "type": "uint256",
+                "indexed": false
+              },
+              {
+                "name": "step",
+                "type": "uint256",
+                "indexed": false
+              }
+            ]
+          },
+          {
+            "name": "CountDecremented",
+            "parameters": [
+              {
+                "name": "newCount",
+                "type": "uint256",
+                "indexed": false
+              },
+              {
+                "name": "step",
+                "type": "uint256",
+                "indexed": false
+              }
+            ]
+          },
+          {
+            "name": "StepChanged",
+            "parameters": [
+              {
+                "name": "oldStep",
+                "type": "uint256",
+                "indexed": false
+              },
+              {
+                "name": "newStep",
+                "type": "uint256",
+                "indexed": false
+              }
+            ]
+          }
+        ],
+        "stateVariables": [],
+        "usesLibraries": [],
+        "imports": [
+          {
+            "path": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          },
+          {
+            "path": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          },
+          {
+            "path": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          }
+        ],
+        "proxyPattern": "uups",
+        "proxyRole": "implementation"
+      },
+      {
+        "name": "UUPSProxy",
+        "filePath": "UUPSProxy.sol",
+        "kind": "contract",
+        "inherits": [
+          "ERC1967Proxy"
+        ],
+        "implements": [],
+        "category": "other",
+        "externalFunctions": [],
+        "internalFunctions": [
+          {
+            "name": "constructor",
+            "visibility": "default",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "_implementation",
+                "type": "address"
+              },
+              {
+                "name": "_data",
+                "type": "bytes"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "isVirtual": false,
+            "sourceCode": "constructor(\n        address _implementation,\n        bytes memory _data\n    ) ERC1967Proxy(_implementation, _data) {}",
+            "startLine": 12
+          }
+        ],
+        "events": [],
+        "stateVariables": [],
+        "usesLibraries": [],
+        "imports": [
+          {
+            "path": "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol",
+            "name": "",
+            "alias": "",
+            "isExternal": true
+          }
+        ],
+        "proxyPattern": "uups",
+        "proxyRole": "proxy"
+      }
+    ],
+    "dependencies": [],
+    "proxyGroups": [],
+    "stats": {
+      "totalContracts": 3,
+      "totalLibraries": 0,
+      "totalInterfaces": 0,
+      "totalFunctions": 17
+    }
+  }
+}
