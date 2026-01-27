@@ -111,7 +111,7 @@ function ContractNodeComponent({ data, selected }: NodeProps<ContractNodeData>) 
     <div
       ref={nodeRef}
       className={clsx(
-        'contract-node w-[280px] rounded-xl flex flex-col',
+        'contract-node w-[380px] rounded-xl flex flex-col',
         'bg-navy-600 shadow-node',
         contract.proxyPattern
           ? `border-2 ${proxyBorderColors[contract.proxyPattern] || 'border-mint/20'}`
@@ -209,7 +209,7 @@ function ContractNodeComponent({ data, selected }: NodeProps<ContractNodeData>) 
       <div className="flex items-center justify-between px-4 py-2 border-b border-mint/10">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-mint text-lg flex-shrink-0">{icon}</span>
-          <span className="font-mono font-semibold text-sm text-slate-100 truncate">
+          <span className="font-mono font-semibold text-sm text-slate-100 whitespace-nowrap">
             {contract.name}
           </span>
         </div>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { Edit3, PanelLeft, X } from 'lucide-react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { DiagramCanvas, type DiagramCanvasHandle, type TempEdge } from '@/components/Canvas/DiagramCanvas';
@@ -58,6 +59,20 @@ export function MainLayout({
   // Ref for diagram canvas export functions
   const diagramRef = useRef<DiagramCanvasHandle>(null);
 
+  // Mobile sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Close sidebar on window resize to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Export handlers
   const handleExportPng = useCallback(() => {
     diagramRef.current?.exportAsPng();
@@ -66,6 +81,7 @@ export function MainLayout({
   const handleExportSvg = useCallback(() => {
     diagramRef.current?.exportAsSvg();
   }, []);
+
   // Category filter state (undefined = show all)
   const [visibleCategories, setVisibleCategories] = useState<ContractCategory[] | undefined>(undefined);
 
@@ -117,23 +133,45 @@ export function MainLayout({
         savedProjectsCount={savedProjectsCount}
         layoutMode={layoutMode}
         onLayoutModeChange={setLayoutMode}
-        isEditMode={isEditMode}
-        onEditModeChange={onEditModeChange}
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar */}
-        <Sidebar
-          callGraph={callGraph}
-          selectedContract={selectedContract}
-          onSelectContract={(name) => {
-            onSelectContract(name);
-            onSelectFunction(null);
-          }}
-          visibleCategories={visibleCategories}
-          onCategoryToggle={handleCategoryToggle}
-        />
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Mobile Sidebar Overlay */}
+        {sidebarOpen && (
+          <div
+            className="md:hidden fixed inset-0 bg-black/50 z-30"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar - Desktop: always visible, Mobile: slide-in drawer */}
+        <div
+          className={`
+            fixed md:relative inset-y-0 left-0 z-40 md:z-0
+            transform transition-transform duration-300 ease-in-out
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          `}
+        >
+          {/* Mobile close button */}
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="md:hidden absolute top-2 right-2 z-50 p-1.5 rounded-lg bg-navy-700 hover:bg-navy-600 text-slate-400"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          <Sidebar
+            callGraph={callGraph}
+            selectedContract={selectedContract}
+            onSelectContract={(name) => {
+              onSelectContract(name);
+              onSelectFunction(null);
+              setSidebarOpen(false); // Close sidebar on mobile after selection
+            }}
+            visibleCategories={visibleCategories}
+            onCategoryToggle={handleCategoryToggle}
+          />
+        </div>
 
         {/* Canvas */}
         <main className="flex-1 overflow-hidden relative">
@@ -156,6 +194,33 @@ export function MainLayout({
             onAddUserEdge={onAddUserEdge}
             onDeleteEdge={onDeleteEdge}
           />
+
+          {/* Mobile Sidebar Toggle */}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="md:hidden absolute top-4 left-4 z-10 flex items-center p-2 rounded-lg bg-navy-700 hover:bg-navy-600 text-slate-300 transition-colors"
+            title="Open Sidebar"
+          >
+            <PanelLeft className="w-4 h-4" />
+          </button>
+
+          {/* Edit Mode Toggle - only for user projects */}
+          {currentProjectId && onEditModeChange && (
+            <button
+              onClick={() => onEditModeChange(!isEditMode)}
+              className={`absolute top-4 right-4 z-10 flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg transition-colors ${
+                isEditMode
+                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                  : 'bg-navy-700 hover:bg-navy-600 text-slate-300'
+              }`}
+              title={isEditMode ? 'Exit Edit Mode' : 'Enter Edit Mode'}
+            >
+              <Edit3 className="w-4 h-4" />
+              <span className="text-sm font-medium hidden sm:block">
+                {isEditMode ? 'Editing' : 'Edit'}
+              </span>
+            </button>
+          )}
         </main>
       </div>
 

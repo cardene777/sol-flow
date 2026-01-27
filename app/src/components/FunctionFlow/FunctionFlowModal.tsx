@@ -361,6 +361,50 @@ function buildFlowGraph(
         nodeType = 'internal';
       } else if (call.type === 'external') {
         nodeType = 'external';
+
+        // Try to resolve external call using targetType (e.g., ITeleporterMessenger)
+        if (call.targetType) {
+          const funcName = call.target.includes('.') ? call.target.split('.')[1] : call.target;
+
+          let externalContract: Contract | undefined;
+
+          // PRIORITY 1: If type starts with 'I' (interface), try to find implementation first
+          // e.g., ITeleporterMessenger -> TeleporterMessenger
+          if (call.targetType.startsWith('I') && call.targetType[1] === call.targetType[1]?.toUpperCase()) {
+            const implName = call.targetType.slice(1); // Remove 'I' prefix
+            externalContract = graph.contracts.find(c => c.name === implName);
+          }
+
+          // PRIORITY 2: Fall back to exact type name match
+          if (!externalContract) {
+            externalContract = graph.contracts.find(c => c.name === call.targetType);
+          }
+
+          // PRIORITY 3: If found but no source code for function, try implementation again
+          if (externalContract) {
+            targetContract = externalContract;
+            targetFunc = externalContract.externalFunctions.find(f => f.name === funcName)
+              || externalContract.internalFunctions.find(f => f.name === funcName);
+
+            // If function found but no source code (interface), try to find implementation
+            if (targetFunc && !targetFunc.sourceCode && externalContract.kind === 'interface') {
+              const implName = call.targetType?.startsWith('I') ? call.targetType.slice(1) : call.targetType;
+              const implContract = graph.contracts.find(c => c.name === implName && c.kind !== 'interface');
+              if (implContract) {
+                const implFunc = implContract.externalFunctions.find(f => f.name === funcName)
+                  || implContract.internalFunctions.find(f => f.name === funcName);
+                if (implFunc?.sourceCode) {
+                  targetContract = implContract;
+                  targetFunc = implFunc;
+                }
+              }
+            }
+
+            if (targetFunc) {
+              externalLibraryPath = targetContract.filePath;
+            }
+          }
+        }
       } else if (call.type === 'delegatecall') {
         nodeType = 'delegatecall';
       }

@@ -50,7 +50,7 @@ interface CategoryBounds {
 }
 
 // Layout constants
-const NODE_WIDTH = 280;
+const NODE_WIDTH = 380;
 const NODE_MIN_HEIGHT = 160;  // Minimum height for contracts with few/no functions
 const NODE_MAX_HEIGHT = 3000;  // Maximum height for very large contracts (effectively no limit)
 const NODE_GAP_X = 60;  // Horizontal gap between cards
@@ -795,32 +795,6 @@ function createSingleEdge(
   };
 }
 
-/**
- * Find all contracts that are dependencies of ERC7546 contracts
- * (inherited, used, or implemented by ERC7546 contracts)
- */
-function findErc7546Dependencies(
-  contracts: Contract[],
-  dependencies: Dependency[]
-): Set<string> {
-  const erc7546Names = new Set(
-    contracts.filter(c => c.proxyPattern === 'eip7546').map(c => c.name)
-  );
-  const dependencyNames = new Set<string>();
-
-  // Find contracts that ERC7546 contracts depend on
-  for (const dep of dependencies) {
-    if (erc7546Names.has(dep.from)) {
-      // dep.from (ERC7546 contract) depends on dep.to
-      if (dep.type === 'inherits' || dep.type === 'implements' || dep.type === 'uses') {
-        dependencyNames.add(dep.to);
-      }
-    }
-  }
-
-  return dependencyNames;
-}
-
 export function transformToReactFlow(
   callGraph: CallGraph,
   selectedContract: string | null,
@@ -836,6 +810,8 @@ export function transformToReactFlow(
 
   // Filter contracts
   let contracts = callGraph.contracts.filter(c => c.kind === 'contract' || c.kind === 'abstract');
+  // Exclude test contracts (names starting with "Test")
+  contracts = contracts.filter(c => !c.name.startsWith('Test'));
   if (visibleCategories) {
     contracts = contracts.filter(c => visibleCategories.includes(c.category));
   }
@@ -850,25 +826,50 @@ export function transformToReactFlow(
   }
 
   // === STEP 0: Identify contracts with proxy patterns ===
-  // Group by proxy pattern type
-  const proxyPatternTypes: ProxyPatternType[] = ['eip7546', 'uups', 'transparent', 'diamond', 'beacon'];
+  // All proxy patterns (eip7546, uups, transparent, diamond, beacon) are grouped under ERC7546
+  const proxyPatternTypes: ProxyPatternType[] = ['eip7546'];
   const contractsByPattern = new Map<ProxyPatternType, Contract[]>();
 
-  for (const pattern of proxyPatternTypes) {
-    const patternContracts = contracts.filter(c => c.proxyPattern === pattern);
-    if (patternContracts.length > 0) {
-      contractsByPattern.set(pattern, patternContracts);
-    }
+  // Collect ALL contracts with any proxy pattern into ERC7546 group
+  const allProxyContracts = contracts.filter(c => c.proxyPattern);
+  if (allProxyContracts.length > 0) {
+    contractsByPattern.set('eip7546', allProxyContracts);
   }
 
-  // For ERC-7546, also include dependencies
-  const erc7546Dependencies = findErc7546Dependencies(contracts, callGraph.dependencies);
-  const erc7546Contracts = contractsByPattern.get('eip7546') || [];
-  const erc7546Related = contracts.filter(c =>
-    c.proxyPattern === 'eip7546' || erc7546Dependencies.has(c.name)
-  );
-  if (erc7546Related.length > erc7546Contracts.length) {
-    contractsByPattern.set('eip7546', erc7546Related);
+  // Include contracts that proxy contracts inherit from
+  const erc7546Contracts = contractsByPattern.get('eip7546');
+  if (erc7546Contracts && erc7546Contracts.length > 0) {
+    const patternNames = new Set(erc7546Contracts.map(c => c.name));
+    const additionalContracts: Contract[] = [];
+    let foundNew = true;
+
+    // Recursively find all inherited contracts
+    while (foundNew) {
+      foundNew = false;
+      for (const dep of callGraph.dependencies) {
+        // Find contracts that proxy contracts inherit from
+        if (patternNames.has(dep.from) && (dep.type === 'inherits' || dep.type === 'implements')) {
+          const targetContract = contracts.find(c => c.name === dep.to);
+          if (!targetContract) continue;
+          if (patternNames.has(targetContract.name)) continue;
+
+          // Assign a proxyRole based on the inheriting contract's role
+          const inheritingContract = erc7546Contracts.find(c => c.name === dep.from) ||
+            additionalContracts.find(c => c.name === dep.from);
+          if (inheritingContract?.proxyRole && !targetContract.proxyRole) {
+            targetContract.proxyRole = inheritingContract.proxyRole;
+          }
+
+          additionalContracts.push(targetContract);
+          patternNames.add(targetContract.name);
+          foundNew = true;
+        }
+      }
+    }
+
+    if (additionalContracts.length > 0) {
+      contractsByPattern.set('eip7546', [...erc7546Contracts, ...additionalContracts]);
+    }
   }
 
   // Get all contracts that are part of any proxy pattern group
@@ -1170,11 +1171,13 @@ export function transformToReactFlow(
       }
 
       maxWidth = currentRoleX > 0 ? currentRoleX - COLUMN_GAP : 0;
-      currentRoleY = maxRoleHeight;
+      // For horizontal layout, no ROW_GAP was added, so don't subtract it
+      currentRoleY = maxRoleHeight + ROW_GAP; // Add ROW_GAP so the subtraction below works correctly
     }
 
     // Calculate total group dimensions
     // Note: Pattern group header is positioned outside with -top-4, so no extra space needed
+    // Subtract ROW_GAP because it was added after the last role (for both vertical and horizontal layouts now)
     const totalInnerHeight = currentRoleY > 0 ? currentRoleY - ROW_GAP : 0;
     const groupWidth = maxWidth + PROXY_GROUP_PADDING * 2;
     const groupHeight = totalInnerHeight + PROXY_GROUP_PADDING * 2;

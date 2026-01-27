@@ -19,6 +19,7 @@ import type {
   EventDefinition,
   ErrorDefinition,
   ImportInfo,
+  StateVariable,
 } from '@/types/callGraph';
 
 interface ParsedFile {
@@ -126,11 +127,38 @@ function parseContractDefinition(
   const events: EventDefinition[] = [];
   const errors: ErrorDefinition[] = [];
   const usesLibraries: string[] = [];
+  const stateVariables: StateVariable[] = [];
 
-  // Process contract body
+  // First pass: collect state variables to build type map
+  const variableTypeMap = new Map<string, string>();
+
+  for (const subNode of node.subNodes) {
+    if (subNode.type === 'StateVariableDeclaration') {
+      const varNode = subNode as any;
+      for (const variable of varNode.variables || []) {
+        const varName = variable.name;
+        const varType = getTypeName(variable.typeName);
+        const visibility = variable.visibility || 'internal';
+        const isConstant = variable.isDeclaredConst || false;
+        const isImmutable = variable.isImmutable || false;
+
+        variableTypeMap.set(varName, varType);
+
+        stateVariables.push({
+          name: varName,
+          type: varType,
+          visibility: visibility as 'public' | 'private' | 'internal',
+          isConstant,
+          isImmutable,
+        });
+      }
+    }
+  }
+
+  // Second pass: process functions with variable type information
   for (const subNode of node.subNodes) {
     if (subNode.type === 'FunctionDefinition') {
-      const func = parseFunctionDefinition(subNode as FunctionDefinition, sourceCode);
+      const func = parseFunctionDefinition(subNode as FunctionDefinition, sourceCode, variableTypeMap);
       if (func) {
         if (func.visibility === 'external' || func.visibility === 'public') {
           externalFunctions.push(func as ExternalFunction);
@@ -163,12 +191,14 @@ function parseContractDefinition(
     internalFunctions,
     events,
     errors,
+    stateVariables,
   };
 }
 
 function parseFunctionDefinition(
   node: FunctionDefinition,
-  sourceCode: string
+  sourceCode: string,
+  variableTypeMap: Map<string, string> = new Map()
 ): ExternalFunction | InternalFunction | null {
   // Skip constructors, fallbacks, receives
   if (!node.name || node.isConstructor || node.isFallback || node.isReceiveEther) {
@@ -204,6 +234,12 @@ function parseFunctionDefinition(
   const emits: string[] = [];
   const modifiers: string[] = [];
 
+  // Build local variable type map (includes parameters and local declarations)
+  const localVariableTypeMap = new Map(variableTypeMap);
+  for (const param of parameters) {
+    localVariableTypeMap.set(param.name, param.type);
+  }
+
   // Parse modifiers
   for (const mod of node.modifiers || []) {
     if (mod.name) {
@@ -211,9 +247,9 @@ function parseFunctionDefinition(
     }
   }
 
-  // Parse body for calls and emits
+  // Parse body for calls and emits (with variable type information)
   if (node.body) {
-    extractCallsAndEmits(node.body, calls, emits);
+    extractCallsAndEmits(node.body, calls, emits, localVariableTypeMap);
   }
 
   const paramTypes = parameters.map((p) => p.type).join(',');
@@ -252,17 +288,30 @@ function extractCallsAndEmits(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   node: any,
   calls: FunctionCall[],
-  emits: string[]
+  emits: string[],
+  variableTypeMap: Map<string, string> = new Map()
 ) {
   const seen = new Set<string>();
+
+  // Also collect local variable declarations within the function body
+  const localTypes = new Map(variableTypeMap);
 
   function visit(n: any) {
     if (!n || typeof n !== 'object') return;
 
+    // Track local variable declarations
+    if (n.type === 'VariableDeclarationStatement') {
+      for (const variable of n.variables || []) {
+        if (variable?.name && variable?.typeName) {
+          localTypes.set(variable.name, getTypeName(variable.typeName));
+        }
+      }
+    }
+
     if (n.type === 'FunctionCall') {
-      const call = extractFunctionCall(n);
+      const call = extractFunctionCall(n, localTypes);
       if (call) {
-        const key = `${call.type}:${call.target}`;
+        const key = `${call.type}:${call.target}:${call.targetType || ''}`;
         if (!seen.has(key)) {
           seen.add(key);
           calls.push(call);
@@ -293,7 +342,7 @@ function extractCallsAndEmits(
   visit(node);
 }
 
-function extractFunctionCall(node: any): FunctionCall | null {
+function extractFunctionCall(node: any, variableTypeMap: Map<string, string> = new Map()): FunctionCall | null {
   const expr = node.expression;
 
   if (!expr) return null;
@@ -359,9 +408,12 @@ function extractFunctionCall(node: any): FunctionCall | null {
       }
 
       // External call: contract.func()
+      // Look up the type of the variable to help resolve the actual contract
+      const variableType = variableTypeMap.get(objName);
       return {
         target: `${objName}.${memberName}`,
         type: 'external',
+        targetType: variableType,
       };
     }
 

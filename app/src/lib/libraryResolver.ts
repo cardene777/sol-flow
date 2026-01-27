@@ -50,6 +50,27 @@ function resolveImportPath(importPath: string): { fullPath: string; remapping: R
 }
 
 /**
+ * Check if a file is an interface and find its implementation
+ * e.g., "ITeleporterMessenger.sol" -> "TeleporterMessenger.sol"
+ */
+function findImplementationForInterface(interfacePath: string): string | null {
+  const fileName = path.basename(interfacePath, '.sol');
+
+  // Check if it's an interface (starts with 'I' and second char is uppercase)
+  if (fileName.startsWith('I') && fileName[1] === fileName[1]?.toUpperCase()) {
+    const implName = fileName.slice(1); // Remove 'I' prefix
+    const implPath = interfacePath.replace(`/${fileName}.sol`, `/${implName}.sol`);
+
+    const resolved = resolveImportPath(implPath);
+    if (resolved && fs.existsSync(resolved.fullPath)) {
+      return implPath;
+    }
+  }
+
+  return null;
+}
+
+/**
  * Read a Solidity file from the library directory
  */
 function readLibraryFile(filePath: string): string | null {
@@ -152,6 +173,13 @@ export function resolveLibraryDependencies(
             pendingImports.add(imp.path);
           }
         }
+      }
+
+      // If this is an interface, also import the implementation file if it exists
+      const implPath = findImplementationForInterface(importPath);
+      if (implPath && !processedPaths.has(implPath)) {
+        console.log(`[LibraryResolver] Auto-importing implementation for interface: ${implPath}`);
+        pendingImports.add(implPath);
       }
     }
 

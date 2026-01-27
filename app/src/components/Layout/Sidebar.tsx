@@ -88,7 +88,7 @@ export function Sidebar({
   }, [callGraph.contracts]);
 
   return (
-    <aside className="w-[280px] h-full bg-navy-800 border-r border-navy-600 flex flex-col">
+    <aside className="w-[280px] h-full bg-navy-800 border-r border-navy-600 flex flex-col pt-10 md:pt-0">
       {/* Tree View */}
       <div className="flex-1 overflow-y-auto p-3">
         <button

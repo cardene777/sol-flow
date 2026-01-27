@@ -33,11 +33,22 @@ export type ContractKind = 'contract' | 'library' | 'interface' | 'abstract';
 export interface FunctionCall {
   target: string;
   type: 'internal' | 'library' | 'external' | 'modifier' | 'super' | 'delegatecall';
+  /** The resolved type of the target variable (e.g., ITeleporterMessenger) */
+  targetType?: string;
   condition?: string;
   sourceLocation?: {
     start: number;
     end: number;
   };
+}
+
+/** State Variable */
+export interface StateVariable {
+  name: string;
+  type: string;
+  visibility: 'public' | 'private' | 'internal';
+  isConstant?: boolean;
+  isImmutable?: boolean;
 }
 
 /** External Function */
@@ -99,6 +110,8 @@ export interface Contract {
   internalFunctions: InternalFunction[];
   events: EventDefinition[];
   errors: ErrorDefinition[];
+  /** State variables with their types (for resolving external calls) */
+  stateVariables?: StateVariable[];
   // Proxy pattern detection
   proxyPattern?: ProxyPatternType;
   proxyRole?: ProxyRole;
