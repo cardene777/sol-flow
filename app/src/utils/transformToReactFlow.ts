@@ -891,6 +891,7 @@ export function transformToReactFlow(
   const PROXY_GROUP_PADDING = 80;
   const ERC7546_INNER_GAP = 60;
   const ERC7546_SECTION_GAP = 100;
+  const ROLE_GROUP_HEADER_BUFFER = 40; // Extra buffer for role group header badge
 
   interface GroupPosition {
     group: GroupInfo;
@@ -942,9 +943,10 @@ export function transformToReactFlow(
   };
 
   // Calculate row-based positions for contracts (returns positions relative to group)
-  const calcContractPositions = (contractList: Contract[], maxCols: number) => {
+  // extraTopOffset allows for additional top padding (e.g., for role group headers)
+  const calcContractPositions = (contractList: Contract[], maxCols: number, extraTopOffset: number = 0) => {
     const positions: { contract: Contract; x: number; y: number; height: number }[] = [];
-    let currentY = CATEGORY_PADDING;
+    let currentY = CATEGORY_PADDING + extraTopOffset;
     const rows = Math.ceil(contractList.length / maxCols);
 
     for (let row = 0; row < rows; row++) {
@@ -1071,6 +1073,8 @@ export function transformToReactFlow(
             catContracts.sort((a, b) => a.name.localeCompare(b.name));
             const maxCols = catContracts.length <= 2 ? catContracts.length : 2;
             const { width, height } = calcDimensions(catContracts, maxCols);
+            // Add buffer for role group header badge
+            const roleGroupHeight = height + ROLE_GROUP_HEADER_BUFFER;
 
             roleLayouts.push({
               role: 'implementation',
@@ -1080,11 +1084,11 @@ export function transformToReactFlow(
               x: implX,
               y: currentRoleY,
               width,
-              height,
+              height: roleGroupHeight,
             });
 
             implX += width + COLUMN_GAP;
-            implMaxHeight = Math.max(implMaxHeight, height);
+            implMaxHeight = Math.max(implMaxHeight, roleGroupHeight);
           }
 
           maxWidth = Math.max(maxWidth, implX > 0 ? implX - COLUMN_GAP : 0);
@@ -1094,6 +1098,8 @@ export function transformToReactFlow(
           roleContracts.sort((a, b) => a.name.localeCompare(b.name));
           const maxCols = roleContracts.length <= 3 ? roleContracts.length : 3;
           const { width, height } = calcDimensions(roleContracts, maxCols);
+          // Add buffer for role group header badge
+          const roleGroupHeight = height + ROLE_GROUP_HEADER_BUFFER;
 
           roleLayouts.push({
             role,
@@ -1102,11 +1108,11 @@ export function transformToReactFlow(
             x: 0,
             y: currentRoleY,
             width,
-            height,
+            height: roleGroupHeight,
           });
 
           maxWidth = Math.max(maxWidth, width);
-          currentRoleY += height + ROW_GAP;
+          currentRoleY += roleGroupHeight + ROW_GAP;
         }
       }
     } else {
@@ -1135,6 +1141,8 @@ export function transformToReactFlow(
             catContracts.sort((a, b) => a.name.localeCompare(b.name));
             const maxCols = catContracts.length <= 2 ? catContracts.length : 2;
             const { width, height } = calcDimensions(catContracts, maxCols);
+            // Add buffer for role group header badge
+            const roleGroupHeight = height + ROLE_GROUP_HEADER_BUFFER;
 
             roleLayouts.push({
               role: 'implementation',
@@ -1144,15 +1152,17 @@ export function transformToReactFlow(
               x: currentRoleX,
               y: 0,
               width,
-              height,
+              height: roleGroupHeight,
             });
 
             currentRoleX += width + COLUMN_GAP;
-            maxRoleHeight = Math.max(maxRoleHeight, height);
+            maxRoleHeight = Math.max(maxRoleHeight, roleGroupHeight);
           }
         } else {
           const maxCols = roleContracts.length <= 2 ? roleContracts.length : 2;
           const { width, height } = calcDimensions(roleContracts, maxCols);
+          // Add buffer for role group header badge
+          const roleGroupHeight = height + ROLE_GROUP_HEADER_BUFFER;
 
           roleLayouts.push({
             role,
@@ -1161,11 +1171,11 @@ export function transformToReactFlow(
             x: currentRoleX,
             y: 0,
             width,
-            height,
+            height: roleGroupHeight,
           });
 
           currentRoleX += width + COLUMN_GAP;
-          maxRoleHeight = Math.max(maxRoleHeight, height);
+          maxRoleHeight = Math.max(maxRoleHeight, roleGroupHeight);
         }
       }
 
@@ -1174,10 +1184,11 @@ export function transformToReactFlow(
     }
 
     // Calculate total group dimensions
-    // Note: Pattern group header is positioned outside with -top-4, so no extra space needed
+    // Add extra buffer for pattern group header badge (positioned with -translate-y-1/2)
+    const PATTERN_GROUP_HEADER_BUFFER = 40;
     const totalInnerHeight = currentRoleY > 0 ? currentRoleY - ROW_GAP : 0;
     const groupWidth = maxWidth + PROXY_GROUP_PADDING * 2;
-    const groupHeight = totalInnerHeight + PROXY_GROUP_PADDING * 2;
+    const groupHeight = totalInnerHeight + PROXY_GROUP_PADDING * 2 + PATTERN_GROUP_HEADER_BUFFER;
 
     // Create pattern group node (outer container)
     const patternGroupId = `proxy-pattern-${patternType}`;
@@ -1200,8 +1211,9 @@ export function transformToReactFlow(
     });
 
     // Create role group nodes inside pattern group
+    // Add extra offset to account for pattern group header badge
     const contentStartX = PROXY_GROUP_PADDING;
-    const contentStartY = PROXY_GROUP_PADDING; // Role group header is also positioned outside
+    const contentStartY = PROXY_GROUP_PADDING + PATTERN_GROUP_HEADER_BUFFER;
 
     for (const layout of roleLayouts) {
       // Include category in ID for implementation sub-groups to ensure uniqueness
@@ -1237,8 +1249,9 @@ export function transformToReactFlow(
       });
 
       // Position contracts inside this role group with dynamic heights
+      // Add extra top offset for role group header badge
       const maxCols = layout.contracts.length <= 2 ? layout.contracts.length : 2;
-      const contractPositions = calcContractPositions(layout.contracts, maxCols);
+      const contractPositions = calcContractPositions(layout.contracts, maxCols, ROLE_GROUP_HEADER_BUFFER);
 
       for (const pos of contractPositions) {
         const relativePosition = { x: pos.x, y: pos.y };
