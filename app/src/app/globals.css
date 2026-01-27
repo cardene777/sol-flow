@@ -1,0 +1,182 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Navy palette */
+  --color-navy-900: #0a0e1a;
+  --color-navy-800: #111827;
+  --color-navy-700: #1a2444;
+  --color-navy-600: #243056;
+  --color-navy-500: #2d3a5c;
+
+  /* Accent colors */
+  --color-mint: #00d4aa;
+  --color-lavender: #a78bfa;
+  --color-amber: #fbbf24;
+  --color-coral: #f472b6;
+
+  /* Fonts */
+  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+@layer base {
+  * {
+    @apply border-navy-600;
+  }
+
+  body {
+    @apply bg-navy-900 text-slate-100;
+    font-family: var(--font-display);
+  }
+}
+
+/* Blueprint grid background */
+.blueprint-grid {
+  background-image:
+    linear-gradient(rgba(64, 156, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(64, 156, 255, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: theme('colors.navy.800');
+}
+
+::-webkit-scrollbar-thumb {
+  background: theme('colors.navy.600');
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.navy.500');
+}
+
+/* Custom scrollbar for contract cards */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: theme('colors.navy.500') transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: theme('colors.navy.500');
+  border-radius: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.mint');
+}
+
+/* Contract node styles */
+.contract-node {
+  transition: all 0.2s ease;
+}
+
+.contract-node:hover {
+  box-shadow: 0 0 20px rgba(0, 212, 170, 0.3);
+}
+
+.contract-node.selected {
+  box-shadow: 0 0 30px rgba(0, 212, 170, 0.4);
+  border-color: theme('colors.mint');
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+/* Node glow effects */
+.shadow-node {
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 2px 4px -1px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(0, 212, 170, 0.1);
+}
+
+.shadow-glow-mint {
+  box-shadow: 0 0 20px rgba(0, 212, 170, 0.3);
+}
+
+.shadow-glow-amber {
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+}
+
+/* React Flow customizations */
+.react-flow__node {
+  cursor: pointer;
+}
+
+.react-flow__edge-path {
+  stroke-width: 2;
+}
+
+.react-flow__edge.animated path {
+  stroke-dasharray: 5;
+  animation: dashdraw 0.5s linear infinite;
+}
+
+@keyframes dashdraw {
+  from {
+    stroke-dashoffset: 10;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Flowing animation for selected edges */
+@keyframes flowAnimation {
+  from {
+    stroke-dashoffset: 36;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes dashFlow {
+  from {
+    stroke-dashoffset: 48;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.edge-flow-animation {
+  animation: flowAnimation 1s linear infinite;
+}
+
+/* Ensure React Flow controls are visible */
+.react-flow__controls {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.react-flow__minimap {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}

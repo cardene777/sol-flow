@@ -1,0 +1,186 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+interface GitHubFile {
+  name: string;
+  path: string;
+  type: 'file' | 'dir';
+  download_url: string | null;
+}
+
+interface LibraryConfig {
+  id: string;
+  name: string;
+  version: string;
+  repo: string;
+  branch: string;
+  basePath: string;
+  excludePaths: string[];
+}
+
+const LIBRARIES: Record<string, LibraryConfig> = {
+  'openzeppelin': {
+    id: 'openzeppelin',
+    name: 'OpenZeppelin Contracts',
+    version: '5.0.0',
+    repo: 'OpenZeppelin/openzeppelin-contracts',
+    branch: 'master',
+    basePath: 'contracts',
+    excludePaths: ['mocks', 'vendor'],
+  },
+  'openzeppelin-upgradeable': {
+    id: 'openzeppelin-upgradeable',
+    name: 'OpenZeppelin Upgradeable',
+    version: '5.0.0',
+    repo: 'OpenZeppelin/openzeppelin-contracts-upgradeable',
+    branch: 'master',
+    basePath: 'contracts',
+    excludePaths: ['mocks'],
+  },
+  'solady': {
+    id: 'solady',
+    name: 'Solady',
+    version: 'latest',
+    repo: 'Vectorized/solady',
+    branch: 'main',
+    basePath: 'src',
+    excludePaths: ['test'],
+  },
+};
+
+async function fetchGitHubDirectory(
+  repo: string,
+  branch: string,
+  dirPath: string
+): Promise<GitHubFile[]> {
+  const url = `https://api.github.com/repos/${repo}/contents/${dirPath}?ref=${branch}`;
+
+  const response = await fetch(url, {
+    headers: {
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'sol-flow',
+    },
+    next: { revalidate: 3600 }, // Cache for 1 hour
+  });
+
+  if (!response.ok) {
+    if (response.status === 403) {
+      throw new Error('GitHub API rate limit exceeded');
+    }
+    throw new Error(`Failed to fetch: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+async function fetchFileContent(url: string): Promise<string> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch file: ${response.status}`);
+  }
+  return response.text();
+}
+
+async function collectSolidityFiles(
+  repo: string,
+  branch: string,
+  dirPath: string,
+  excludePaths: string[],
+  maxFiles: number = 100
+): Promise<{ path: string; content: string }[]> {
+  const files: { path: string; content: string }[] = [];
+  const queue: string[] = [dirPath];
+
+  while (queue.length > 0 && files.length < maxFiles) {
+    const currentPath = queue.shift()!;
+
+    // Skip excluded paths
+    if (excludePaths.some(exc => currentPath.includes(exc))) {
+      continue;
+    }
+
+    try {
+      const entries = await fetchGitHubDirectory(repo, branch, currentPath);
+
+      for (const entry of entries) {
+        if (files.length >= maxFiles) break;
+
+        if (excludePaths.some(exc => entry.path.includes(exc))) {
+          continue;
+        }
+
+        if (entry.type === 'dir') {
+          queue.push(entry.path);
+        } else if (
+          entry.type === 'file' &&
+          entry.name.endsWith('.sol') &&
+          !entry.name.endsWith('.t.sol') &&
+          !entry.name.endsWith('.s.sol') &&
+          entry.download_url
+        ) {
+          const content = await fetchFileContent(entry.download_url);
+          files.push({
+            path: entry.path,
+            content,
+          });
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching ${currentPath}:`, error);
+    }
+  }
+
+  return files;
+}
+
+// GET /api/libraries - List available libraries
+export async function GET() {
+  const libraries = Object.values(LIBRARIES).map(lib => ({
+    id: lib.id,
+    name: lib.name,
+    version: lib.version,
+  }));
+
+  return NextResponse.json({ libraries });
+}
+
+// POST /api/libraries - Fetch library files
+export async function POST(request: NextRequest) {
+  try {
+    const { libraryId } = await request.json();
+
+    const config = LIBRARIES[libraryId];
+    if (!config) {
+      return NextResponse.json(
+        { error: 'Library not found' },
+        { status: 404 }
+      );
+    }
+
+    console.log(`Fetching library: ${config.name}`);
+
+    const files = await collectSolidityFiles(
+      config.repo,
+      config.branch,
+      config.basePath,
+      config.excludePaths,
+      150 // Limit files to avoid timeout
+    );
+
+    console.log(`Fetched ${files.length} files from ${config.name}`);
+
+    return NextResponse.json({
+      library: {
+        id: config.id,
+        name: config.name,
+        version: config.version,
+      },
+      files,
+    });
+  } catch (error) {
+    console.error('Library fetch error:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to fetch library' },
+      { status: 500 }
+    );
+  }
+}
