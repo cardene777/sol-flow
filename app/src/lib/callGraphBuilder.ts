@@ -593,6 +593,98 @@ function calculateStats(contracts: Contract[]): Stats {
   };
 }
 
+// Resolve inherited functions for all contracts
+function resolveInheritedFunctions(contracts: Contract[]): void {
+  // Build contract map for quick lookup
+  const contractMap = new Map<string, Contract>();
+  for (const contract of contracts) {
+    contractMap.set(contract.name, contract);
+  }
+
+  // Get all inherited functions for a contract (recursive)
+  function getInheritedFunctions(
+    contract: Contract,
+    visited: Set<string>
+  ): { external: typeof contract.externalFunctions; internal: typeof contract.internalFunctions } {
+    const external: typeof contract.externalFunctions = [];
+    const internal: typeof contract.internalFunctions = [];
+
+    // Prevent circular inheritance
+    if (visited.has(contract.name)) {
+      return { external, internal };
+    }
+    visited.add(contract.name);
+
+    // Process all parent contracts
+    for (const parentName of contract.inherits) {
+      const parent = contractMap.get(parentName);
+      if (!parent) continue;
+
+      // Get parent's own functions (mark as inherited)
+      for (const func of parent.externalFunctions) {
+        if (!func.inheritedFrom) {
+          external.push({ ...func, inheritedFrom: parentName });
+        } else {
+          external.push(func);
+        }
+      }
+      for (const func of parent.internalFunctions) {
+        if (!func.inheritedFrom) {
+          internal.push({ ...func, inheritedFrom: parentName });
+        } else {
+          internal.push(func);
+        }
+      }
+
+      // Recursively get grandparent functions
+      const grandparentFuncs = getInheritedFunctions(parent, visited);
+      external.push(...grandparentFuncs.external);
+      internal.push(...grandparentFuncs.internal);
+    }
+
+    // Also check implements (interfaces)
+    for (const ifaceName of contract.implements) {
+      const iface = contractMap.get(ifaceName);
+      if (!iface) continue;
+
+      for (const func of iface.externalFunctions) {
+        if (!func.inheritedFrom) {
+          external.push({ ...func, inheritedFrom: ifaceName });
+        }
+      }
+    }
+
+    return { external, internal };
+  }
+
+  // Resolve for each contract
+  for (const contract of contracts) {
+    // Skip interfaces and libraries
+    if (contract.kind === 'interface' || contract.kind === 'library') continue;
+
+    const visited = new Set<string>();
+    const inherited = getInheritedFunctions(contract, visited);
+
+    // Deduplicate by function name (keep the most derived version)
+    const ownExternalNames = new Set(contract.externalFunctions.map(f => f.name));
+    const ownInternalNames = new Set(contract.internalFunctions.map(f => f.name));
+
+    // Add inherited functions that aren't overridden
+    for (const func of inherited.external) {
+      if (!ownExternalNames.has(func.name)) {
+        contract.externalFunctions.push(func);
+        ownExternalNames.add(func.name);
+      }
+    }
+    for (const func of inherited.internal) {
+      if (!ownInternalNames.has(func.name)) {
+        contract.internalFunctions.push(func);
+        ownInternalNames.add(func.name);
+      }
+    }
+  }
+}
+
 // Build complete CallGraph from contracts
 export function buildCallGraph(
   projectName: string,
@@ -600,6 +692,9 @@ export function buildCallGraph(
 ): CallGraph {
   // Detect proxy groups first (this also sets proxyPattern, proxyRole, proxyGroupId)
   const proxyGroups = detectProxyGroups(contracts);
+
+  // Resolve inherited functions
+  resolveInheritedFunctions(contracts);
 
   return {
     version: '1.0.0',

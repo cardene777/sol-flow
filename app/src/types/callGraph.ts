@@ -67,6 +67,7 @@ export interface ExternalFunction {
   isVirtual: boolean;
   sourceCode?: string;
   startLine?: number;
+  inheritedFrom?: string;  // Name of contract this function was inherited from
 }
 
 /** Internal Function */
@@ -81,6 +82,7 @@ export interface InternalFunction {
   isVirtual: boolean;
   sourceCode?: string;
   startLine?: number;
+  inheritedFrom?: string;  // Name of contract this function was inherited from
 }
 
 /** Contract Proxy Role */
