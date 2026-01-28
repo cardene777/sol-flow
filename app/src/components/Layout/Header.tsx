@@ -170,7 +170,7 @@ export function Header({
         </div>
 
         {/* Search - Desktop */}
-        <div className="hidden md:flex flex-1 max-w-md mx-4">
+        <div data-tour="search" className="hidden md:flex flex-1 max-w-md mx-4">
           <SearchBar callGraph={callGraph} onSelectContract={onSelectContract} />
         </div>
 
@@ -240,7 +240,7 @@ export function Header({
           </button>
 
           {/* Export Dropdown - Hidden on mobile, shown in menu */}
-          <div ref={exportMenuRef} className="relative hidden sm:block">
+          <div data-tour="export" ref={exportMenuRef} className="relative hidden sm:block">
             <button
               onClick={() => setShowExportMenu(!showExportMenu)}
               className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-navy-700 hover:bg-navy-600 text-slate-300 transition-colors cursor-pointer [&_*]:cursor-pointer"
@@ -284,6 +284,7 @@ export function Header({
 
           {/* Import */}
           <button
+            data-tour="import"
             onClick={onImportClick}
             className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-mint/20 hover:bg-mint/30 text-mint transition-colors cursor-pointer [&_*]:cursor-pointer"
             title="Import Contracts"
