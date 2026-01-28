@@ -1,3 +1,15 @@
 [submodule "contracts"]
 	path = contracts
 	url = ./contracts
+[submodule "library/openzeppelin-contracts"]
+	path = library/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts.git
+[submodule "library/openzeppelin-contracts-upgradeable"]
+	path = library/openzeppelin-contracts-upgradeable
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable.git
+[submodule "library/solady"]
+	path = library/solady
+	url = https://github.com/Vectorized/solady.git
+[submodule "library/icm-services"]
+	path = library/icm-services
+	url = https://github.com/ava-labs/icm-services.git

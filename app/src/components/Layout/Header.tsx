@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Zap, Upload, FolderOpen, Grid3X3, GitBranch, RefreshCw, Download, Image, FileCode, ChevronDown, Pencil, Check, X, Search, Menu } from 'lucide-react';
+import { Upload, FolderOpen, Grid3X3, GitBranch, RefreshCw, Download, Image as ImageIcon, FileCode, ChevronDown, Pencil, Check, X, Search, Menu } from 'lucide-react';
+import Image from 'next/image';
 import { SearchBar } from '@/components/Search/SearchBar';
 import type { CallGraph } from '@/types/callGraph';
 import type { LayoutMode } from '@/utils/transformToReactFlow';
@@ -15,6 +16,7 @@ interface HeaderProps {
   onExportPng: () => void;
   onExportSvg: () => void;
   onRenameProject?: (newName: string) => void;
+  onNavigateToLanding?: () => void;
   currentProjectId: string | null;
   savedProjectsCount: number;
   layoutMode: LayoutMode;
@@ -30,6 +32,7 @@ export function Header({
   onExportPng,
   onExportSvg,
   onRenameProject,
+  onNavigateToLanding,
   currentProjectId,
   savedProjectsCount,
   layoutMode,
@@ -99,14 +102,18 @@ export function Header({
       <header className="h-14 bg-navy-800 border-b border-navy-600 flex items-center justify-between px-2 sm:px-4">
         {/* Logo & Project Name */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-mint/20 flex items-center justify-center flex-shrink-0">
-              <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-mint" />
+          <button
+            onClick={onNavigateToLanding}
+            className="flex items-center gap-2 cursor-pointer [&_*]:cursor-pointer hover:opacity-80 transition-opacity"
+            title="Go to Landing Page"
+          >
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+              <Image src="/logo.png" alt="Sol-Flow" width={32} height={32} className="w-full h-full object-contain" />
             </div>
             <span className="font-display font-semibold text-base sm:text-lg text-slate-100 hidden sm:block">
               Sol-Flow
             </span>
-          </div>
+          </button>
           {isEditing ? (
             <div className="flex items-center gap-1 sm:gap-2">
               <input
@@ -120,14 +127,14 @@ export function Header({
               />
               <button
                 onClick={handleSaveEdit}
-                className="p-1 text-mint hover:bg-mint/20 rounded transition-colors"
+                className="p-1 text-mint hover:bg-mint/20 rounded transition-colors cursor-pointer [&_*]:cursor-pointer"
                 title="Save"
               >
                 <Check className="w-4 h-4" />
               </button>
               <button
                 onClick={handleCancelEdit}
-                className="p-1 text-slate-400 hover:bg-slate-500/20 rounded transition-colors"
+                className="p-1 text-slate-400 hover:bg-slate-500/20 rounded transition-colors cursor-pointer [&_*]:cursor-pointer"
                 title="Cancel"
               >
                 <X className="w-4 h-4" />
@@ -137,7 +144,7 @@ export function Header({
             <div className="flex items-center gap-1 sm:gap-1.5 group min-w-0">
               <button
                 onClick={onProjectManagerClick}
-                className="flex items-center gap-1 sm:gap-1.5 text-slate-400 hover:text-slate-200 transition-colors min-w-0"
+                className="flex items-center gap-1 sm:gap-1.5 text-slate-400 hover:text-slate-200 transition-colors min-w-0 cursor-pointer [&_*]:cursor-pointer"
                 title="Manage Projects"
               >
                 <span className="text-xs sm:text-sm font-display truncate max-w-[80px] sm:max-w-[200px]">
@@ -152,7 +159,7 @@ export function Header({
               {currentProjectId && (
                 <button
                   onClick={handleStartEditing}
-                  className="p-1 text-slate-500 hover:text-slate-300 hover:bg-navy-700 rounded transition-colors opacity-0 group-hover:opacity-100 hidden sm:block"
+                  className="p-1 text-slate-500 hover:text-slate-300 hover:bg-navy-700 rounded transition-colors opacity-0 group-hover:opacity-100 hidden sm:block cursor-pointer [&_*]:cursor-pointer"
                   title="Rename project"
                 >
                   <Pencil className="w-3 h-3" />
@@ -172,7 +179,7 @@ export function Header({
           {/* Mobile Search Toggle */}
           <button
             onClick={() => setShowMobileSearch(!showMobileSearch)}
-            className="md:hidden flex items-center p-2 rounded-lg bg-navy-700 hover:bg-navy-600 text-slate-300 transition-colors"
+            className="md:hidden flex items-center p-2 rounded-lg bg-navy-700 hover:bg-navy-600 text-slate-300 transition-colors cursor-pointer [&_*]:cursor-pointer"
             title="Search"
           >
             <Search className="w-4 h-4" />
@@ -182,7 +189,7 @@ export function Header({
           <div className="hidden sm:flex items-center bg-navy-700 rounded-lg p-0.5">
             <button
               onClick={() => onLayoutModeChange('grid')}
-              className={`flex items-center px-2 py-1.5 rounded-md transition-colors ${
+              className={`flex items-center px-2 py-1.5 rounded-md transition-colors cursor-pointer [&_*]:cursor-pointer ${
                 layoutMode === 'grid'
                   ? 'bg-navy-600 text-mint'
                   : 'text-slate-400 hover:text-slate-200'
@@ -193,7 +200,7 @@ export function Header({
             </button>
             <button
               onClick={() => onLayoutModeChange('hierarchy')}
-              className={`flex items-center px-2 py-1.5 rounded-md transition-colors ${
+              className={`flex items-center px-2 py-1.5 rounded-md transition-colors cursor-pointer [&_*]:cursor-pointer ${
                 layoutMode === 'hierarchy'
                   ? 'bg-navy-600 text-mint'
                   : 'text-slate-400 hover:text-slate-200'
@@ -207,7 +214,7 @@ export function Header({
           {/* Projects - Hidden on mobile, shown in menu */}
           <button
             onClick={onProjectManagerClick}
-            className="hidden sm:flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-navy-700 hover:bg-navy-600 text-slate-300 transition-colors"
+            className="hidden sm:flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-navy-700 hover:bg-navy-600 text-slate-300 transition-colors cursor-pointer [&_*]:cursor-pointer"
             title="Manage Projects"
           >
             <FolderOpen className="w-4 h-4" />
@@ -226,7 +233,7 @@ export function Header({
               onReload();
               setTimeout(() => setIsReloading(false), 500);
             }}
-            className="flex items-center p-2 sm:px-3 sm:py-1.5 rounded-lg bg-navy-700 hover:bg-navy-600 text-slate-300 transition-colors"
+            className="flex items-center p-2 sm:px-3 sm:py-1.5 rounded-lg bg-navy-700 hover:bg-navy-600 text-slate-300 transition-colors cursor-pointer [&_*]:cursor-pointer"
             title="Reload View"
           >
             <RefreshCw className={`w-4 h-4 transition-transform ${isReloading ? 'animate-spin' : ''}`} />
@@ -236,7 +243,7 @@ export function Header({
           <div ref={exportMenuRef} className="relative hidden sm:block">
             <button
               onClick={() => setShowExportMenu(!showExportMenu)}
-              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-navy-700 hover:bg-navy-600 text-slate-300 transition-colors"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-navy-700 hover:bg-navy-600 text-slate-300 transition-colors cursor-pointer [&_*]:cursor-pointer"
               title="Export Diagram"
             >
               <Download className="w-4 h-4" />
@@ -250,9 +257,9 @@ export function Header({
                     onExportPng();
                     setShowExportMenu(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-slate-300 hover:bg-navy-600 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-slate-300 hover:bg-navy-600 transition-colors cursor-pointer [&_*]:cursor-pointer"
                 >
-                  <Image className="w-4 h-4 text-mint" />
+                  <ImageIcon className="w-4 h-4 text-mint" />
                   <div>
                     <div className="text-sm font-medium">Export as PNG</div>
                     <div className="text-xs text-slate-500">High-quality image</div>
@@ -263,7 +270,7 @@ export function Header({
                     onExportSvg();
                     setShowExportMenu(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-slate-300 hover:bg-navy-600 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-slate-300 hover:bg-navy-600 transition-colors cursor-pointer [&_*]:cursor-pointer"
                 >
                   <FileCode className="w-4 h-4 text-lavender" />
                   <div>
@@ -278,7 +285,7 @@ export function Header({
           {/* Import */}
           <button
             onClick={onImportClick}
-            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-mint/20 hover:bg-mint/30 text-mint transition-colors"
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-mint/20 hover:bg-mint/30 text-mint transition-colors cursor-pointer [&_*]:cursor-pointer"
             title="Import Contracts"
           >
             <Upload className="w-4 h-4" />
@@ -289,7 +296,7 @@ export function Header({
           <div ref={mobileMenuRef} className="relative sm:hidden">
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="flex items-center p-2 rounded-lg bg-navy-700 hover:bg-navy-600 text-slate-300 transition-colors"
+              className="flex items-center p-2 rounded-lg bg-navy-700 hover:bg-navy-600 text-slate-300 transition-colors cursor-pointer [&_*]:cursor-pointer"
               title="Menu"
             >
               <Menu className="w-4 h-4" />
@@ -306,7 +313,7 @@ export function Header({
                         onLayoutModeChange('grid');
                         setShowMobileMenu(false);
                       }}
-                      className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-sm transition-colors ${
+                      className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-sm transition-colors cursor-pointer [&_*]:cursor-pointer ${
                         layoutMode === 'grid'
                           ? 'bg-navy-600 text-mint'
                           : 'text-slate-400'
@@ -320,7 +327,7 @@ export function Header({
                         onLayoutModeChange('hierarchy');
                         setShowMobileMenu(false);
                       }}
-                      className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-sm transition-colors ${
+                      className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-sm transition-colors cursor-pointer [&_*]:cursor-pointer ${
                         layoutMode === 'hierarchy'
                           ? 'bg-navy-600 text-mint'
                           : 'text-slate-400'
@@ -338,7 +345,7 @@ export function Header({
                     onProjectManagerClick();
                     setShowMobileMenu(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-slate-300 hover:bg-navy-600 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-slate-300 hover:bg-navy-600 transition-colors cursor-pointer [&_*]:cursor-pointer"
                 >
                   <FolderOpen className="w-4 h-4" />
                   <span className="flex-1">Projects</span>
@@ -357,9 +364,9 @@ export function Header({
                       onExportPng();
                       setShowMobileMenu(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-left text-slate-300 hover:bg-navy-600 transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-2 text-left text-slate-300 hover:bg-navy-600 transition-colors cursor-pointer [&_*]:cursor-pointer"
                   >
-                    <Image className="w-4 h-4 text-mint" />
+                    <ImageIcon className="w-4 h-4 text-mint" />
                     <span>PNG</span>
                   </button>
                   <button
@@ -367,7 +374,7 @@ export function Header({
                       onExportSvg();
                       setShowMobileMenu(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-left text-slate-300 hover:bg-navy-600 transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-2 text-left text-slate-300 hover:bg-navy-600 transition-colors cursor-pointer [&_*]:cursor-pointer"
                   >
                     <FileCode className="w-4 h-4 text-lavender" />
                     <span>SVG</span>
@@ -382,7 +389,7 @@ export function Header({
                         handleStartEditing();
                         setShowMobileMenu(false);
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-slate-300 hover:bg-navy-600 transition-colors"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-slate-300 hover:bg-navy-600 transition-colors cursor-pointer [&_*]:cursor-pointer"
                     >
                       <Pencil className="w-4 h-4" />
                       <span>Rename Project</span>
