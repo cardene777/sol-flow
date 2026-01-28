@@ -33,7 +33,7 @@ console.log('[LibraryResolver] Library base path:', LIBRARY_BASE_PATH);
 
 /**
  * Resolve an import path to a file system path
- * e.g., "@teleporter/TeleporterMessenger.sol" -> "/path/to/library/icm-contracts/avalanche/teleporter/TeleporterMessenger.sol"
+ * e.g., "@teleporter/TeleporterMessenger.sol" -> "/path/to/library/icm-services/icm-contracts/avalanche/teleporter/TeleporterMessenger.sol"
  */
 function resolveImportPath(importPath: string): { fullPath: string; remapping: Remapping } | null {
   const normalized = normalizeVersionedPath(importPath);

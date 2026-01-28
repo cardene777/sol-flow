@@ -187,6 +187,14 @@ function buildFlowGraph(
   contract: Contract,
   callGraph: CallGraph
 ): { nodes: Node<CodeBlockNodeData>[]; edges: Edge[] } {
+  // Debug: Log what we're processing
+  console.log('[buildFlowGraph] Entry:', {
+    functionName: func.name,
+    contractName: contract.name,
+    callsCount: func.calls?.length || 0,
+    calls: func.calls?.map(c => ({ target: c.target, type: c.type, targetType: c.targetType })),
+  });
+
   const nodes: Node<CodeBlockNodeData>[] = [];
   const edges: Edge[] = [];
 
@@ -356,11 +364,20 @@ function buildFlowGraph(
         }
         nodeType = 'library';
       } else if (call.type === 'internal') {
-        // Internal call
-        targetFunc = currentContract.internalFunctions.find(f => f.name === call.target);
+        // Internal call - search both internal and external functions
+        // (public functions can be called internally but are stored in externalFunctions)
+        targetFunc = currentContract.internalFunctions.find(f => f.name === call.target)
+          || currentContract.externalFunctions.find(f => f.name === call.target);
         nodeType = 'internal';
       } else if (call.type === 'external') {
         nodeType = 'external';
+
+        // Debug: Log external call resolution
+        console.log('[FunctionFlowModal] External call:', {
+          target: call.target,
+          targetType: call.targetType,
+          availableContracts: graph.contracts.map(c => c.name),
+        });
 
         // Try to resolve external call using targetType (e.g., ITeleporterMessenger)
         if (call.targetType) {
@@ -382,6 +399,11 @@ function buildFlowGraph(
 
           // PRIORITY 3: If found but no source code for function, try implementation again
           if (externalContract) {
+            console.log('[FunctionFlowModal] Found contract:', {
+              name: externalContract.name,
+              kind: externalContract.kind,
+              funcName,
+            });
             targetContract = externalContract;
             targetFunc = externalContract.externalFunctions.find(f => f.name === funcName)
               || externalContract.internalFunctions.find(f => f.name === funcName);
@@ -399,6 +421,12 @@ function buildFlowGraph(
                 }
               }
             }
+
+            console.log('[FunctionFlowModal] Found function:', {
+              found: !!targetFunc,
+              hasSourceCode: !!targetFunc?.sourceCode,
+              sourceCodeLength: targetFunc?.sourceCode?.length || 0,
+            });
 
             if (targetFunc) {
               externalLibraryPath = targetContract.filePath;

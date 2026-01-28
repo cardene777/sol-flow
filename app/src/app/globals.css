@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+
 @theme inline {
   /* Navy palette */
   --color-navy-900: #0a0e1a;
@@ -180,3 +181,4 @@
 .react-flow__minimap {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 }
+

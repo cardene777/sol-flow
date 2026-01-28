@@ -2,13 +2,13 @@
  * Standard remappings configuration for Solidity imports
  *
  * Maps foundry-style import aliases to actual file paths.
- * Example: @teleporter/X.sol -> icm-contracts/avalanche/teleporter/X.sol
+ * Example: @teleporter/X.sol -> icm-services/icm-contracts/avalanche/teleporter/X.sol
  */
 
 export interface Remapping {
   // Import alias used in Solidity (e.g., "@teleporter")
   alias: string;
-  // Actual path relative to library root (e.g., "icm-contracts/avalanche/teleporter")
+  // Actual path relative to library root (e.g., "icm-services/icm-contracts/avalanche/teleporter")
   target: string;
   // Library source identifier
   librarySource: 'openzeppelin' | 'openzeppelin-upgradeable' | 'solady' | 'avalanche-icm';
@@ -23,14 +23,15 @@ export interface Remapping {
 /**
  * Standard remappings matching foundry.toml conventions:
  *
- * @openzeppelin/contracts@5.0.2=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts
- * @openzeppelin/contracts-upgradeable@5.0.2=lib/openzeppelin-contracts-upgradeable/contracts
- * @teleporter=icm-contracts/avalanche/teleporter
- * @utilities=icm-contracts/avalanche/utilities
- * @subnet-evm=icm-contracts/avalanche/subnet-evm
- * @mocks=icm-contracts/avalanche/mocks
- * @ictt=icm-contracts/avalanche/ictt
- * @validator-manager=icm-contracts/avalanche/validator-manager
+ * @openzeppelin/contracts -> openzeppelin-contracts/contracts
+ * @openzeppelin/contracts-upgradeable -> openzeppelin-contracts-upgradeable/contracts
+ * solady -> solady/src
+ * @teleporter -> icm-services/icm-contracts/avalanche/teleporter
+ * @utilities -> icm-services/icm-contracts/avalanche/utilities
+ * @subnet-evm -> icm-services/icm-contracts/avalanche/subnet-evm
+ * @mocks -> icm-services/icm-contracts/avalanche/mocks
+ * @ictt -> icm-services/icm-contracts/avalanche/ictt
+ * @validator-manager -> icm-services/icm-contracts/avalanche/validator-manager
  */
 export const STANDARD_REMAPPINGS: Remapping[] = [
   // OpenZeppelin (order matters - more specific first)
@@ -66,9 +67,10 @@ export const STANDARD_REMAPPINGS: Remapping[] = [
     },
   },
   // Avalanche ICM - support multiple alias formats
+  // Note: Using icm-services submodule which contains icm-contracts folder
   {
     alias: '@avalanche-icm/teleporter',
-    target: 'icm-contracts/avalanche/teleporter',
+    target: 'icm-services/icm-contracts/avalanche/teleporter',
     librarySource: 'avalanche-icm',
     github: {
       repo: 'ava-labs/icm-services',
@@ -78,7 +80,7 @@ export const STANDARD_REMAPPINGS: Remapping[] = [
   },
   {
     alias: '@teleporter',
-    target: 'icm-contracts/avalanche/teleporter',
+    target: 'icm-services/icm-contracts/avalanche/teleporter',
     librarySource: 'avalanche-icm',
     github: {
       repo: 'ava-labs/icm-services',
@@ -88,7 +90,7 @@ export const STANDARD_REMAPPINGS: Remapping[] = [
   },
   {
     alias: '@avalanche-icm/utilities',
-    target: 'icm-contracts/avalanche/utilities',
+    target: 'icm-services/icm-contracts/avalanche/utilities',
     librarySource: 'avalanche-icm',
     github: {
       repo: 'ava-labs/icm-services',
@@ -98,7 +100,7 @@ export const STANDARD_REMAPPINGS: Remapping[] = [
   },
   {
     alias: '@utilities',
-    target: 'icm-contracts/avalanche/utilities',
+    target: 'icm-services/icm-contracts/avalanche/utilities',
     librarySource: 'avalanche-icm',
     github: {
       repo: 'ava-labs/icm-services',
@@ -108,7 +110,7 @@ export const STANDARD_REMAPPINGS: Remapping[] = [
   },
   {
     alias: '@avalanche-icm/subnet-evm',
-    target: 'icm-contracts/avalanche/subnet-evm',
+    target: 'icm-services/icm-contracts/avalanche/subnet-evm',
     librarySource: 'avalanche-icm',
     github: {
       repo: 'ava-labs/icm-services',
@@ -118,7 +120,7 @@ export const STANDARD_REMAPPINGS: Remapping[] = [
   },
   {
     alias: '@subnet-evm',
-    target: 'icm-contracts/avalanche/subnet-evm',
+    target: 'icm-services/icm-contracts/avalanche/subnet-evm',
     librarySource: 'avalanche-icm',
     github: {
       repo: 'ava-labs/icm-services',
@@ -128,7 +130,7 @@ export const STANDARD_REMAPPINGS: Remapping[] = [
   },
   {
     alias: '@avalanche-icm/mocks',
-    target: 'icm-contracts/avalanche/mocks',
+    target: 'icm-services/icm-contracts/avalanche/mocks',
     librarySource: 'avalanche-icm',
     github: {
       repo: 'ava-labs/icm-services',
@@ -138,7 +140,7 @@ export const STANDARD_REMAPPINGS: Remapping[] = [
   },
   {
     alias: '@mocks',
-    target: 'icm-contracts/avalanche/mocks',
+    target: 'icm-services/icm-contracts/avalanche/mocks',
     librarySource: 'avalanche-icm',
     github: {
       repo: 'ava-labs/icm-services',
@@ -148,7 +150,7 @@ export const STANDARD_REMAPPINGS: Remapping[] = [
   },
   {
     alias: '@avalanche-icm/ictt',
-    target: 'icm-contracts/avalanche/ictt',
+    target: 'icm-services/icm-contracts/avalanche/ictt',
     librarySource: 'avalanche-icm',
     github: {
       repo: 'ava-labs/icm-services',
@@ -158,7 +160,7 @@ export const STANDARD_REMAPPINGS: Remapping[] = [
   },
   {
     alias: '@ictt',
-    target: 'icm-contracts/avalanche/ictt',
+    target: 'icm-services/icm-contracts/avalanche/ictt',
     librarySource: 'avalanche-icm',
     github: {
       repo: 'ava-labs/icm-services',
@@ -168,7 +170,7 @@ export const STANDARD_REMAPPINGS: Remapping[] = [
   },
   {
     alias: '@avalanche-icm/validator-manager',
-    target: 'icm-contracts/avalanche/validator-manager',
+    target: 'icm-services/icm-contracts/avalanche/validator-manager',
     librarySource: 'avalanche-icm',
     github: {
       repo: 'ava-labs/icm-services',
@@ -178,7 +180,7 @@ export const STANDARD_REMAPPINGS: Remapping[] = [
   },
   {
     alias: '@validator-manager',
-    target: 'icm-contracts/avalanche/validator-manager',
+    target: 'icm-services/icm-contracts/avalanche/validator-manager',
     librarySource: 'avalanche-icm',
     github: {
       repo: 'ava-labs/icm-services',
@@ -216,7 +218,7 @@ export function findRemapping(importPath: string): Remapping | null {
 
 /**
  * Resolve import path to actual file path (relative to library root)
- * e.g., "@teleporter/TeleporterMessenger.sol" -> "icm-contracts/avalanche/teleporter/TeleporterMessenger.sol"
+ * e.g., "@teleporter/TeleporterMessenger.sol" -> "icm-services/icm-contracts/avalanche/teleporter/TeleporterMessenger.sol"
  */
 export function resolveImportToTarget(importPath: string): { targetPath: string; remapping: Remapping } | null {
   const normalized = normalizeVersionedPath(importPath);
@@ -234,7 +236,7 @@ export function resolveImportToTarget(importPath: string): { targetPath: string;
 
 /**
  * Convert target path back to import alias format
- * e.g., "icm-contracts/avalanche/teleporter/TeleporterMessenger.sol" -> "@teleporter/TeleporterMessenger.sol"
+ * e.g., "icm-services/icm-contracts/avalanche/teleporter/TeleporterMessenger.sol" -> "@teleporter/TeleporterMessenger.sol"
  */
 export function targetToAlias(targetPath: string): string | null {
   for (const remapping of STANDARD_REMAPPINGS) {

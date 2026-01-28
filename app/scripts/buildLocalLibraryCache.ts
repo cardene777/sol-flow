@@ -30,16 +30,16 @@ interface ExternalLibraryMapping {
 const LIBRARY_BASE = path.join(__dirname, '..', '..', 'library');
 
 // External library mappings for resolving dependencies
-// These match the foundry.toml remappings:
-// @openzeppelin/contracts@5.0.2=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts
-// @openzeppelin/contracts-upgradeable@5.0.2=lib/openzeppelin-contracts-upgradeable/contracts
-// @forge-std=lib/forge-std/src
-// @teleporter=icm-contracts/avalanche/teleporter
-// @subnet-evm=icm-contracts/avalanche/subnet-evm
-// @mocks=icm-contracts/avalanche/mocks
-// @utilities=icm-contracts/avalanche/utilities
-// @ictt=icm-contracts/avalanche/ictt
-// @validator-manager=icm-contracts/avalanche/validator-manager
+// These match the standard remappings:
+// @openzeppelin/contracts -> openzeppelin-contracts/contracts
+// @openzeppelin/contracts-upgradeable -> openzeppelin-contracts-upgradeable/contracts
+// solady -> solady/src
+// @teleporter -> icm-services/icm-contracts/avalanche/teleporter
+// @subnet-evm -> icm-services/icm-contracts/avalanche/subnet-evm
+// @mocks -> icm-services/icm-contracts/avalanche/mocks
+// @utilities -> icm-services/icm-contracts/avalanche/utilities
+// @ictt -> icm-services/icm-contracts/avalanche/ictt
+// @validator-manager -> icm-services/icm-contracts/avalanche/validator-manager
 const EXTERNAL_LIBRARY_MAPPINGS: ExternalLibraryMapping[] = [
   // OpenZeppelin
   {
@@ -59,34 +59,35 @@ const EXTERNAL_LIBRARY_MAPPINGS: ExternalLibraryMapping[] = [
     source: 'solady',
   },
   // Avalanche ICM - foundry remappings
+  // Note: Using icm-services submodule which contains icm-contracts folder
   {
     prefix: '@teleporter',
-    localPath: path.join(LIBRARY_BASE, 'icm-contracts', 'avalanche', 'teleporter'),
+    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'teleporter'),
     source: 'avalanche-icm',
   },
   {
     prefix: '@utilities',
-    localPath: path.join(LIBRARY_BASE, 'icm-contracts', 'avalanche', 'utilities'),
+    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'utilities'),
     source: 'avalanche-icm',
   },
   {
     prefix: '@subnet-evm',
-    localPath: path.join(LIBRARY_BASE, 'icm-contracts', 'avalanche', 'subnet-evm'),
+    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'subnet-evm'),
     source: 'avalanche-icm',
   },
   {
     prefix: '@mocks',
-    localPath: path.join(LIBRARY_BASE, 'icm-contracts', 'avalanche', 'mocks'),
+    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'mocks'),
     source: 'avalanche-icm',
   },
   {
     prefix: '@ictt',
-    localPath: path.join(LIBRARY_BASE, 'icm-contracts', 'avalanche', 'ictt'),
+    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'ictt'),
     source: 'avalanche-icm',
   },
   {
     prefix: '@validator-manager',
-    localPath: path.join(LIBRARY_BASE, 'icm-contracts', 'avalanche', 'validator-manager'),
+    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'validator-manager'),
     source: 'avalanche-icm',
   },
 ];
@@ -121,11 +122,12 @@ const LIBRARIES: LibraryConfig[] = [
   // Avalanche ICM - with external dependency resolution
   // Use foundry-style remapping prefixes (@teleporter, @utilities, etc.)
   // to match user project imports
+  // Note: Using icm-services submodule which contains icm-contracts folder
   {
     id: 'avalanche-teleporter',
     name: 'Avalanche Teleporter',
     version: '1.0.0',
-    localPath: path.join(LIBRARY_BASE, 'icm-contracts', 'avalanche', 'teleporter'),
+    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'teleporter'),
     pathPrefix: '@teleporter',
     excludePaths: ['mocks', 'test', 'tests', '.t.sol', '.s.sol'],
     resolveExternalDeps: true,
@@ -134,7 +136,7 @@ const LIBRARIES: LibraryConfig[] = [
     id: 'avalanche-ictt',
     name: 'Avalanche ICTT',
     version: '1.0.0',
-    localPath: path.join(LIBRARY_BASE, 'icm-contracts', 'avalanche', 'ictt'),
+    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'ictt'),
     pathPrefix: '@ictt',
     excludePaths: ['mocks', 'test', 'tests', '.t.sol', '.s.sol'],
     resolveExternalDeps: true,
@@ -143,7 +145,7 @@ const LIBRARIES: LibraryConfig[] = [
     id: 'avalanche-validator-manager',
     name: 'Avalanche Validator Manager',
     version: '1.0.0',
-    localPath: path.join(LIBRARY_BASE, 'icm-contracts', 'avalanche', 'validator-manager'),
+    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'validator-manager'),
     pathPrefix: '@validator-manager',
     excludePaths: ['mocks', 'test', 'tests', '.t.sol', '.s.sol'],
     resolveExternalDeps: true,
@@ -152,7 +154,7 @@ const LIBRARIES: LibraryConfig[] = [
     id: 'avalanche-utilities',
     name: 'Avalanche Utilities',
     version: '1.0.0',
-    localPath: path.join(LIBRARY_BASE, 'icm-contracts', 'avalanche', 'utilities'),
+    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'utilities'),
     pathPrefix: '@utilities',
     excludePaths: ['mocks', 'test', 'tests', '.t.sol', '.s.sol'],
     resolveExternalDeps: true,

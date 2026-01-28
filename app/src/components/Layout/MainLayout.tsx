@@ -19,6 +19,7 @@ interface MainLayoutProps {
   onProjectManagerClick: () => void;
   onReload: () => void;
   onRenameProject?: (newName: string) => void;
+  onNavigateToLanding?: () => void;
   currentProjectId: string | null;
   currentLibraryId: string | null;
   savedProjectsCount: number;
@@ -42,6 +43,7 @@ export function MainLayout({
   onProjectManagerClick,
   onReload,
   onRenameProject,
+  onNavigateToLanding,
   currentProjectId,
   currentLibraryId,
   savedProjectsCount,
@@ -129,6 +131,7 @@ export function MainLayout({
         onExportPng={handleExportPng}
         onExportSvg={handleExportSvg}
         onRenameProject={onRenameProject}
+        onNavigateToLanding={onNavigateToLanding}
         currentProjectId={currentProjectId}
         savedProjectsCount={savedProjectsCount}
         layoutMode={layoutMode}
@@ -174,7 +177,7 @@ export function MainLayout({
         </div>
 
         {/* Canvas */}
-        <main className="flex-1 overflow-hidden relative">
+        <main data-tour="canvas" className="flex-1 overflow-hidden relative">
           <DiagramCanvas
             key={canvasKey}
             ref={diagramRef}
