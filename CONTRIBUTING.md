@@ -1,8 +1,10 @@
 # Contributing to Sol-Flow
 
-Sol-Flowへのコントリビューションを歓迎します！このドキュメントでは、プロジェクトへの貢献方法について説明します。
+We welcome contributions to Sol-Flow! This document explains how to contribute to the project.
 
-## 開発環境のセットアップ
+[日本語版](ja/CONTRIBUTING.md)
+
+## Development Environment Setup
 
 ### Prerequisites
 
@@ -12,65 +14,94 @@ Sol-Flowへのコントリビューションを歓迎します！このドキュ
 ### Setup
 
 ```bash
-# リポジトリをクローン
+# Clone the repository
 git clone https://github.com/cardene777/sol-flow.git
 cd sol-flow
 
-# 依存関係をインストール
+# Install dependencies
 cd app
 pnpm install
 
-# 開発サーバーを起動
+# Start development server
 pnpm dev
 ```
 
-## コントリビューションの方法
+## How to Contribute
 
-### Issue
+### Issues
 
-- バグ報告や機能リクエストは [Issues](https://github.com/cardene777/sol-flow/issues) から行ってください
-- 既存のIssueを確認し、重複がないことを確認してください
-- Issueテンプレートに従って記述してください
+- Report bugs or request features via [Issues](https://github.com/cardene777/sol-flow/issues)
+- Check existing issues to avoid duplicates
+- Follow the issue templates
 
-### Pull Request
+### Issue-Driven Development
 
-1. リポジトリをForkする
-2. フィーチャーブランチを作成する
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
-3. 変更をコミットする
-   ```bash
-   git commit -m 'Add amazing feature'
-   ```
-4. ブランチをプッシュする
-   ```bash
-   git push origin feature/amazing-feature
-   ```
-5. Pull Requestを作成する
+All work starts with an Issue:
 
-### コミットメッセージ
+1. **Create an Issue** - Use the appropriate template
+   - `[Feature]` - New features or enhancements
+   - `[Bug]` - Bug reports and fixes
 
-以下の形式でコミットメッセージを書いてください：
+2. **Document in the Issue**
+   - Clear description of the work
+   - Design/implementation notes
+   - Acceptance criteria
+   - Affected components
+
+### Branch Naming Convention
+
+Create branches from `main` with the following format:
+
+```
+<type>/#<issue-number>-<short-description>
+```
+
+**Types:**
+- `feature/` - New features
+- `fix/` - Bug fixes
+- `refactor/` - Code refactoring
+- `docs/` - Documentation updates
+- `chore/` - Maintenance tasks
+
+**Examples:**
+```bash
+git checkout -b feature/#42-add-search-filter
+git checkout -b fix/#15-zoom-calculation
+git checkout -b docs/#23-update-readme
+```
+
+### Pull Requests
+
+1. Update your branch with the latest `main`
+2. Create a PR with a clear title and description
+3. Link the related Issue (`Fixes #<number>`)
+4. Complete the PR template checklist
+5. Request review if needed
+
+### Commit Messages
+
+Write commit messages in the following format:
 
 ```
 <type>: <description>
 
 [optional body]
+
+Fixes #<issue-number>
 ```
 
-#### Type
+#### Types
 
-- `feat`: 新機能
-- `fix`: バグ修正
-- `docs`: ドキュメントの変更
-- `style`: コードの意味に影響しない変更（空白、フォーマット等）
-- `refactor`: バグ修正でも機能追加でもないコード変更
-- `perf`: パフォーマンス改善
-- `test`: テストの追加・修正
-- `chore`: ビルドプロセスやツールの変更
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Changes that don't affect code meaning (whitespace, formatting)
+- `refactor`: Code changes that neither fix bugs nor add features
+- `perf`: Performance improvements
+- `test`: Adding or modifying tests
+- `chore`: Build process or tool changes
 
-#### 例
+#### Example
 
 ```
 feat: Add proxy pattern detection for ERC-7546
@@ -78,55 +109,75 @@ feat: Add proxy pattern detection for ERC-7546
 - Detect ERC-7546 proxy pattern in contracts
 - Group related contracts in the diagram
 - Add visual indicator for proxy relationships
+
+Fixes #42
 ```
 
-## コードスタイル
+## Code Style
 
 ### TypeScript
 
-- ESLintの設定に従ってください
-- 型を明示的に定義してください
-- `any`型の使用は避けてください
+- Follow ESLint configuration
+- Define types explicitly
+- Avoid using `any` type
 
 ### React
 
-- 関数コンポーネントを使用してください
-- Hooksを適切に使用してください
-- コンポーネントは単一責任の原則に従ってください
+- Use functional components
+- Use Hooks appropriately
+- Follow single responsibility principle for components
 
 ### CSS
 
-- Tailwind CSSを使用してください
-- カスタムCSSは最小限にしてください
-- レスポンシブデザインを考慮してください
+- Use Tailwind CSS
+- Minimize custom CSS
+- Consider responsive design
 
-## ディレクトリ構造
+## Directory Structure
 
 ```
 app/src/
 ├── app/            # Next.js App Router
-├── components/     # Reactコンポーネント
-│   ├── Canvas/     # ダイアグラム関連
-│   ├── Layout/     # レイアウト（Header, Sidebar等）
-│   ├── FunctionFlow/  # 関数フロー表示
+├── components/     # React components
+│   ├── Canvas/     # Diagram-related
+│   ├── Layout/     # Layout (Header, Sidebar, etc.)
+│   ├── FunctionFlow/  # Function flow display
 │   └── ...
-├── lib/            # ユーティリティ、パーサー
-├── types/          # 型定義
-└── utils/          # ヘルパー関数
+├── lib/            # Utilities, parsers
+├── types/          # Type definitions
+└── utils/          # Helper functions
 ```
 
-## テスト
+## Testing
 
-現在テストは未実装ですが、将来的に追加予定です。
+Tests are not yet implemented but planned for the future.
 
-## ライセンス
+## Release Process
 
-コントリビューションは [MIT License](LICENSE) の下でライセンスされます。
+We use [Semantic Versioning](https://semver.org/):
+- **MAJOR** (1.0.0): Breaking changes
+- **MINOR** (0.1.0): New features (backward compatible)
+- **PATCH** (0.0.1): Bug fixes
 
-## 質問
+### Release Steps
 
-質問がある場合は、[Discussions](https://github.com/cardene777/sol-flow/discussions) または [Issues](https://github.com/cardene777/sol-flow/issues) でお気軽にどうぞ。
+1. Update `CHANGELOG.md`
+2. Create a git tag:
+   ```bash
+   git tag -a v1.0.0 -m "Release v1.0.0"
+   git push origin v1.0.0
+   ```
+3. Create a GitHub Release from the tag
+4. Copy release notes from CHANGELOG
+
+## License
+
+Contributions are licensed under the [Sol-Flow Non-Commercial Open Source License](LICENSE).
+
+## Questions
+
+If you have questions, feel free to ask in [Discussions](https://github.com/cardene777/sol-flow/discussions) or [Issues](https://github.com/cardene777/sol-flow/issues).
 
 ---
 
-Thank you for contributing to Sol-Flow! 🎉
+Thank you for contributing to Sol-Flow!

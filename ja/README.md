@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/logo.png" alt="Sol-Flow Logo" width="120" />
+  <img src="../docs/images/logo.png" alt="Sol-Flow Logo" width="120" />
 </p>
 
 <h1 align="center">Sol-Flow</h1>
@@ -24,7 +24,7 @@
   <a href="#使い方">使い方</a> •
   <a href="#内蔵ライブラリ">内蔵ライブラリ</a> •
   <a href="#コントリビュート">コントリビュート</a> •
-  <a href="README.md">English</a>
+  <a href="../README.md">English</a>
 </p>
 
 ---
@@ -182,7 +182,7 @@ sol-flow/
 4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
 5. プルリクエストを開く
 
-詳細は [CONTRIBUTING.md](CONTRIBUTING.md) をご覧ください。
+詳細は [CONTRIBUTING.md](CONTRIBUTING.md) をご覧ください。（[English](../CONTRIBUTING.md)）
 
 ## ライセンス
 
@@ -193,7 +193,7 @@ sol-flow/
 - ✅ 改変可（同じライセンスで共有必須）
 - ✅ ネットワーク/SaaS利用可（ソースコード開示必須）
 
-詳細は [LICENSE](LICENSE) ファイルをご覧ください。商用ライセンスについては、作者にお問い合わせください。
+詳細は [LICENSE](../LICENSE) ファイルをご覧ください。商用ライセンスについては、作者にお問い合わせください。
 
 ## 謝辞
 
