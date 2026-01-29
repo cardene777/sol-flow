@@ -15,12 +15,21 @@ export interface ReturnValue {
 export interface ErrorDefinition {
   name: string;
   parameters: Parameter[];
+  startLine?: number;
 }
 
 /** Event Definition */
 export interface EventDefinition {
   name: string;
   parameters: Parameter[];
+  startLine?: number;
+}
+
+/** Struct Definition */
+export interface StructDefinition {
+  name: string;
+  members: Parameter[];
+  startLine?: number;
 }
 
 /** Contract Category - dynamically determined from directory structure */
@@ -35,6 +44,8 @@ export interface FunctionCall {
   type: 'internal' | 'library' | 'external' | 'modifier' | 'super' | 'delegatecall';
   /** The resolved type of the target variable (e.g., ITeleporterMessenger) */
   targetType?: string;
+  /** Number of arguments in the call (used to match overloaded functions) */
+  argCount?: number;
   condition?: string;
   sourceLocation?: {
     start: number;
@@ -49,6 +60,7 @@ export interface StateVariable {
   visibility: 'public' | 'private' | 'internal';
   isConstant?: boolean;
   isImmutable?: boolean;
+  startLine?: number;
 }
 
 /** External Function */
@@ -110,6 +122,7 @@ export interface Contract {
   internalFunctions: InternalFunction[];
   events: EventDefinition[];
   errors: ErrorDefinition[];
+  structs?: StructDefinition[];
   /** State variables with their types (for resolving external calls) */
   stateVariables?: StateVariable[];
   // Proxy pattern detection

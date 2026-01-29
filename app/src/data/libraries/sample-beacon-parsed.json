@@ -2,10 +2,10 @@
   "id": "sample-beacon",
   "name": "Beacon Proxy Sample",
   "version": "1.0.0",
-  "generatedAt": "2026-01-27T03:58:24.713Z",
+  "generatedAt": "2026-01-29T03:50:08.576Z",
   "callGraph": {
     "version": "1.0.0",
-    "generatedAt": "2026-01-27T03:58:24.713Z",
+    "generatedAt": "2026-01-29T03:50:08.576Z",
     "projectName": "Beacon Proxy Sample",
     "structure": {
       "name": "contracts",
@@ -72,6 +72,8 @@
           }
         ],
         "events": [],
+        "errors": [],
+        "structs": [],
         "stateVariables": [],
         "usesLibraries": [],
         "imports": [
@@ -118,6 +120,8 @@
           }
         ],
         "events": [],
+        "errors": [],
+        "structs": [],
         "stateVariables": [],
         "usesLibraries": [],
         "imports": [
@@ -173,7 +177,23 @@
               }
             ],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "__ERC721_init",
+                "type": "internal",
+                "argCount": 2
+              },
+              {
+                "target": "__ERC721URIStorage_init",
+                "type": "internal",
+                "argCount": 0
+              },
+              {
+                "target": "__Ownable_init",
+                "type": "internal",
+                "argCount": 1
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -202,7 +222,18 @@
                 "type": "uint256"
               }
             ],
-            "calls": [],
+            "calls": [
+              {
+                "target": "_safeMint",
+                "type": "internal",
+                "argCount": 2
+              },
+              {
+                "target": "_setTokenURI",
+                "type": "internal",
+                "argCount": 2
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -231,7 +262,18 @@
                 "type": "uint256"
               }
             ],
-            "calls": [],
+            "calls": [
+              {
+                "target": "_safeMint",
+                "type": "internal",
+                "argCount": 2
+              },
+              {
+                "target": "_setTokenURI",
+                "type": "internal",
+                "argCount": 2
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -266,7 +308,13 @@
             "stateMutability": "nonpayable",
             "parameters": [],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "owner",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -291,7 +339,13 @@
                 "type": "string"
               }
             ],
-            "calls": [],
+            "calls": [
+              {
+                "target": "tokenURI",
+                "type": "super",
+                "argCount": 1
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -316,7 +370,13 @@
                 "type": "bool"
               }
             ],
-            "calls": [],
+            "calls": [
+              {
+                "target": "supportsInterface",
+                "type": "super",
+                "argCount": 1
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -331,7 +391,13 @@
             "stateMutability": "nonpayable",
             "parameters": [],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "_disableInitializers",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "isVirtual": false,
             "sourceCode": "constructor() {\n        _disableInitializers();\n    }",
             "startLine": 22
@@ -356,10 +422,38 @@
                 "type": "string",
                 "indexed": false
               }
-            ]
+            ],
+            "startLine": 19
           }
         ],
-        "stateVariables": [],
+        "errors": [],
+        "structs": [],
+        "stateVariables": [
+          {
+            "name": "_nextTokenId",
+            "type": "uint256",
+            "visibility": "private",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 15
+          },
+          {
+            "name": "maxSupply",
+            "type": "uint256",
+            "visibility": "public",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 16
+          },
+          {
+            "name": "mintPrice",
+            "type": "uint256",
+            "visibility": "public",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 17
+          }
+        ],
         "usesLibraries": [],
         "imports": [
           {
@@ -434,7 +528,33 @@
               }
             ],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "__ERC721_init",
+                "type": "internal",
+                "argCount": 2
+              },
+              {
+                "target": "__ERC721URIStorage_init",
+                "type": "internal",
+                "argCount": 0
+              },
+              {
+                "target": "__ERC721Royalty_init",
+                "type": "internal",
+                "argCount": 0
+              },
+              {
+                "target": "__Ownable_init",
+                "type": "internal",
+                "argCount": 1
+              },
+              {
+                "target": "__Pausable_init",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -454,7 +574,18 @@
               }
             ],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "_setDefaultRoyalty",
+                "type": "internal",
+                "argCount": 2
+              },
+              {
+                "target": "owner",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -483,7 +614,18 @@
                 "type": "uint256"
               }
             ],
-            "calls": [],
+            "calls": [
+              {
+                "target": "_safeMint",
+                "type": "internal",
+                "argCount": 2
+              },
+              {
+                "target": "_setTokenURI",
+                "type": "internal",
+                "argCount": 2
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -512,7 +654,18 @@
                 "type": "uint256"
               }
             ],
-            "calls": [],
+            "calls": [
+              {
+                "target": "_safeMint",
+                "type": "internal",
+                "argCount": 2
+              },
+              {
+                "target": "_setTokenURI",
+                "type": "internal",
+                "argCount": 2
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -541,7 +694,18 @@
                 "type": "uint256[]"
               }
             ],
-            "calls": [],
+            "calls": [
+              {
+                "target": "_safeMint",
+                "type": "internal",
+                "argCount": 2
+              },
+              {
+                "target": "_setTokenURI",
+                "type": "internal",
+                "argCount": 2
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -649,7 +813,13 @@
               }
             ],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "_setDefaultRoyalty",
+                "type": "internal",
+                "argCount": 2
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -664,7 +834,13 @@
             "stateMutability": "nonpayable",
             "parameters": [],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "_pause",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -679,7 +855,13 @@
             "stateMutability": "nonpayable",
             "parameters": [],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "_unpause",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -714,7 +896,13 @@
             "stateMutability": "nonpayable",
             "parameters": [],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "owner",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -739,7 +927,13 @@
                 "type": "string"
               }
             ],
-            "calls": [],
+            "calls": [
+              {
+                "target": "tokenURI",
+                "type": "super",
+                "argCount": 1
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -764,7 +958,13 @@
                 "type": "bool"
               }
             ],
-            "calls": [],
+            "calls": [
+              {
+                "target": "supportsInterface",
+                "type": "super",
+                "argCount": 1
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -779,7 +979,13 @@
             "stateMutability": "nonpayable",
             "parameters": [],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "_disableInitializers",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "isVirtual": false,
             "sourceCode": "constructor() {\n        _disableInitializers();\n    }",
             "startLine": 37
@@ -820,7 +1026,8 @@
                 "type": "string",
                 "indexed": false
               }
-            ]
+            ],
+            "startLine": 32
           },
           {
             "name": "WhitelistUpdated",
@@ -835,7 +1042,8 @@
                 "type": "bool",
                 "indexed": false
               }
-            ]
+            ],
+            "startLine": 33
           },
           {
             "name": "BaseURIUpdated",
@@ -845,10 +1053,62 @@
                 "type": "string",
                 "indexed": false
               }
-            ]
+            ],
+            "startLine": 34
           }
         ],
-        "stateVariables": [],
+        "errors": [],
+        "structs": [],
+        "stateVariables": [
+          {
+            "name": "_nextTokenId",
+            "type": "uint256",
+            "visibility": "private",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 24
+          },
+          {
+            "name": "maxSupply",
+            "type": "uint256",
+            "visibility": "public",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 25
+          },
+          {
+            "name": "mintPrice",
+            "type": "uint256",
+            "visibility": "public",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 26
+          },
+          {
+            "name": "baseURI",
+            "type": "string",
+            "visibility": "public",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 27
+          },
+          {
+            "name": "whitelist",
+            "type": "mapping(address => bool)",
+            "visibility": "public",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 29
+          },
+          {
+            "name": "whitelistOnly",
+            "type": "bool",
+            "visibility": "public",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 30
+          }
+        ],
         "usesLibraries": [],
         "imports": [
           {

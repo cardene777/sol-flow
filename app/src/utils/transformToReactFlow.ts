@@ -312,6 +312,56 @@ const SUB_CATEGORIES: Partial<Record<ContractCategory, Record<SubCategoryKey, Su
       match: () => true,
     },
   },
+  library: {
+    'math': {
+      label: 'Math',
+      match: (c) => ['math', 'safecast', 'signedmath', 'fixedpoint', 'mulwad', 'fullmath', 'wadray'].some(k => c.name.toLowerCase().includes(k)),
+    },
+    'strings': {
+      label: 'Strings',
+      match: (c) => ['string', 'libstring'].some(k => c.name.toLowerCase().includes(k)),
+    },
+    'bytes': {
+      label: 'Bytes',
+      match: (c) => c.name.toLowerCase().includes('bytes'),
+    },
+    'address': {
+      label: 'Address',
+      match: (c) => c.name.toLowerCase().includes('address'),
+    },
+    'arrays': {
+      label: 'Arrays/Collections',
+      match: (c) => ['array', 'sort', 'slice', 'map', 'set', 'heap', 'tree', 'queue', 'buffer'].some(k => c.name.toLowerCase().includes(k)),
+    },
+    'storage': {
+      label: 'Storage',
+      match: (c) => ['storage', 'slot', 'transient', 'sstore'].some(k => c.name.toLowerCase().includes(k)),
+    },
+    'crypto': {
+      label: 'Crypto',
+      match: (c) => ['ecdsa', 'merkle', 'signature', 'p256', 'schnorr', 'hash', 'bls', 'webauthn'].some(k => c.name.toLowerCase().includes(k)),
+    },
+    'encoding': {
+      label: 'Encoding',
+      match: (c) => ['base58', 'base64', 'rlp', 'zip', 'json', 'cwia'].some(k => c.name.toLowerCase().includes(k)),
+    },
+    'clone': {
+      label: 'Clone/Create',
+      match: (c) => ['clone', 'create3', 'factory'].some(k => c.name.toLowerCase().includes(k)),
+    },
+    'bits': {
+      label: 'Bits/Bitmap',
+      match: (c) => ['bit', 'bitmap'].some(k => c.name.toLowerCase().includes(k)),
+    },
+    'erc': {
+      label: 'ERC Standards',
+      match: (c) => c.name.toLowerCase().startsWith('erc') || c.name.toLowerCase().includes('safetransfer') || c.name.toLowerCase().startsWith('lib'),
+    },
+    'other': {
+      label: 'Other Libraries',
+      match: () => true,
+    },
+  },
 };
 
 /**
@@ -345,6 +395,7 @@ export interface TransformOptions {
   visibleCategories?: ContractCategory[];
   layoutMode?: LayoutMode;  // 'grid' (default) or 'dagre'
   measuredHeights?: Map<string, number>;  // Actual DOM-measured heights from first render
+  showLibraryContracts?: boolean;  // Show/hide external library contracts (default: false)
 }
 
 /**
@@ -485,6 +536,7 @@ function groupContractsWithSubCategories(contracts: Contract[]): GroupInfo[] {
 /**
  * Calculate hierarchical positions for contracts within a group using dagre
  * Returns relative positions within the group
+ * If no hierarchy exists (no edges), returns empty map to signal grid fallback
  */
 function calculateHierarchicalPositions(
   contracts: Contract[],
@@ -500,6 +552,20 @@ function calculateHierarchicalPositions(
   }
 
   const contractNames = new Set(contracts.map(c => c.name));
+
+  // Count edges within this group first
+  let edgeCount = 0;
+  for (const dep of dependencies) {
+    if (dep.type !== 'inherits' && dep.type !== 'implements') continue;
+    if (!contractNames.has(dep.from) || !contractNames.has(dep.to)) continue;
+    edgeCount++;
+  }
+
+  // If no edges within this group, return empty to signal grid fallback
+  // This prevents dagre from placing all nodes in a single horizontal row
+  if (edgeCount === 0) {
+    return positions;
+  }
 
   // Create dagre graph for this group
   const g = new dagre.graphlib.Graph();
@@ -610,29 +676,9 @@ function createEdges(
   // Track created edges to prevent duplicates between same node pairs
   const createdEdgePairs = new Set<string>();
 
-  // Track handle usage for offset calculation (to prevent overlapping lines)
-  // Key: "nodeName-direction" (e.g., "Proxy-bottom"), Value: count of edges using that handle
-  const sourceHandleUsage = new Map<string, number>();
-  const targetHandleUsage = new Map<string, number>();
-  const OFFSET_STEP = 15; // Pixels between parallel lines
-
-  // Helper to get offset for a handle
-  const getSourceOffset = (nodeName: string, direction: string): number => {
-    const key = `${nodeName}-${direction}`;
-    const count = sourceHandleUsage.get(key) || 0;
-    sourceHandleUsage.set(key, count + 1);
-    // Center the offsets around 0: -30, -15, 0, 15, 30, ...
-    const offset = (count - Math.floor(count / 2)) * OFFSET_STEP * (count % 2 === 0 ? 1 : -1);
-    return count === 0 ? 0 : offset;
-  };
-
-  const getTargetOffset = (nodeName: string, direction: string): number => {
-    const key = `${nodeName}-${direction}`;
-    const count = targetHandleUsage.get(key) || 0;
-    targetHandleUsage.set(key, count + 1);
-    const offset = (count - Math.floor(count / 2)) * OFFSET_STEP * (count % 2 === 0 ? 1 : -1);
-    return count === 0 ? 0 : offset;
-  };
+  // No offset - all edges start/end at the same handle point
+  const getSourceOffset = (_nodeName: string, _direction: string): number => 0;
+  const getTargetOffset = (_nodeName: string, _direction: string): number => 0;
 
   for (const dep of dependencies) {
     // Skip self-referencing edges
@@ -669,7 +715,7 @@ function createEdges(
     }
 
     // Check if both contracts are in ERC7546 group
-    const isErc7546Edge = sourceGroup?.startsWith('erc7546-') && targetGroup?.startsWith('erc7546-');
+    const isErc7546Edge = sourceGroup?.startsWith('eip7546-') && targetGroup?.startsWith('eip7546-');
 
     // For ERC7546 group, only show key relationship edges (not inheritance to reduce clutter)
     if (isErc7546Edge) {
@@ -704,7 +750,16 @@ function createEdges(
       continue;
     }
 
-    // Other edge types (uses, delegatecall, etc.) between different categories: hide by default
+    // For 'uses' edges (library usage), always show with lower opacity
+    if (dep.type === 'uses') {
+      const sourceOffset = getSourceOffset(dep.from, direction);
+      const targetOffset = getTargetOffset(dep.to, oppositeDir[direction]);
+      const edge = createSingleEdge(dep, sourcePos, targetPos, false, 0.4, sourceOffset, targetOffset);
+      if (edge) edges.push(edge);
+      continue;
+    }
+
+    // Other edge types (delegatecall, etc.) between different categories: hide by default
     // These will only show when a contract is selected (handled above)
   }
 
@@ -801,20 +856,62 @@ export function transformToReactFlow(
   selectedFunction: string | null,
   options: TransformOptions = {}
 ): { nodes: Node[]; edges: Edge[] } {
-  const { visibleCategories, layoutMode = 'grid', measuredHeights } = options;
+  const { visibleCategories, layoutMode = 'grid', measuredHeights, showLibraryContracts = false } = options;
   const nodes: Node[] = [];
   const nodePositions = new Map<string, NodePosition>();
   const categoryBoundsMap = new Map<ContractCategory, CategoryBounds>();
   const contractCategories = new Map<string, ContractCategory>();
   const contractGroups = new Map<string, string>();  // contract name -> group id
 
+  // Helper to extract library names from function calls
+  const getLibraryCallsFromContract = (contract: Contract): string[] => {
+    const libraryNames: string[] = [];
+    const allFunctions = [...(contract.externalFunctions || []), ...(contract.internalFunctions || [])];
+    for (const func of allFunctions) {
+      for (const call of func.calls || []) {
+        if (call.type === 'library' && call.target) {
+          // Extract library name from "LibraryName.functionName"
+          const libName = call.target.split('.')[0];
+          if (libName && !libraryNames.includes(libName)) {
+            libraryNames.push(libName);
+          }
+        }
+      }
+    }
+    return libraryNames;
+  };
+
   // Filter contracts
-  let contracts = callGraph.contracts.filter(c => c.kind === 'contract' || c.kind === 'abstract');
-  // Exclude test contracts (names starting with "Test")
-  contracts = contracts.filter(c => !c.name.startsWith('Test'));
+  // showLibraryContracts controls visibility of Solidity 'library' kind only
+  // External library contracts (isExternalLibrary) that are inherited/used should ALWAYS be shown
+  let contracts = callGraph.contracts.filter(c => {
+    // Always exclude test contracts
+    if (c.name.startsWith('Test')) return false;
+    // Always exclude interfaces
+    if (c.kind === 'interface') return false;
+    // Regular contracts and abstract contracts: always include
+    if (c.kind === 'contract' || c.kind === 'abstract') return true;
+    // Solidity 'library' kind: only when showLibraryContracts is true
+    if (c.kind === 'library' && showLibraryContracts) return true;
+    return false;
+  });
+
   if (visibleCategories) {
     contracts = contracts.filter(c => visibleCategories.includes(c.category));
   }
+
+  // Helper function to check if a contract should be included
+  const shouldIncludeContract = (contract: Contract): boolean => {
+    // Always exclude test contracts
+    if (contract.name.startsWith('Test')) return false;
+    // Always exclude interfaces
+    if (contract.kind === 'interface') return false;
+    // Regular contracts and abstract contracts: always include (even if isExternalLibrary)
+    if (contract.kind === 'contract' || contract.kind === 'abstract') return true;
+    // Solidity 'library' kind: only when showLibraryContracts is true
+    if (contract.kind === 'library') return showLibraryContracts;
+    return true;
+  };
 
   if (contracts.length === 0) {
     return { nodes: [], edges: [] };
@@ -826,49 +923,302 @@ export function transformToReactFlow(
   }
 
   // === STEP 0: Identify contracts with proxy patterns ===
-  // All proxy patterns (eip7546, uups, transparent, diamond, beacon) are grouped under ERC7546
-  const proxyPatternTypes: ProxyPatternType[] = ['eip7546'];
+  // Group contracts by their actual proxy pattern type
+  // ERC-7546 is special: if it exists, other proxy patterns can be nested under it
   const contractsByPattern = new Map<ProxyPatternType, Contract[]>();
 
-  // Collect ALL contracts with any proxy pattern into ERC7546 group
-  const allProxyContracts = contracts.filter(c => c.proxyPattern);
-  if (allProxyContracts.length > 0) {
-    contractsByPattern.set('eip7546', allProxyContracts);
+  // Create a map for looking up contracts by name from ALL contracts (including filtered out ones)
+  // This is needed to find inherited contracts that may have been filtered
+  // Include ALL contracts for lookup - filtering happens later when deciding what to display
+  const allContractsMap = new Map<string, Contract>();
+  for (const c of callGraph.contracts) {
+    allContractsMap.set(c.name, c);
   }
 
-  // Include contracts that proxy contracts inherit from
-  const erc7546Contracts = contractsByPattern.get('eip7546');
-  if (erc7546Contracts && erc7546Contracts.length > 0) {
-    const patternNames = new Set(erc7546Contracts.map(c => c.name));
-    const additionalContracts: Contract[] = [];
-    let foundNew = true;
+  // First, check if there are any ERC-7546 contracts
+  const hasErc7546 = contracts.some(c => c.proxyPattern === 'eip7546');
 
-    // Recursively find all inherited contracts
-    while (foundNew) {
-      foundNew = false;
-      for (const dep of callGraph.dependencies) {
-        // Find contracts that proxy contracts inherit from
-        if (patternNames.has(dep.from) && (dep.type === 'inherits' || dep.type === 'implements')) {
-          const targetContract = contracts.find(c => c.name === dep.to);
+  // Collect contracts by their proxy pattern
+  const allProxyContracts = contracts.filter(c => c.proxyPattern);
+
+  // Build a combined lookup map for all contracts (for finding inherited contracts)
+  const contractNameMap = new Map<string, Contract>();
+  for (const c of contracts) {
+    contractNameMap.set(c.name, c);
+  }
+
+  // Helper function to find a contract by name with fuzzy matching
+  const findContractByName = (name: string): Contract | undefined => {
+    // Try exact match first
+    let found = allContractsMap.get(name) || contractNameMap.get(name);
+    if (found) return found;
+
+    // Try matching by contract name (for cases like "OwnableUpgradeable" in inherits)
+    // Check if name ends with any contract's name or vice versa
+    for (const [contractName, contract] of allContractsMap) {
+      if (name === contractName || name.endsWith(contractName) || contractName.endsWith(name)) {
+        return contract;
+      }
+    }
+    for (const [contractName, contract] of contractNameMap) {
+      if (name === contractName || name.endsWith(contractName) || contractName.endsWith(name)) {
+        return contract;
+      }
+    }
+
+    return undefined;
+  };
+
+  if (hasErc7546) {
+    // ERC-7546 exists: group all proxy contracts under ERC-7546
+    if (allProxyContracts.length > 0) {
+      contractsByPattern.set('eip7546', allProxyContracts);
+    }
+
+    // Include contracts that ERC-7546 contracts inherit from
+    const erc7546Contracts = contractsByPattern.get('eip7546');
+    if (erc7546Contracts && erc7546Contracts.length > 0) {
+      const patternNames = new Set(erc7546Contracts.map(c => c.name));
+      const additionalContracts: Contract[] = [];
+
+      // Collect all related names from ERC7546 contracts first
+      const processContract = (contract: Contract) => {
+        const relatedNames = [
+          ...(contract.inherits || []),
+          ...(contract.implements || []),
+          ...(contract.usesLibraries || []),
+          ...getLibraryCallsFromContract(contract),
+        ];
+
+        for (const relatedName of relatedNames) {
+          if (patternNames.has(relatedName)) continue;
+
+          // Try to find the contract with fuzzy matching
+          const targetContract = findContractByName(relatedName);
+
           if (!targetContract) continue;
           if (patternNames.has(targetContract.name)) continue;
 
-          // Assign a proxyRole based on the inheriting contract's role
-          const inheritingContract = erc7546Contracts.find(c => c.name === dep.from) ||
-            additionalContracts.find(c => c.name === dep.from);
-          if (inheritingContract?.proxyRole && !targetContract.proxyRole) {
-            targetContract.proxyRole = inheritingContract.proxyRole;
+          if (targetContract.name.startsWith('Test')) continue;
+          if (targetContract.kind === 'interface') continue;
+          // Respect showLibraryContracts setting for Solidity library contracts
+          if (targetContract.kind === 'library' && !showLibraryContracts) continue;
+
+          if (contract.proxyRole && !targetContract.proxyRole) {
+            targetContract.proxyRole = contract.proxyRole;
           }
 
           additionalContracts.push(targetContract);
           patternNames.add(targetContract.name);
-          foundNew = true;
+        }
+      };
+
+      // Process initial ERC7546 contracts
+      for (const contract of erc7546Contracts) {
+        processContract(contract);
+      }
+
+      // Process newly added contracts (limited iterations to prevent infinite loops)
+      let lastProcessedIndex = 0;
+      for (let i = 0; i < 10 && lastProcessedIndex < additionalContracts.length; i++) {
+        const currentLength = additionalContracts.length;
+        for (let j = lastProcessedIndex; j < currentLength; j++) {
+          processContract(additionalContracts[j]);
+        }
+        lastProcessedIndex = currentLength;
+      }
+
+      // Also check dependencies array for inheritance relationships
+      const relevantDeps = callGraph.dependencies.filter(
+        dep => dep.type === 'inherits' || dep.type === 'implements' || dep.type === 'uses'
+      );
+
+      // Forward lookup: if dep.from is in group, add dep.to (the parent/inherited contract)
+      for (const dep of relevantDeps) {
+        if (!patternNames.has(dep.from)) continue;
+        if (patternNames.has(dep.to)) continue;
+
+        const targetContract = findContractByName(dep.to);
+
+        if (!targetContract) continue;
+        if (patternNames.has(targetContract.name)) continue;
+        if (targetContract.name.startsWith('Test')) continue;
+        if (targetContract.kind === 'interface') continue;
+        // Respect showLibraryContracts setting for Solidity library contracts
+        if (targetContract.kind === 'library' && !showLibraryContracts) continue;
+
+        // Find the inheriting contract to copy proxyRole
+        const inheritingContract = erc7546Contracts.find(c => c.name === dep.from) ||
+          additionalContracts.find(c => c.name === dep.from);
+        if (inheritingContract?.proxyRole && !targetContract.proxyRole) {
+          targetContract.proxyRole = inheritingContract.proxyRole;
+        }
+
+        additionalContracts.push(targetContract);
+        patternNames.add(targetContract.name);
+      }
+
+      // Reverse lookup: if dep.to is in group, add dep.from (the child/inheriting contract)
+      // This catches contracts like AccessControl (inherits ERC165) and ERC721Enumerable (inherits ERC721)
+      let addedInReverse = true;
+      for (let iter = 0; iter < 10 && addedInReverse; iter++) {
+        addedInReverse = false;
+        for (const dep of relevantDeps) {
+          // Only process inherits/implements for reverse lookup (not 'uses')
+          if (dep.type !== 'inherits' && dep.type !== 'implements') continue;
+          // Skip if the parent (dep.to) is not in group
+          if (!patternNames.has(dep.to)) continue;
+          // Skip if the child (dep.from) is already in group
+          if (patternNames.has(dep.from)) continue;
+
+          const childContract = findContractByName(dep.from);
+
+          if (!childContract) continue;
+          if (patternNames.has(childContract.name)) continue;
+          if (childContract.name.startsWith('Test')) continue;
+          if (childContract.kind === 'interface') continue;
+          // Respect showLibraryContracts setting for Solidity library contracts
+          if (childContract.kind === 'library' && !showLibraryContracts) continue;
+
+          // Copy proxyRole from parent if available
+          const parentContract = erc7546Contracts.find(c => c.name === dep.to) ||
+            additionalContracts.find(c => c.name === dep.to);
+          if (parentContract?.proxyRole && !childContract.proxyRole) {
+            childContract.proxyRole = parentContract.proxyRole;
+          }
+
+          additionalContracts.push(childContract);
+          patternNames.add(childContract.name);
+          addedInReverse = true;
         }
       }
+
+      // Add additional contracts to the main contracts list if needed
+      for (const contract of additionalContracts) {
+        if (!contractNameMap.has(contract.name)) {
+          contracts.push(contract);
+          contractNameMap.set(contract.name, contract);
+          contractCategories.set(contract.name, contract.category);
+        }
+      }
+
+      if (additionalContracts.length > 0) {
+        contractsByPattern.set('eip7546', [...erc7546Contracts, ...additionalContracts]);
+      }
+    }
+  } else {
+    // No ERC-7546: group each proxy pattern separately
+    // Track which contracts have been added to avoid duplicates
+    const addedContractNames = new Set<string>();
+    for (const contract of allProxyContracts) {
+      // Skip if already added to another pattern group
+      if (addedContractNames.has(contract.name)) continue;
+
+      const pattern = contract.proxyPattern as ProxyPatternType;
+      if (!contractsByPattern.has(pattern)) {
+        contractsByPattern.set(pattern, []);
+      }
+      contractsByPattern.get(pattern)!.push(contract);
+      addedContractNames.add(contract.name);
     }
 
-    if (additionalContracts.length > 0) {
-      contractsByPattern.set('eip7546', [...erc7546Contracts, ...additionalContracts]);
+    // Pre-filter dependencies for relevant types
+    const relevantDeps = callGraph.dependencies.filter(
+      dep => dep.type === 'inherits' || dep.type === 'implements' || dep.type === 'uses'
+    );
+
+    // Include contracts that proxy pattern contracts inherit from (for each pattern)
+    for (const [patternType, patternContracts] of contractsByPattern.entries()) {
+      const patternNames = new Set(patternContracts.map(c => c.name));
+      const additionalContracts: Contract[] = [];
+
+      // Helper to process a contract and find related contracts
+      const processContract = (contractInGroup: Contract) => {
+        const relatedNames = [
+          ...(contractInGroup.inherits || []),
+          ...(contractInGroup.implements || []),
+          ...(contractInGroup.usesLibraries || []),
+          ...getLibraryCallsFromContract(contractInGroup),
+        ];
+
+        for (const relatedName of relatedNames) {
+          if (patternNames.has(relatedName)) continue;
+          if (addedContractNames.has(relatedName)) continue;
+
+          const targetContract = findContractByName(relatedName);
+          if (!targetContract) continue;
+          if (patternNames.has(targetContract.name)) continue;
+          if (addedContractNames.has(targetContract.name)) continue;
+
+          if (targetContract.name.startsWith('Test')) continue;
+          if (targetContract.kind === 'interface') continue;
+          // Respect showLibraryContracts setting for Solidity library contracts
+          if (targetContract.kind === 'library' && !showLibraryContracts) continue;
+
+          if (contractInGroup.proxyRole && !targetContract.proxyRole) {
+            targetContract.proxyRole = contractInGroup.proxyRole;
+          }
+
+          additionalContracts.push(targetContract);
+          patternNames.add(targetContract.name);
+          addedContractNames.add(targetContract.name);
+          if (!contractNameMap.has(targetContract.name)) {
+            contracts.push(targetContract);
+            contractNameMap.set(targetContract.name, targetContract);
+            contractCategories.set(targetContract.name, targetContract.category);
+          }
+        }
+      };
+
+      // Process initial proxy contracts
+      for (const contract of patternContracts) {
+        processContract(contract);
+      }
+
+      // Process newly added contracts (limited iterations to prevent infinite loops)
+      let lastProcessedIndex = 0;
+      for (let iteration = 0; iteration < 10 && lastProcessedIndex < additionalContracts.length; iteration++) {
+        const currentLength = additionalContracts.length;
+        for (let j = lastProcessedIndex; j < currentLength; j++) {
+          processContract(additionalContracts[j]);
+        }
+        lastProcessedIndex = currentLength;
+      }
+
+      // Also check dependencies (single pass, using pattern membership)
+      for (const dep of relevantDeps) {
+        if (!patternNames.has(dep.from)) continue;
+        if (patternNames.has(dep.to)) continue;
+        if (addedContractNames.has(dep.to)) continue;
+
+        const targetContract = findContractByName(dep.to);
+        if (!targetContract) continue;
+        if (patternNames.has(targetContract.name)) continue;
+        if (addedContractNames.has(targetContract.name)) continue;
+        if (targetContract.name.startsWith('Test')) continue;
+        if (targetContract.kind === 'interface') continue;
+        // Respect showLibraryContracts setting for Solidity library contracts
+        if (targetContract.kind === 'library' && !showLibraryContracts) continue;
+
+        const inheritingContract = patternContracts.find(c => c.name === dep.from) ||
+          additionalContracts.find(c => c.name === dep.from);
+        if (inheritingContract?.proxyRole && !targetContract.proxyRole) {
+          targetContract.proxyRole = inheritingContract.proxyRole;
+        }
+
+        additionalContracts.push(targetContract);
+        patternNames.add(targetContract.name);
+        addedContractNames.add(targetContract.name);
+        if (!contractNameMap.has(targetContract.name)) {
+          contracts.push(targetContract);
+          contractNameMap.set(targetContract.name, targetContract);
+          contractCategories.set(targetContract.name, targetContract.category);
+        }
+      }
+
+      if (additionalContracts.length > 0) {
+        contractsByPattern.set(patternType, [...patternContracts, ...additionalContracts]);
+      }
     }
   }
 
@@ -888,8 +1238,13 @@ export function transformToReactFlow(
   const COLUMN_GAP = 80;           // Gap between category columns
   const ROW_GAP = 80;              // Gap between rows (vertical layout)
   const SUB_CATEGORY_GAP = 70;     // Gap between sub-category groups
-  const CONTRACTS_PER_ROW = 2;
+  const CONTRACTS_PER_ROW = 2;  // Same for all categories including library
   const PROXY_GROUP_PADDING = 80;
+
+  // Get column count for category (same for all)
+  const getColumnsForCategory = (_category: ContractCategory): number => {
+    return CONTRACTS_PER_ROW;
+  };
   const ERC7546_INNER_GAP = 60;
   const ERC7546_SECTION_GAP = 100;
 
@@ -943,12 +1298,13 @@ export function transformToReactFlow(
   };
 
   // Calculate row-based positions for contracts (returns positions relative to group)
+  // Also returns the calculated bounds based on actual positions
   const calcContractPositions = (contractList: Contract[], maxCols: number) => {
     const positions: { contract: Contract; x: number; y: number; height: number }[] = [];
     let currentY = CATEGORY_PADDING;
-    const rows = Math.ceil(contractList.length / maxCols);
+    let maxX = 0;  // Track rightmost edge
 
-    for (let row = 0; row < rows; row++) {
+    for (let row = 0; row < Math.ceil(contractList.length / maxCols); row++) {
       // Find max height in this row
       let maxRowHeight = 0;
       const rowContracts: Contract[] = [];
@@ -966,18 +1322,26 @@ export function transformToReactFlow(
       for (let col = 0; col < rowContracts.length; col++) {
         const contract = rowContracts[col];
         const h = nodeHeights.get(contract.name) || NODE_MIN_HEIGHT;
+        const x = CATEGORY_PADDING + col * (NODE_WIDTH + NODE_GAP_X);
         positions.push({
           contract,
-          x: CATEGORY_PADDING + col * (NODE_WIDTH + NODE_GAP_X),
+          x,
           y: currentY,
           height: h,
         });
+        // Track rightmost edge (x + NODE_WIDTH)
+        maxX = Math.max(maxX, x + NODE_WIDTH);
       }
 
       currentY += maxRowHeight + NODE_GAP_Y;
     }
 
-    return positions;
+    // Calculate actual bounds from positions
+    // Remove the last NODE_GAP_Y since there's no row after the last one
+    const actualHeight = currentY - NODE_GAP_Y + CATEGORY_PADDING;
+    const actualWidth = maxX + CATEGORY_PADDING;
+
+    return { positions, width: actualWidth, height: actualHeight };
   };
 
   // Role labels for display (no emoji - CategoryGroupNode adds icon from style)
@@ -1001,7 +1365,7 @@ export function transformToReactFlow(
   };
 
   // Process each proxy pattern group
-  for (const patternType of proxyPatternTypes) {
+  for (const patternType of contractsByPattern.keys()) {
     const patternContracts = contractsByPattern.get(patternType);
     if (!patternContracts || patternContracts.length === 0) continue;
 
@@ -1071,7 +1435,7 @@ export function transformToReactFlow(
 
             catContracts.sort((a, b) => a.name.localeCompare(b.name));
             const maxCols = catContracts.length <= 2 ? catContracts.length : 2;
-            const { width, height } = calcDimensions(catContracts, maxCols);
+            const { width, height } = calcContractPositions(catContracts, maxCols);
 
             roleLayouts.push({
               role: 'implementation',
@@ -1093,8 +1457,9 @@ export function transformToReactFlow(
         } else {
           // Single role group (Proxy, Dictionary, or small implementation)
           roleContracts.sort((a, b) => a.name.localeCompare(b.name));
-          const maxCols = roleContracts.length <= 3 ? roleContracts.length : 3;
-          const { width, height } = calcDimensions(roleContracts, maxCols);
+          // Use consistent maxCols: 2 columns max
+          const maxCols = roleContracts.length <= 2 ? roleContracts.length : 2;
+          const { width, height } = calcContractPositions(roleContracts, maxCols);
 
           roleLayouts.push({
             role,
@@ -1135,7 +1500,7 @@ export function transformToReactFlow(
 
             catContracts.sort((a, b) => a.name.localeCompare(b.name));
             const maxCols = catContracts.length <= 2 ? catContracts.length : 2;
-            const { width, height } = calcDimensions(catContracts, maxCols);
+            const { width, height } = calcContractPositions(catContracts, maxCols);
 
             roleLayouts.push({
               role: 'implementation',
@@ -1153,7 +1518,7 @@ export function transformToReactFlow(
           }
         } else {
           const maxCols = roleContracts.length <= 2 ? roleContracts.length : 2;
-          const { width, height } = calcDimensions(roleContracts, maxCols);
+          const { width, height } = calcContractPositions(roleContracts, maxCols);
 
           roleLayouts.push({
             role,
@@ -1207,6 +1572,9 @@ export function transformToReactFlow(
     const contentStartY = PROXY_GROUP_PADDING; // Role group header is also positioned outside
 
     for (const layout of roleLayouts) {
+      // Skip empty role groups
+      if (layout.contracts.length === 0) continue;
+
       // Include category in ID for implementation sub-groups to ensure uniqueness
       const roleGroupId = layout.category
         ? `${patternType}-role-${layout.role}-${layout.category}`
@@ -1241,7 +1609,7 @@ export function transformToReactFlow(
 
       // Position contracts inside this role group with dynamic heights
       const maxCols = layout.contracts.length <= 2 ? layout.contracts.length : 2;
-      const contractPositions = calcContractPositions(layout.contracts, maxCols);
+      const { positions: contractPositions } = calcContractPositions(layout.contracts, maxCols);
 
       for (const pos of contractPositions) {
         const relativePosition = { x: pos.x, y: pos.y };
@@ -1351,49 +1719,76 @@ export function transformToReactFlow(
     // Get dynamic category order
     const nonProxyCategoryOrder = getCategoryOrder(categoryContracts);
 
-    // Position category columns
+    // Position category columns - spread sub-categories across multiple columns if there are many
+    const SUBCATEGORY_COLS = 3;  // Max sub-category columns per category
     let currentX = startX;
+
     for (const category of nonProxyCategoryOrder) {
       const categoryGroups = categoryColumns.get(category);
       if (!categoryGroups || categoryGroups.length === 0) continue;
 
-      let columnY = currentY;
-      let maxColumnWidth = 0;
-
+      // Calculate dimensions for all groups first
+      const groupDims: { group: GroupInfo; width: number; height: number }[] = [];
       for (const group of categoryGroups) {
         let width: number;
         let height: number;
 
         if (layoutMode === 'hierarchy') {
           const hierarchyPositions = groupHierarchyPositions.get(group.id);
+          const colsForCategory = getColumnsForCategory(group.category);
           if (hierarchyPositions && hierarchyPositions.size > 0) {
             const dims = calculateHierarchicalGroupDimensions(hierarchyPositions, nodeHeights, group.contracts);
             width = dims.width;
             height = dims.height;
           } else {
-            const dims = calcDimensions(group.contracts, CONTRACTS_PER_ROW);
-            width = dims.width;
-            height = dims.height;
+            const { width: actualWidth, height: actualHeight } = calcContractPositions(group.contracts, colsForCategory);
+            width = actualWidth;
+            height = actualHeight;
           }
         } else {
-          const dims = calcDimensions(group.contracts, CONTRACTS_PER_ROW);
-          width = dims.width;
-          height = dims.height;
+          const colsForCategory = getColumnsForCategory(group.category);
+          const { width: actualWidth, height: actualHeight } = calcContractPositions(group.contracts, colsForCategory);
+          width = actualWidth;
+          height = actualHeight;
         }
-
-        groupPositions.push({
-          group,
-          x: currentX + CATEGORY_PADDING,
-          y: columnY + CATEGORY_PADDING,
-          width,
-          height,
-        });
-
-        maxColumnWidth = Math.max(maxColumnWidth, width);
-        columnY += height + SUB_CATEGORY_GAP;
+        groupDims.push({ group, width, height });
       }
 
-      currentX += maxColumnWidth + COLUMN_GAP;
+      // Determine number of columns based on group count
+      const numSubCols = Math.min(SUBCATEGORY_COLS, groupDims.length);
+      const groupsPerCol = Math.ceil(groupDims.length / numSubCols);
+
+      // Position groups in grid layout
+      let subColX = currentX;
+      let maxTotalWidth = 0;
+
+      for (let col = 0; col < numSubCols; col++) {
+        let columnY = currentY;
+        let maxColWidth = 0;
+
+        for (let row = 0; row < groupsPerCol; row++) {
+          const idx = col * groupsPerCol + row;
+          if (idx >= groupDims.length) break;
+
+          const { group, width, height } = groupDims[idx];
+
+          groupPositions.push({
+            group,
+            x: subColX + CATEGORY_PADDING,
+            y: columnY + CATEGORY_PADDING,
+            width,
+            height,
+          });
+
+          maxColWidth = Math.max(maxColWidth, width);
+          columnY += height + SUB_CATEGORY_GAP;
+        }
+
+        subColX += maxColWidth + COLUMN_GAP;
+        maxTotalWidth = subColX - currentX - COLUMN_GAP;
+      }
+
+      currentX += maxTotalWidth + COLUMN_GAP;
     }
 
     // Create category group nodes and position contracts
@@ -1471,7 +1866,8 @@ export function transformToReactFlow(
         }
       } else {
         // Grid layout - use dynamic height positions
-        const contractPositions = calcContractPositions(group.contracts, CONTRACTS_PER_ROW);
+        const colsForCategory = getColumnsForCategory(group.category);
+        const { positions: contractPositions } = calcContractPositions(group.contracts, colsForCategory);
 
         for (const cpos of contractPositions) {
           const relativePosition = { x: cpos.x, y: cpos.y };
@@ -1501,15 +1897,54 @@ export function transformToReactFlow(
     }
   }
 
-  // Create edges from dependencies
+  // Get set of actual node IDs that are rendered
+  const renderedNodeIds = new Set(nodes.filter(n => n.type === 'contractNode').map(n => n.id));
+
+  // Generate 'uses' dependencies from usesLibraries and library calls
+  const allDependencies = [...callGraph.dependencies];
+  const existingDeps = new Set(callGraph.dependencies.map(d => `${d.from}-${d.to}-${d.type}`));
+
+  for (const contract of contracts) {
+    // Add 'uses' dependencies from usesLibraries
+    for (const libName of contract.usesLibraries || []) {
+      const depKey = `${contract.name}-${libName}-uses`;
+      if (!existingDeps.has(depKey) && renderedNodeIds.has(libName)) {
+        allDependencies.push({
+          from: contract.name,
+          to: libName,
+          type: 'uses',
+        });
+        existingDeps.add(depKey);
+      }
+    }
+
+    // Add 'uses' dependencies from direct library calls
+    const libraryCalls = getLibraryCallsFromContract(contract);
+    for (const libName of libraryCalls) {
+      const depKey = `${contract.name}-${libName}-uses`;
+      if (!existingDeps.has(depKey) && renderedNodeIds.has(libName)) {
+        allDependencies.push({
+          from: contract.name,
+          to: libName,
+          type: 'uses',
+        });
+        existingDeps.add(depKey);
+      }
+    }
+  }
+
+  // Create edges from dependencies (only for rendered nodes)
   let edges = createEdges(
-    callGraph.dependencies,
+    allDependencies,
     nodePositions,
     categoryBoundsMap,
     contractCategories,
     contractGroups,
     selectedContract
   );
+
+  // Filter edges to only include those where both source and target are rendered
+  edges = edges.filter(e => renderedNodeIds.has(e.source) && renderedNodeIds.has(e.target));
 
   // Filter out deleted edges
   if (callGraph.deletedEdgeIds && callGraph.deletedEdgeIds.length > 0) {

@@ -18,6 +18,7 @@ import type {
   FunctionCall,
   EventDefinition,
   ErrorDefinition,
+  StructDefinition,
   ImportInfo,
   StateVariable,
 } from '@/types/callGraph';
@@ -92,8 +93,8 @@ export function parseSolidityFile(filePath: string, content: string): ParsedFile
         contracts.push(contract);
       }
     }
-  } catch (e) {
-    console.error(`Failed to parse ${filePath}:`, e);
+  } catch {
+    // Failed to parse file - skip silently
   }
 
   return { contracts, sourceCode: content };
@@ -126,6 +127,7 @@ function parseContractDefinition(
   const internalFunctions: InternalFunction[] = [];
   const events: EventDefinition[] = [];
   const errors: ErrorDefinition[] = [];
+  const structs: StructDefinition[] = [];
   const usesLibraries: string[] = [];
   const stateVariables: StateVariable[] = [];
 
@@ -170,6 +172,8 @@ function parseContractDefinition(
       events.push(parseEventDefinition(subNode as ASTEventDefinition));
     } else if (subNode.type === 'CustomErrorDefinition') {
       errors.push(parseErrorDefinition(subNode as CustomErrorDefinition));
+    } else if (subNode.type === 'StructDefinition') {
+      structs.push(parseStructDefinition(subNode as any));
     } else if (subNode.type === 'UsingForDeclaration') {
       const usingNode = subNode as UsingForDeclaration;
       if (usingNode.libraryName) {
@@ -191,6 +195,7 @@ function parseContractDefinition(
     internalFunctions,
     events,
     errors,
+    structs,
     stateVariables,
   };
 }
@@ -476,6 +481,17 @@ function parseErrorDefinition(node: CustomErrorDefinition): ErrorDefinition {
       name: p.name || '',
       type: getTypeName(p.typeName),
     })),
+  };
+}
+
+function parseStructDefinition(node: any): StructDefinition {
+  return {
+    name: node.name,
+    members: (node.members || []).map((m: any) => ({
+      name: m.name || '',
+      type: getTypeName(m.typeName),
+    })),
+    startLine: node.loc?.start?.line,
   };
 }
 

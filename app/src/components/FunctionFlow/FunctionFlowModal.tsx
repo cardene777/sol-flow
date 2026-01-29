@@ -20,6 +20,7 @@ interface FunctionFlowModalProps {
   func: ExternalFunction;
   contract: Contract;
   callGraph: CallGraph;
+  libraryId?: string | null;
   onClose: () => void;
 }
 
@@ -27,13 +28,13 @@ const nodeTypes = {
   codeBlock: CodeBlockNode,
 };
 
-function FunctionFlowContent({ func, contract, callGraph, onClose }: FunctionFlowModalProps) {
+function FunctionFlowContent({ func, contract, callGraph, libraryId, onClose }: FunctionFlowModalProps) {
   const { fitView } = useReactFlow();
   const [isFullscreen, setIsFullscreen] = useState(true);
 
   const { nodes, edges } = useMemo(() => {
-    return buildFlowGraph(func, contract, callGraph);
-  }, [func, contract, callGraph]);
+    return buildFlowGraph(func, contract, callGraph, libraryId);
+  }, [func, contract, callGraph, libraryId]);
 
   const handleResetView = useCallback(() => {
     fitView({ padding: 0.2, duration: 300 });
@@ -103,12 +104,13 @@ function FunctionFlowContent({ func, contract, callGraph, onClose }: FunctionFlo
             maxZoom={2}
             nodesDraggable={true}
             nodesConnectable={false}
-            elementsSelectable={true}
+            elementsSelectable={false}
+            selectNodesOnDrag={false}
             panOnDrag
             zoomOnScroll
             defaultEdgeOptions={{
-              type: 'smoothstep',
-              animated: false,
+              type: 'default',
+              animated: true,
             }}
           >
             <Background color="rgba(64, 156, 255, 0.03)" gap={30} size={1} />
@@ -160,6 +162,63 @@ interface CodeBlockNodeData {
   startLine: number;
   type: 'entry' | 'internal' | 'library' | 'external' | 'delegatecall';
   filePath?: string;
+  libraryId?: string | null;
+}
+
+// Find contract by name, preferring contracts in similar paths
+function findContractByName(contracts: Contract[], name: string, referenceFilePath?: string): Contract | undefined {
+  const matches = contracts.filter(c => c.name === name);
+  if (matches.length === 0) return undefined;
+  if (matches.length === 1) return matches[0];
+
+  // Multiple matches - prefer the one with the closest path
+  if (referenceFilePath) {
+    const refParts = referenceFilePath.split('/');
+    let bestMatch = matches[0];
+    let bestScore = 0;
+
+    for (const match of matches) {
+      const matchParts = match.filePath.split('/');
+      let score = 0;
+      // Count matching path segments from the start
+      for (let i = 0; i < Math.min(refParts.length, matchParts.length); i++) {
+        if (refParts[i] === matchParts[i]) {
+          score++;
+        } else {
+          break;
+        }
+      }
+      // Also prefer shorter paths (likely the main version)
+      if (score > bestScore || (score === bestScore && match.filePath.length < bestMatch.filePath.length)) {
+        bestScore = score;
+        bestMatch = match;
+      }
+    }
+    return bestMatch;
+  }
+
+  // No reference path - prefer shortest path (likely main version)
+  return matches.reduce((a, b) => a.filePath.length <= b.filePath.length ? a : b);
+}
+
+// Find function by name and optionally by argument count (for overloaded functions)
+function findFunctionByNameAndArgs<T extends { name: string; parameters: { name: string; type: string }[] }>(
+  functions: T[],
+  name: string,
+  argCount?: number
+): T | undefined {
+  const matches = functions.filter(f => f.name === name);
+  if (matches.length === 0) return undefined;
+  if (matches.length === 1) return matches[0];
+
+  // Multiple matches (overloaded functions) - try to match by argument count
+  if (argCount !== undefined) {
+    const exactMatch = matches.find(f => f.parameters.length === argCount);
+    if (exactMatch) return exactMatch;
+  }
+
+  // Return first match as fallback
+  return matches[0];
 }
 
 // Resolve a relative import path to an absolute path
@@ -185,16 +244,9 @@ function resolveRelativePath(basePath: string, relativePath: string): string {
 function buildFlowGraph(
   func: ExternalFunction,
   contract: Contract,
-  callGraph: CallGraph
+  callGraph: CallGraph,
+  libraryId?: string | null
 ): { nodes: Node<CodeBlockNodeData>[]; edges: Edge[] } {
-  // Debug: Log what we're processing
-  console.log('[buildFlowGraph] Entry:', {
-    functionName: func.name,
-    contractName: contract.name,
-    callsCount: func.calls?.length || 0,
-    calls: func.calls?.map(c => ({ target: c.target, type: c.type, targetType: c.targetType })),
-  });
-
   const nodes: Node<CodeBlockNodeData>[] = [];
   const edges: Edge[] = [];
 
@@ -204,8 +256,8 @@ function buildFlowGraph(
 
   // Layout configuration - spread horizontally like the reference image
   const nodeWidth = 500;
-  const horizontalGap = 150;
-  const verticalGap = 100;
+  const horizontalGap = 250;
+  const verticalGap = 80;
 
   // Track columns for horizontal layout
   let currentColumn = 0;
@@ -217,13 +269,16 @@ function buildFlowGraph(
     return columnOccupancy.get(column) || 0;
   };
 
-  const updateColumnY = (column: number, y: number, height: number) => {
-    columnOccupancy.set(column, y + height + verticalGap);
+  const updateColumnY = (column: number, bottomY: number) => {
+    const current = columnOccupancy.get(column) || 0;
+    // Track the maximum bottom position for this column
+    columnOccupancy.set(column, Math.max(current, bottomY + verticalGap));
   };
 
   const estimateNodeHeight = (code: string): number => {
     const lines = code.split('\n').length;
-    return Math.max(150, lines * 20 + 80); // 20px per line + header/footer
+    // More accurate estimate: ~24px per line + 100px for header/footer/padding
+    return Math.max(180, lines * 24 + 100);
   };
 
   // Create the entry node (main function)
@@ -244,12 +299,15 @@ function buildFlowGraph(
       startLine: func.startLine || 1,
       type: 'entry',
       filePath: contract.filePath,
+      libraryId,
     },
   });
 
-  nodePositions.set(`${contract.name}.${func.name}`, { x: entryX, y: entryY });
-  updateColumnY(0, entryY, entryHeight);
-  visitedFunctions.add(`${contract.name}.${func.name}`);
+  // Include parameter count in keys to distinguish overloaded functions
+  const entryFuncKey = `${contract.name}.${func.name}:${func.parameters.length}`;
+  nodePositions.set(entryFuncKey, { x: entryX, y: entryY });
+  updateColumnY(0, entryY + entryHeight);
+  visitedFunctions.add(entryFuncKey);
 
   // Process calls recursively
   processCallsHorizontally(
@@ -282,7 +340,9 @@ function buildFlowGraph(
     }
 
     for (const call of calls) {
-      const funcKey = `${call.type === 'library' ? call.target : currentContract.name + '.' + call.target}`;
+      // Include argCount in key to distinguish overloaded functions
+      const argCountSuffix = call.argCount !== undefined ? `:${call.argCount}` : '';
+      const funcKey = `${call.type === 'library' ? call.target : currentContract.name + '.' + call.target}${argCountSuffix}`;
 
       // Skip if already visited (prevent cycles)
       if (visitedFunctions.has(funcKey)) {
@@ -341,20 +401,30 @@ function buildFlowGraph(
 
         // PRIORITY 2: Fallback to name-based search only if path search failed
         if (!library) {
-          library = graph.contracts.find(c =>
-            c.name === actualName ||
-            c.name === libNameOrAlias ||
-            c.name === `${libNameOrAlias}Lib` ||
-            c.name.toLowerCase() === actualName.toLowerCase() ||
-            c.name.toLowerCase() === libNameOrAlias.toLowerCase()
-          );
+          // Try exact name matches first, preferring contracts in similar paths
+          library = findContractByName(graph.contracts, actualName, currentContract.filePath)
+            || findContractByName(graph.contracts, libNameOrAlias, currentContract.filePath)
+            || findContractByName(graph.contracts, `${libNameOrAlias}Lib`, currentContract.filePath);
+
+          // Fall back to case-insensitive search
+          if (!library) {
+            const lowerActual = actualName.toLowerCase();
+            const lowerAlias = libNameOrAlias.toLowerCase();
+            const matches = graph.contracts.filter(c =>
+              c.name.toLowerCase() === lowerActual ||
+              c.name.toLowerCase() === lowerAlias
+            );
+            if (matches.length > 0) {
+              library = findContractByName(matches, matches[0].name, currentContract.filePath);
+            }
+          }
         }
 
         if (library) {
           targetContract = library;
-          // Look in both internal and external functions
-          targetFunc = library.internalFunctions.find(f => f.name === funcName)
-            || library.externalFunctions.find(f => f.name === funcName);
+          // Look in both internal and external functions, matching by argCount for overloaded functions
+          targetFunc = findFunctionByNameAndArgs(library.internalFunctions, funcName, call.argCount)
+            || findFunctionByNameAndArgs(library.externalFunctions, funcName, call.argCount);
         } else if (importInfo) {
           // Has import but not found in graph - library wasn't resolved
           externalLibraryPath = normalizeVersionedPath(importInfo.path);
@@ -366,18 +436,43 @@ function buildFlowGraph(
       } else if (call.type === 'internal') {
         // Internal call - search both internal and external functions
         // (public functions can be called internally but are stored in externalFunctions)
-        targetFunc = currentContract.internalFunctions.find(f => f.name === call.target)
-          || currentContract.externalFunctions.find(f => f.name === call.target);
+        // Use argCount for matching overloaded functions
+        targetFunc = findFunctionByNameAndArgs(currentContract.internalFunctions, call.target, call.argCount)
+          || findFunctionByNameAndArgs(currentContract.externalFunctions, call.target, call.argCount);
+
+        // If not found in current contract, search in inherited contracts (recursively)
+        if (!targetFunc && currentContract.inherits) {
+          const searchInherited = (contractToSearch: Contract, visited: Set<string>): { func: InternalFunction | ExternalFunction; contract: Contract } | null => {
+            if (visited.has(contractToSearch.name)) return null;
+            visited.add(contractToSearch.name);
+
+            for (const parentName of contractToSearch.inherits || []) {
+              // Use findContractByName to prefer contracts from similar paths
+              const parentContract = findContractByName(graph.contracts, parentName, contractToSearch.filePath);
+              if (parentContract) {
+                // Use argCount for matching overloaded functions
+                const parentFunc = findFunctionByNameAndArgs(parentContract.internalFunctions, call.target, call.argCount)
+                  || findFunctionByNameAndArgs(parentContract.externalFunctions, call.target, call.argCount);
+                if (parentFunc) {
+                  return { func: parentFunc, contract: parentContract };
+                }
+                // Recursively search grandparents
+                const result = searchInherited(parentContract, visited);
+                if (result) return result;
+              }
+            }
+            return null;
+          };
+
+          const result = searchInherited(currentContract, new Set());
+          if (result) {
+            targetFunc = result.func;
+            targetContract = result.contract;
+          }
+        }
         nodeType = 'internal';
       } else if (call.type === 'external') {
         nodeType = 'external';
-
-        // Debug: Log external call resolution
-        console.log('[FunctionFlowModal] External call:', {
-          target: call.target,
-          targetType: call.targetType,
-          availableContracts: graph.contracts.map(c => c.name),
-        });
 
         // Try to resolve external call using targetType (e.g., ITeleporterMessenger)
         if (call.targetType) {
@@ -389,44 +484,39 @@ function buildFlowGraph(
           // e.g., ITeleporterMessenger -> TeleporterMessenger
           if (call.targetType.startsWith('I') && call.targetType[1] === call.targetType[1]?.toUpperCase()) {
             const implName = call.targetType.slice(1); // Remove 'I' prefix
-            externalContract = graph.contracts.find(c => c.name === implName);
+            externalContract = findContractByName(graph.contracts, implName, currentContract.filePath);
           }
 
           // PRIORITY 2: Fall back to exact type name match
           if (!externalContract) {
-            externalContract = graph.contracts.find(c => c.name === call.targetType);
+            externalContract = findContractByName(graph.contracts, call.targetType, currentContract.filePath);
           }
 
           // PRIORITY 3: If found but no source code for function, try implementation again
           if (externalContract) {
-            console.log('[FunctionFlowModal] Found contract:', {
-              name: externalContract.name,
-              kind: externalContract.kind,
-              funcName,
-            });
             targetContract = externalContract;
-            targetFunc = externalContract.externalFunctions.find(f => f.name === funcName)
-              || externalContract.internalFunctions.find(f => f.name === funcName);
+            // Use argCount for matching overloaded functions
+            targetFunc = findFunctionByNameAndArgs(externalContract.externalFunctions, funcName, call.argCount)
+              || findFunctionByNameAndArgs(externalContract.internalFunctions, funcName, call.argCount);
 
             // If function found but no source code (interface), try to find implementation
             if (targetFunc && !targetFunc.sourceCode && externalContract.kind === 'interface') {
               const implName = call.targetType?.startsWith('I') ? call.targetType.slice(1) : call.targetType;
-              const implContract = graph.contracts.find(c => c.name === implName && c.kind !== 'interface');
+              const implContract = findContractByName(
+                graph.contracts.filter(c => c.kind !== 'interface'),
+                implName,
+                currentContract.filePath
+              );
               if (implContract) {
-                const implFunc = implContract.externalFunctions.find(f => f.name === funcName)
-                  || implContract.internalFunctions.find(f => f.name === funcName);
+                // Use argCount for matching overloaded functions
+                const implFunc = findFunctionByNameAndArgs(implContract.externalFunctions, funcName, call.argCount)
+                  || findFunctionByNameAndArgs(implContract.internalFunctions, funcName, call.argCount);
                 if (implFunc?.sourceCode) {
                   targetContract = implContract;
                   targetFunc = implFunc;
                 }
               }
             }
-
-            console.log('[FunctionFlowModal] Found function:', {
-              found: !!targetFunc,
-              hasSourceCode: !!targetFunc?.sourceCode,
-              sourceCodeLength: targetFunc?.sourceCode?.length || 0,
-            });
 
             if (targetFunc) {
               externalLibraryPath = targetContract.filePath;
@@ -458,6 +548,7 @@ function buildFlowGraph(
           startLine: targetFunc?.startLine || 1,
           type: nodeType,
           filePath: displayFilePath,
+          libraryId,
         },
       });
 
@@ -468,7 +559,7 @@ function buildFlowGraph(
         id: `edge-${parentNodeId}-${nodeId}`,
         source: parentNodeId,
         target: nodeId,
-        type: 'smoothstep',
+        type: 'default',
         style: {
           stroke: getEdgeColor(nodeType),
           strokeWidth: 2,
@@ -477,12 +568,13 @@ function buildFlowGraph(
           type: MarkerType.ArrowClosed,
           color: getEdgeColor(nodeType),
         },
-        animated: nodeType === 'library',
+        animated: true,
       });
 
       const nodeCenterY = y + nodeHeight / 2;
-      y += nodeHeight + verticalGap;
-      updateColumnY(column, y - verticalGap - nodeHeight, nodeHeight);
+      const nodeBottomY = y + nodeHeight;
+      updateColumnY(column, nodeBottomY);
+      y = nodeBottomY + verticalGap;
 
       // Recursively process calls from this function
       if (targetFunc && targetFunc.calls.length > 0) {

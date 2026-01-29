@@ -160,8 +160,8 @@ async function collectSolidityFiles(
           });
         }
       }
-    } catch (error) {
-      console.error(`Error fetching ${currentPath}:`, error);
+    } catch {
+      // Skip files that fail to fetch
     }
   }
 
@@ -192,8 +192,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`Fetching library: ${config.name}`);
-
     const files = await collectSolidityFiles(
       config.repo,
       config.branch,
@@ -201,8 +199,6 @@ export async function POST(request: NextRequest) {
       config.excludePaths,
       150 // Limit files to avoid timeout
     );
-
-    console.log(`Fetched ${files.length} files from ${config.name}`);
 
     return NextResponse.json({
       library: {
@@ -213,7 +209,6 @@ export async function POST(request: NextRequest) {
       files,
     });
   } catch (error) {
-    console.error('Library fetch error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to fetch library' },
       { status: 500 }

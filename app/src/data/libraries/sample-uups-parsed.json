@@ -2,10 +2,10 @@
   "id": "sample-uups",
   "name": "UUPS Proxy Sample",
   "version": "1.0.0",
-  "generatedAt": "2026-01-27T03:58:24.610Z",
+  "generatedAt": "2026-01-29T03:50:08.474Z",
   "callGraph": {
     "version": "1.0.0",
-    "generatedAt": "2026-01-27T03:58:24.610Z",
+    "generatedAt": "2026-01-29T03:50:08.474Z",
     "projectName": "UUPS Proxy Sample",
     "structure": {
       "name": "contracts",
@@ -58,7 +58,18 @@
               }
             ],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "__Ownable_init",
+                "type": "internal",
+                "argCount": 1
+              },
+              {
+                "target": "__UUPSUpgradeable_init",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -123,7 +134,13 @@
             "stateMutability": "nonpayable",
             "parameters": [],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "_disableInitializers",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "isVirtual": false,
             "sourceCode": "constructor() {\n        _disableInitializers();\n    }",
             "startLine": 19
@@ -154,7 +171,8 @@
                 "type": "uint256",
                 "indexed": false
               }
-            ]
+            ],
+            "startLine": 15
           },
           {
             "name": "CountDecremented",
@@ -164,10 +182,22 @@
                 "type": "uint256",
                 "indexed": false
               }
-            ]
+            ],
+            "startLine": 16
           }
         ],
-        "stateVariables": [],
+        "errors": [],
+        "structs": [],
+        "stateVariables": [
+          {
+            "name": "count",
+            "type": "uint256",
+            "visibility": "public",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 13
+          }
+        ],
         "usesLibraries": [],
         "imports": [
           {
@@ -217,7 +247,18 @@
               }
             ],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "__Ownable_init",
+                "type": "internal",
+                "argCount": 1
+              },
+              {
+                "target": "__UUPSUpgradeable_init",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -357,7 +398,13 @@
             "stateMutability": "nonpayable",
             "parameters": [],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "_disableInitializers",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "isVirtual": false,
             "sourceCode": "constructor() {\n        _disableInitializers();\n    }",
             "startLine": 21
@@ -393,7 +440,8 @@
                 "type": "uint256",
                 "indexed": false
               }
-            ]
+            ],
+            "startLine": 16
           },
           {
             "name": "CountDecremented",
@@ -408,7 +456,8 @@
                 "type": "uint256",
                 "indexed": false
               }
-            ]
+            ],
+            "startLine": 17
           },
           {
             "name": "StepChanged",
@@ -423,10 +472,30 @@
                 "type": "uint256",
                 "indexed": false
               }
-            ]
+            ],
+            "startLine": 18
           }
         ],
-        "stateVariables": [],
+        "errors": [],
+        "structs": [],
+        "stateVariables": [
+          {
+            "name": "count",
+            "type": "uint256",
+            "visibility": "public",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 13
+          },
+          {
+            "name": "step",
+            "type": "uint256",
+            "visibility": "public",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 14
+          }
+        ],
         "usesLibraries": [],
         "imports": [
           {
@@ -484,6 +553,8 @@
           }
         ],
         "events": [],
+        "errors": [],
+        "structs": [],
         "stateVariables": [],
         "usesLibraries": [],
         "imports": [

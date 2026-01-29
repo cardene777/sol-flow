@@ -4,7 +4,7 @@ import { memo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import { ExternalLink, Github } from 'lucide-react';
 import clsx from 'clsx';
-import { getGitHubUrlForPath, isExternalLibrary } from '@/config/remappings';
+import { getGitHubUrlForPath, isExternalLibrary, getGitHubUrlForLibrary, LIBRARY_GITHUB_CONFIG } from '@/config/remappings';
 
 interface CodeBlockNodeData {
   label: string;
@@ -13,6 +13,7 @@ interface CodeBlockNodeData {
   startLine: number;
   type: 'entry' | 'internal' | 'library' | 'external';
   filePath?: string;
+  libraryId?: string | null;
 }
 
 const typeStyles = {
@@ -131,9 +132,30 @@ function HighlightedLine({ line }: { line: string }) {
 }
 
 function CodeBlockNodeComponent({ data }: NodeProps<CodeBlockNodeData>) {
-  const { label, functionName, sourceCode, startLine, type, filePath } = data;
+  const { label, functionName, sourceCode, startLine, type, filePath, libraryId } = data;
   const style = typeStyles[type];
   const lines = sourceCode.split('\n');
+
+  // Determine GitHub URL
+  // Priority 1: If libraryId is set and we have config for it, use that
+  // Priority 2: If filePath looks like an external import path (@openzeppelin/...), use that
+  const getGitHubUrl = (): string | null => {
+    if (!filePath) return null;
+
+    // Check if viewing a known library directly
+    if (libraryId && LIBRARY_GITHUB_CONFIG[libraryId]) {
+      return getGitHubUrlForLibrary(libraryId, filePath, startLine);
+    }
+
+    // Check if it's an external import path
+    if (isExternalLibrary(filePath)) {
+      return getGitHubUrlForPath(filePath, startLine);
+    }
+
+    return null;
+  };
+
+  const githubUrl = getGitHubUrl();
 
   return (
     <div
@@ -154,13 +176,19 @@ function CodeBlockNodeComponent({ data }: NodeProps<CodeBlockNodeData>) {
         className="!bg-slate-500 !w-3 !h-3 !border-2 !border-navy-800"
       />
 
-      {/* Header */}
-      <div className={clsx('px-4 py-2 rounded-t-lg border-b border-white/10', style.headerBg)}>
-        <div className={clsx('font-mono font-semibold text-sm', style.headerText)}>
+      {/* Header - selectable text with nodrag to prevent ReactFlow interference */}
+      <div className={clsx('px-4 py-2 rounded-t-lg border-b border-white/10 nodrag', style.headerBg)}>
+        <div
+          className={clsx('font-mono font-semibold text-sm cursor-text select-text', style.headerText)}
+          style={{ userSelect: 'text' }}
+        >
           {label}
         </div>
         {filePath && (
-          <div className="text-[10px] text-slate-500 mt-0.5 truncate">
+          <div
+            className="text-[10px] text-slate-500 mt-0.5 truncate cursor-text select-text"
+            style={{ userSelect: 'text' }}
+          >
             {filePath}
           </div>
         )}
@@ -168,20 +196,21 @@ function CodeBlockNodeComponent({ data }: NodeProps<CodeBlockNodeData>) {
 
       {/* Code block - scrollable horizontally with selectable text */}
       {/* nowheel prevents ReactFlow from capturing scroll events */}
-      <div className="overflow-x-auto nowheel" style={{ userSelect: 'text' }}>
+      {/* nodrag prevents ReactFlow from capturing drag events (allows text selection) */}
+      <div className="overflow-x-auto nowheel nodrag code-selectable" style={{ userSelect: 'text' }}>
         <pre className="text-xs leading-relaxed min-w-max">
-          <code className="block" style={{ userSelect: 'text', cursor: 'text' }}>
+          <code className="block cursor-text" style={{ userSelect: 'text' }}>
             {lines.map((line, index) => (
               <div key={index} className="flex hover:bg-white/5">
                 {/* Line number - not selectable, sticky on horizontal scroll */}
                 <span
-                  className="text-slate-600 text-right pr-4 pl-3 py-0.5 border-r border-white/5 min-w-[50px] sticky left-0 bg-navy-900 z-10"
+                  className="text-slate-600 text-right pr-4 pl-3 py-0.5 border-r border-white/5 min-w-[50px] sticky left-0 bg-navy-900 z-10 select-none"
                   style={{ userSelect: 'none' }}
                 >
                   {startLine + index}
                 </span>
                 {/* Code - selectable for copying */}
-                <span className="pl-4 pr-4 py-0.5 whitespace-pre" style={{ userSelect: 'text' }}>
+                <span className="pl-4 pr-4 py-0.5 whitespace-pre select-text" style={{ userSelect: 'text' }}>
                   <HighlightedLine line={line} />
                 </span>
               </div>
@@ -192,9 +221,9 @@ function CodeBlockNodeComponent({ data }: NodeProps<CodeBlockNodeData>) {
 
       {/* Footer */}
       <div className="px-4 py-2 border-t border-white/10 flex justify-end">
-        {filePath && isExternalLibrary(filePath) ? (
+        {githubUrl ? (
           <a
-            href={getGitHubUrlForPath(filePath, startLine) || '#'}
+            href={githubUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 text-[10px] text-mint hover:text-mint/80 transition-colors bg-mint/10 hover:bg-mint/20 px-2 py-1 rounded"
@@ -208,7 +237,7 @@ function CodeBlockNodeComponent({ data }: NodeProps<CodeBlockNodeData>) {
             className="flex items-center gap-1.5 text-[10px] text-mint hover:text-mint/80 transition-colors bg-mint/10 hover:bg-mint/20 px-2 py-1 rounded"
             onClick={(e) => {
               e.stopPropagation();
-              console.log('Go to source:', filePath, startLine);
+              // TODO: Implement local source navigation
             }}
           >
             <ExternalLink className="w-3 h-3" />

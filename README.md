@@ -5,12 +5,12 @@
 <h1 align="center">Sol-Flow</h1>
 
 <p align="center">
-  <strong>Solidityスマートコントラクトを可視化して理解を深める</strong>
+  <strong>Interactive visualization tool for Solidity smart contracts</strong>
 </p>
 
 <p align="center">
   <a href="https://github.com/cardene777/sol-flow/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
+    <img src="https://img.shields.io/badge/license-Non--Commercial-red.svg" alt="License: Non-Commercial" />
   </a>
   <a href="https://github.com/cardene777/sol-flow">
     <img src="https://img.shields.io/github/stars/cardene777/sol-flow?style=social" alt="GitHub Stars" />
@@ -23,40 +23,40 @@
   <a href="#getting-started">Getting Started</a> •
   <a href="#usage">Usage</a> •
   <a href="#built-in-libraries">Built-in Libraries</a> •
-  <a href="#contributing">Contributing</a>
+  <a href="#contributing">Contributing</a> •
+  <a href="README-ja.md">日本語</a>
 </p>
 
 ---
 
 ## Overview
 
-Sol-Flowは、Solidityスマートコントラクトの**依存関係**、**継承構造**、**関数フロー**をインタラクティブな図として可視化するツールです。
+Sol-Flow is a web-based tool that visualizes **dependencies**, **inheritance structures**, and **function call flows** of Solidity smart contracts as interactive diagrams.
 
-複雑なコードベースの理解を助け、セキュリティレビューを効率化します。
-
-<p align="center">
-  <img src="docs/images/screenshot.png" alt="Sol-Flow Screenshot" width="800" />
-</p>
+It helps developers understand complex codebases and streamlines security reviews.
 
 ## Features
 
-### 🔗 継承関係の可視化
-コントラクト間の継承・実装関係を視覚的に表示。OpenZeppelin等のライブラリとの関係も一目で把握できます。
+### 🔗 Inheritance Visualization
+Visualize inheritance and implementation relationships between contracts. Easily understand relationships with libraries like OpenZeppelin.
 
-### 📊 関数フロー図
-関数をクリックすると、内部呼び出しのフローを図解表示。実際のソースコードと共に確認できます。
+### 📊 Function Flow Diagrams
+Click on a function to see its internal call flow diagram with actual source code.
 
-### 🔍 プロキシパターン検出
-ERC-7546、UUPS、Transparent、Diamond、Beacon等のプロキシパターンを自動検出し、グループ化して表示します。
+### 🔍 Proxy Pattern Detection
+Automatically detects and groups proxy patterns including ERC-7546, UUPS, Transparent, Diamond, and Beacon.
 
-### 🎯 スマート検索
-コントラクト名、関数名、イベント名で素早く検索。大規模なコードベースでも目的の場所にすぐアクセスできます。
+### 🎯 Smart Search
+Quickly search by contract name, function name, or event name. Navigate large codebases efficiently.
 
-### 📁 簡単インポート
-Solidityファイルをドラッグ&ドロップするだけ。外部ライブラリ（OpenZeppelin、Solady等）は自動解決されます。
+### 📁 Easy Import
+Simply drag and drop Solidity files. External libraries (OpenZeppelin, Solady, etc.) are resolved automatically.
 
-### 📚 ライブラリ内蔵
-OpenZeppelin、Solady、Avalanche ICM等の主要ライブラリがプリロード済み。すぐに参照できます。
+### 📚 Built-in Libraries
+Major libraries like OpenZeppelin, Solady, and Avalanche ICM are preloaded and ready to explore.
+
+### ✏️ Edit Mode
+Add custom edges to document relationships not captured by static analysis. Perfect for documenting proxy relationships and cross-contract interactions.
 
 ## Demo
 
@@ -76,14 +76,14 @@ OpenZeppelin、Solady、Avalanche ICM等の主要ライブラリがプリロー�
 git clone --recurse-submodules https://github.com/cardene777/sol-flow.git
 cd sol-flow
 
-# If you already cloned without submodules, run:
+# If you already cloned without submodules:
 git submodule update --init --recursive
 
 # Install dependencies
 cd app
 pnpm install
 
-# Start the development server
+# Start development server
 pnpm dev
 ```
 
@@ -93,7 +93,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### 1. Import Contracts
 
-右上の「Import」ボタンをクリックし、Solidityファイル（.sol）をドラッグ&ドロップまたは選択してアップロードします。
+Click the "Import" button and drag & drop your Solidity files (.sol).
 
 ```
 src/
@@ -104,37 +104,41 @@ src/
 
 ### 2. Explore the Diagram
 
-自動生成された依存関係図を確認します。
+Navigate the auto-generated dependency diagram:
 
-- **マウスホイール**: ズーム
-- **ドラッグ**: パン（移動）
-- **クリック**: コントラクトを展開/折りたたみ
-- **サイドバー**: カテゴリフィルター
+- **Mouse wheel**: Zoom in/out
+- **Drag**: Pan the view
+- **Click contract**: Expand/collapse details
+- **Sidebar**: Filter by category
 
 ### 3. View Function Flow
 
-展開したコントラクト内の関数名をクリックすると、詳細なフロー図とソースコードが表示されます。
+Click on a function name within an expanded contract to see its detailed call flow and source code.
 
-| アイコン | 説明 |
+| Icon | Description |
 |:---:|---|
 | 🟢 | external view/pure |
 | 🟠 | external write |
 | 🟣 | internal |
 
+### 4. Edit Mode (Projects only)
+
+Enable Edit Mode to add custom relationship edges between contracts. Changes are saved to your project.
+
 ## Built-in Libraries
 
-以下のライブラリがプリロード済みです：
+The following libraries are preloaded:
 
-| ライブラリ | 説明 |
+| Library | Description |
 |---|---|
-| **OpenZeppelin Contracts** | 業界標準のスマートコントラクトライブラリ |
-| **OpenZeppelin Upgradeable** | プロキシパターン対応のアップグレード可能なコントラクト |
-| **Solady** | ガス最適化されたSolidityスニペット |
-| **Avalanche Teleporter** | Avalanche間のクロスチェーンメッセージング |
+| **OpenZeppelin Contracts** | Industry-standard smart contract library |
+| **OpenZeppelin Upgradeable** | Upgradeable contracts with proxy patterns |
+| **Solady** | Gas-optimized Solidity snippets |
+| **Avalanche Teleporter** | Cross-chain messaging for Avalanche |
 | **Avalanche ICTT** | Interchain Token Transfer |
-| **Avalanche Validator Manager** | バリデータ管理 |
+| **Avalanche Validator Manager** | Validator management |
 
-ヘッダーの「Projects」ボタンから切り替え可能です。
+Switch between libraries using the "Projects" button in the header.
 
 ## Tech Stack
 
@@ -150,26 +154,27 @@ src/
 
 ```
 sol-flow/
-├── app/                    # Next.js アプリケーション
+├── app/                    # Next.js application
 │   ├── src/
 │   │   ├── app/            # App Router (pages)
-│   │   ├── components/     # React コンポーネント
-│   │   ├── lib/            # パーサー、ユーティリティ
-│   │   ├── types/          # 型定義
-│   │   └── utils/          # ヘルパー関数
+│   │   ├── components/     # React components
+│   │   ├── lib/            # Parser, utilities
+│   │   ├── constants/      # Application constants
+│   │   ├── types/          # Type definitions
+│   │   └── utils/          # Helper functions
 │   └── package.json
-├── library/                # ビルトインライブラリソース (Git submodules)
+├── library/                # Built-in library sources (Git submodules)
 │   ├── openzeppelin-contracts/
 │   ├── openzeppelin-contracts-upgradeable/
 │   ├── solady/
 │   └── icm-services/
-├── docs/                   # ドキュメント
+├── docs/                   # Documentation
 └── README.md
 ```
 
 ## Contributing
 
-コントリビューションを歓迎します！
+Contributions are welcome!
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
@@ -177,11 +182,18 @@ sol-flow/
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-詳細は [CONTRIBUTING.md](CONTRIBUTING.md) をご覧ください。
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **Sol-Flow Non-Commercial Open Source License**.
+
+- ❌ Commercial use prohibited
+- ✅ Non-commercial use allowed
+- ✅ Modification allowed (must share under same license)
+- ✅ Network/SaaS use allowed (must disclose source code)
+
+See the [LICENSE](LICENSE) file for details. For commercial licensing inquiries, please contact the author.
 
 ## Acknowledgments
 

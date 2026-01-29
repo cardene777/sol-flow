@@ -51,8 +51,7 @@ export async function GET() {
       },
       callGraph: recategorizedCallGraph,
     });
-  } catch (error) {
-    console.error('Error loading default library:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Failed to load default library' },
       { status: 500 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, ReactNode } from 'react';
 
 export type Language = 'en' | 'ja';
 
@@ -228,31 +228,31 @@ const LanguageContext = createContext<LanguageContextType | null>(null);
 
 const LANGUAGE_KEY = 'sol-flow-language';
 
+function getInitialLanguage(): Language {
+  if (typeof window === 'undefined') return 'en';
+  const saved = localStorage.getItem(LANGUAGE_KEY) as Language | null;
+  if (saved && (saved === 'en' || saved === 'ja')) {
+    return saved;
+  }
+  const browserLang = navigator.language.toLowerCase();
+  return browserLang.startsWith('ja') ? 'ja' : 'en';
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>('en');
-  const [isLoaded, setIsLoaded] = useState(false);
-  const userChangedRef = useRef(false);
+  const [mounted, setMounted] = useState(false);
 
+  // Initialize language after mount to avoid hydration mismatch
   useEffect(() => {
-    // Only load from localStorage if user hasn't changed language in this session
-    if (userChangedRef.current) return;
-
-    // Load from localStorage
-    const saved = localStorage.getItem(LANGUAGE_KEY) as Language | null;
-    if (saved && (saved === 'en' || saved === 'ja')) {
-      setLanguageState(saved);
-    } else {
-      // Detect browser language
-      const browserLang = navigator.language.toLowerCase();
-      if (browserLang.startsWith('ja')) {
-        setLanguageState('ja');
-      }
+    const initialLang = getInitialLanguage();
+    setLanguageState(initialLang);
+    if (!localStorage.getItem(LANGUAGE_KEY)) {
+      localStorage.setItem(LANGUAGE_KEY, initialLang);
     }
-    setIsLoaded(true);
+    setMounted(true);
   }, []);
 
   const setLanguage = useCallback((lang: Language) => {
-    userChangedRef.current = true;
     localStorage.setItem(LANGUAGE_KEY, lang);
     setLanguageState(lang);
   }, []);
@@ -265,9 +265,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     t,
   }), [language, setLanguage, t]);
 
-  // Prevent hydration mismatch
-  if (!isLoaded) {
-    return null;
+  // Show loading or default content during hydration
+  if (!mounted) {
+    return (
+      <LanguageContext.Provider value={{ language: 'en', setLanguage: () => {}, t: translations['en'] }}>
+        {children}
+      </LanguageContext.Provider>
+    );
   }
 
   return (

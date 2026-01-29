@@ -12,15 +12,14 @@ import {
   getSavedProjects,
   saveProject,
   loadProject,
+  loadProjectSources,
   deleteProject,
   renameProject,
   updateProjectCallGraph,
   type SavedProject,
+  type SourceFile,
 } from '@/lib/storage';
-
-const CURRENT_PROJECT_KEY = 'sol-flow-current-project';
-const CURRENT_LIBRARY_KEY = 'sol-flow-current-library';
-const ONBOARDING_COMPLETE_KEY = 'sol-flow-onboarding-complete';
+import { STORAGE_KEYS } from '@/constants';
 
 // Empty initial state
 const emptyCallGraph: CallGraph = {
@@ -53,12 +52,16 @@ export default function AppPage() {
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
   const [tempEdges, setTempEdges] = useState<TempEdge[]>([]);
+  // Show library contracts toggle (for samples with merged libraries)
+  const [showLibraryContracts, setShowLibraryContracts] = useState(false);
+  // Reload key to force complete re-render
+  const [reloadKey, setReloadKey] = useState(0);
   // Onboarding tour state
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Check if this is first visit to app page
   useEffect(() => {
-    const hasCompletedOnboarding = localStorage.getItem(ONBOARDING_COMPLETE_KEY);
+    const hasCompletedOnboarding = localStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETE);
     if (!hasCompletedOnboarding) {
       // Small delay to let the UI render first
       setTimeout(() => setShowOnboarding(true), 500);
@@ -74,7 +77,7 @@ export default function AppPage() {
         setSavedProjects(projects);
 
         // Check for last opened project
-        const lastProjectId = localStorage.getItem(CURRENT_PROJECT_KEY);
+        const lastProjectId = localStorage.getItem(STORAGE_KEYS.CURRENT_PROJECT);
         if (lastProjectId) {
           const savedCallGraph = loadProject(lastProjectId);
           if (savedCallGraph) {
@@ -87,14 +90,14 @@ export default function AppPage() {
         }
 
         // Check for last selected library (default to openzeppelin)
-        let lastLibraryId = (localStorage.getItem(CURRENT_LIBRARY_KEY) || 'openzeppelin') as LibraryId;
+        let lastLibraryId = (localStorage.getItem(STORAGE_KEYS.CURRENT_LIBRARY) || 'openzeppelin') as LibraryId;
         let response = await fetch(`/api/libraries/${lastLibraryId}`);
 
         // Fallback to openzeppelin if the saved library doesn't exist
         if (!response.ok && lastLibraryId !== 'openzeppelin') {
-          console.warn(`Library ${lastLibraryId} not found, falling back to openzeppelin`);
+          // Warning:(`Library ${lastLibraryId} not found, falling back to openzeppelin`);
           lastLibraryId = 'openzeppelin';
-          localStorage.setItem(CURRENT_LIBRARY_KEY, 'openzeppelin');
+          localStorage.setItem(STORAGE_KEYS.CURRENT_LIBRARY, 'openzeppelin');
           response = await fetch(`/api/libraries/openzeppelin`);
         }
 
@@ -105,7 +108,7 @@ export default function AppPage() {
           setCurrentLibraryId(lastLibraryId);
         }
       } catch (e) {
-        console.error('Failed to load initial data:', e);
+        // Error:('Failed to load initial data:', e);
       } finally {
         setIsLoading(false);
       }
@@ -115,22 +118,25 @@ export default function AppPage() {
   }, []);
 
   // Handle importing new project
-  const handleImport = useCallback((newCallGraph: CallGraph) => {
+  const handleImport = useCallback((newCallGraph: CallGraph, sourceFiles?: SourceFile[]) => {
     setCallGraph(newCallGraph);
     setSelectedContract(null);
     setSelectedFunction(null);
 
-    // Save to localStorage as new project
+    // Save to localStorage as new project (with source files for re-parsing)
     try {
-      const project = saveProject(newCallGraph.projectName, newCallGraph);
+      const project = saveProject(newCallGraph.projectName, newCallGraph, sourceFiles);
       setCurrentProjectId(project.id);
       setCurrentLibraryId(null);
       setSavedProjects(getSavedProjects());
-      localStorage.setItem(CURRENT_PROJECT_KEY, project.id);
-      localStorage.removeItem(CURRENT_LIBRARY_KEY);
+      localStorage.setItem(STORAGE_KEYS.CURRENT_PROJECT, project.id);
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_LIBRARY);
     } catch (e) {
-      console.error('Failed to save project:', e);
+      // Error:('Failed to save project:', e);
     }
+
+    // Increment reload key to force complete re-render
+    setReloadKey(prev => prev + 1);
   }, []);
 
   // Switch to a different saved project
@@ -144,8 +150,8 @@ export default function AppPage() {
       setSelectedFunction(null);
       setIsEditMode(false);
       setTempEdges([]);
-      localStorage.setItem(CURRENT_PROJECT_KEY, projectId);
-      localStorage.removeItem(CURRENT_LIBRARY_KEY);
+      localStorage.setItem(STORAGE_KEYS.CURRENT_PROJECT, projectId);
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_LIBRARY);
     }
     setShowProjectManager(false);
   }, []);
@@ -159,12 +165,12 @@ export default function AppPage() {
     if (projectId === currentProjectId) {
       setCurrentProjectId(null);
       setCurrentLibraryId('openzeppelin');
-      localStorage.removeItem(CURRENT_PROJECT_KEY);
-      localStorage.setItem(CURRENT_LIBRARY_KEY, 'openzeppelin');
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_PROJECT);
+      localStorage.setItem(STORAGE_KEYS.CURRENT_LIBRARY, 'openzeppelin');
       fetch('/api/libraries/openzeppelin')
         .then(res => res.json())
         .then(data => setCallGraph(data.callGraph))
-        .catch(console.error);
+        .catch(() => { /* ignore */ });
     }
   }, [currentProjectId]);
 
@@ -195,15 +201,56 @@ export default function AppPage() {
     setShowProjectManager(true);
   }, []);
 
-  // Reload current view (forces re-render with updated transformToReactFlow)
-  const handleReload = useCallback(() => {
-    // Force re-render by creating a new callGraph object reference
-    setCallGraph(prev => ({ ...prev }));
+  // Reload/Reset current view
+  // For libraries: re-fetch from API
+  // For user projects: re-parse from saved source files
+  const handleReload = useCallback(async () => {
     setSelectedContract(null);
     setSelectedFunction(null);
-    // Clear temp edges on reload
     setTempEdges([]);
-  }, []);
+
+    try {
+      if (currentProjectId) {
+        // For user projects: re-parse from saved source files
+        const sourceFiles = loadProjectSources(currentProjectId);
+        if (sourceFiles && sourceFiles.length > 0) {
+          const savedProject = getSavedProjects().find(p => p.id === currentProjectId);
+          const projectName = savedProject?.name || callGraph.projectName;
+
+          const response = await fetch('/api/parse', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ projectName, files: sourceFiles }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setCallGraph(data.callGraph);
+            // Update saved project with new callGraph
+            updateProjectCallGraph(currentProjectId, data.callGraph);
+          }
+        } else {
+          // No source files saved (old project), just reload from storage
+          const savedCallGraph = loadProject(currentProjectId);
+          if (savedCallGraph) {
+            setCallGraph(savedCallGraph);
+          }
+        }
+      } else if (currentLibraryId) {
+        // For libraries: re-fetch from API
+        const response = await fetch(`/api/libraries/${currentLibraryId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setCallGraph(data.callGraph);
+        }
+      }
+    } catch (e) {
+      // Error:('Failed to reload:', e);
+    }
+
+    // Increment reload key to force complete re-render of canvas
+    setReloadKey(prev => prev + 1);
+  }, [currentLibraryId, currentProjectId, callGraph.projectName]);
 
   // Edit mode handlers
   const handleEditModeChange = useCallback((enabled: boolean) => {
@@ -273,12 +320,12 @@ export default function AppPage() {
   }, [router]);
 
   const handleOnboardingComplete = useCallback(() => {
-    localStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
+    localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETE, 'true');
     setShowOnboarding(false);
   }, []);
 
   const handleOnboardingSkip = useCallback(() => {
-    localStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
+    localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETE, 'true');
     setShowOnboarding(false);
   }, []);
 
@@ -293,8 +340,8 @@ export default function AppPage() {
     setTempEdges([]);
 
     // Update localStorage
-    localStorage.removeItem(CURRENT_PROJECT_KEY);
-    localStorage.setItem(CURRENT_LIBRARY_KEY, libraryId);
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_PROJECT);
+    localStorage.setItem(STORAGE_KEYS.CURRENT_LIBRARY, libraryId);
 
     // Set a loading state by updating the callGraph projectName
     setCallGraph(prev => ({
@@ -308,10 +355,10 @@ export default function AppPage() {
         const data = await response.json();
         setCallGraph(data.callGraph);
       } else {
-        console.error('Failed to load library: Response not OK', response.status);
+        // Error:('Failed to load library: Response not OK', response.status);
       }
     } catch (e) {
-      console.error('Failed to load library:', e);
+      // Error:('Failed to load library:', e);
     }
     setShowProjectManager(false);
   }, []);
@@ -339,6 +386,9 @@ export default function AppPage() {
         onClearTempEdges={handleClearTempEdges}
         onAddUserEdge={handleAddUserEdge}
         onDeleteEdge={handleDeleteEdge}
+        showLibraryContracts={showLibraryContracts}
+        onShowLibraryContractsChange={setShowLibraryContracts}
+        reloadKey={reloadKey}
       />
 
       {showUploadModal && (

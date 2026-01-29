@@ -16,6 +16,11 @@ export interface SavedProject {
   version: string;
 }
 
+export interface SourceFile {
+  path: string;
+  content: string;
+}
+
 export interface ProjectData {
   project: SavedProject;
   callGraph: CallGraph;
@@ -31,7 +36,7 @@ export function getSavedProjects(): SavedProject[] {
     const data = localStorage.getItem(PROJECTS_INDEX_KEY);
     return data ? JSON.parse(data) : [];
   } catch (error) {
-    console.error('Failed to load saved projects:', error);
+    // Error:('Failed to load saved projects:', error);
     return [];
   }
 }
@@ -39,7 +44,7 @@ export function getSavedProjects(): SavedProject[] {
 /**
  * Save a parsed CallGraph to localStorage
  */
-export function saveProject(name: string, callGraph: CallGraph): SavedProject {
+export function saveProject(name: string, callGraph: CallGraph, sourceFiles?: SourceFile[]): SavedProject {
   if (typeof window === 'undefined') {
     throw new Error('Cannot save: not in browser environment');
   }
@@ -57,12 +62,34 @@ export function saveProject(name: string, callGraph: CallGraph): SavedProject {
   const dataKey = `${STORAGE_KEY_PREFIX}${id}`;
   localStorage.setItem(dataKey, JSON.stringify(callGraph));
 
+  // Save source files if provided (for re-parsing)
+  if (sourceFiles && sourceFiles.length > 0) {
+    const sourcesKey = `${STORAGE_KEY_PREFIX}${id}:sources`;
+    localStorage.setItem(sourcesKey, JSON.stringify(sourceFiles));
+  }
+
   // Update projects index
   const projects = getSavedProjects();
   projects.unshift(project); // Add to beginning (most recent first)
   localStorage.setItem(PROJECTS_INDEX_KEY, JSON.stringify(projects));
 
   return project;
+}
+
+/**
+ * Load a project's source files for re-parsing
+ */
+export function loadProjectSources(projectId: string): SourceFile[] | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const sourcesKey = `${STORAGE_KEY_PREFIX}${projectId}:sources`;
+    const data = localStorage.getItem(sourcesKey);
+    return data ? JSON.parse(data) : null;
+  } catch (error) {
+    // Error:('Failed to load project sources:', error);
+    return null;
+  }
 }
 
 /**
@@ -76,7 +103,7 @@ export function loadProject(projectId: string): CallGraph | null {
     const data = localStorage.getItem(dataKey);
     return data ? JSON.parse(data) : null;
   } catch (error) {
-    console.error('Failed to load project:', error);
+    // Error:('Failed to load project:', error);
     return null;
   }
 }
@@ -107,7 +134,7 @@ export function renameProject(projectId: string, newName: string): boolean {
 
     return true;
   } catch (error) {
-    console.error('Failed to rename project:', error);
+    // Error:('Failed to rename project:', error);
     return false;
   }
 }
@@ -123,6 +150,10 @@ export function deleteProject(projectId: string): boolean {
     const dataKey = `${STORAGE_KEY_PREFIX}${projectId}`;
     localStorage.removeItem(dataKey);
 
+    // Remove source files
+    const sourcesKey = `${STORAGE_KEY_PREFIX}${projectId}:sources`;
+    localStorage.removeItem(sourcesKey);
+
     // Update projects index
     const projects = getSavedProjects();
     const updated = projects.filter(p => p.id !== projectId);
@@ -130,7 +161,7 @@ export function deleteProject(projectId: string): boolean {
 
     return true;
   } catch (error) {
-    console.error('Failed to delete project:', error);
+    // Error:('Failed to delete project:', error);
     return false;
   }
 }
@@ -234,7 +265,7 @@ export function importProject(jsonString: string): SavedProject | null {
 
     return project;
   } catch (error) {
-    console.error('Failed to import project:', error);
+    // Error:('Failed to import project:', error);
     return null;
   }
 }
@@ -250,7 +281,7 @@ export function updateProjectCallGraph(projectId: string, callGraph: CallGraph):
     localStorage.setItem(dataKey, JSON.stringify(callGraph));
     return true;
   } catch (error) {
-    console.error('Failed to update project:', error);
+    // Error:('Failed to update project:', error);
     return false;
   }
 }

@@ -24,7 +24,6 @@ export function FunctionItem({ func, onClick, isSelected }: FunctionItemProps) {
     // Stop all event propagation
     e.stopPropagation();
     e.preventDefault();
-    console.log('FunctionItem clicked:', func.name);
     if (onClick) {
       onClick();
     }

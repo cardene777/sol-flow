@@ -182,3 +182,25 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 }
 
+/* Code block text selection styling */
+.code-selectable ::selection {
+  background-color: rgba(0, 212, 170, 0.4);
+  color: inherit;
+}
+
+.code-selectable ::-moz-selection {
+  background-color: rgba(0, 212, 170, 0.4);
+  color: inherit;
+}
+
+/* Header text selection in CodeBlockNode */
+.select-text::selection {
+  background-color: rgba(0, 212, 170, 0.4);
+  color: inherit;
+}
+
+.select-text::-moz-selection {
+  background-color: rgba(0, 212, 170, 0.4);
+  color: inherit;
+}
+

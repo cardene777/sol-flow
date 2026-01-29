@@ -162,11 +162,17 @@ function detectProxyPattern(contract: Contract): {
   }
 
   // UUPS Detection
-  if (
+  // Check for UUPS-specific patterns including OpenZeppelin ERC1967Proxy
+  const isUupsProxy =
     functionNames.includes('upgradeTo') ||
     functionNames.includes('upgradeToAndCall') ||
-    inheritNames.some((i) => i.includes('uups'))
-  ) {
+    inheritNames.some((i) => i.includes('uups')) ||
+    // OpenZeppelin ERC1967Proxy is commonly used for UUPS
+    inheritNames.some((i) => i.includes('erc1967proxy')) ||
+    // Name-based detection
+    lowerName.includes('uupsproxy');
+
+  if (isUupsProxy) {
     // Check if it's the implementation or the proxy
     if (functionNames.includes('proxiableUUID') || functionNames.includes('_authorizeUpgrade')) {
       return { pattern: 'uups', role: 'implementation' };
@@ -174,31 +180,71 @@ function detectProxyPattern(contract: Contract): {
     return { pattern: 'uups', role: 'proxy' };
   }
 
-  // Diamond Detection (EIP-2535)
+  // UUPS Implementation detection (contracts that implement UUPSUpgradeable)
   if (
+    inheritNames.some((i) => i.includes('uupsupgradeable')) ||
+    functionNames.includes('_authorizeUpgrade')
+  ) {
+    return { pattern: 'uups', role: 'implementation' };
+  }
+
+  // Diamond Detection (EIP-2535)
+  const isDiamond =
     functionNames.includes('diamondCut') ||
     functionNames.includes('facets') ||
     functionNames.includes('facetAddress') ||
-    eventNames.includes('DiamondCut')
-  ) {
+    eventNames.includes('DiamondCut') ||
+    // Name-based detection
+    lowerName === 'diamond' ||
+    lowerName.includes('diamondproxy') ||
+    // Path-based detection
+    lowerPath.includes('/diamond/') && lowerName !== 'libdiamond';
+
+  if (isDiamond) {
     return { pattern: 'diamond', role: 'proxy' };
   }
 
-  // Beacon Detection
+  // Diamond Facet detection
   if (
-    functionNames.includes('implementation') &&
-    (lowerName.includes('beacon') || inheritNames.some((i) => i.includes('beacon')))
+    lowerPath.includes('/facets/') ||
+    lowerName.includes('facet')
   ) {
+    return { pattern: 'diamond', role: 'implementation' };
+  }
+
+  // Diamond Library detection
+  if (lowerName === 'libdiamond' || lowerName.includes('libdiamond')) {
+    return { pattern: 'diamond', role: 'implementation' };
+  }
+
+  // Beacon Detection
+  // Beacon contract (holds implementation address)
+  const isBeacon =
+    // Function-based detection
+    (functionNames.includes('implementation') && lowerName.includes('beacon')) ||
+    // Inheritance-based detection (OpenZeppelin UpgradeableBeacon)
+    inheritNames.some((i) => i.includes('upgradeablebeacon')) ||
+    inheritNames.some((i) => i === 'beacon') ||
+    // Name-based detection (not a proxy but a beacon itself)
+    (lowerName.includes('beacon') && !lowerName.includes('proxy'));
+
+  if (isBeacon) {
     return { pattern: 'beacon', role: 'beacon' };
   }
 
-  if (inheritNames.some((i) => i.includes('beaconproxy'))) {
+  // Beacon Proxy detection
+  if (
+    inheritNames.some((i) => i.includes('beaconproxy')) ||
+    (lowerName.includes('beaconproxy'))
+  ) {
     return { pattern: 'beacon', role: 'proxy' };
   }
 
   // Transparent Proxy Detection
   if (
     inheritNames.some((i) => i.includes('transparentupgradeableproxy')) ||
+    inheritNames.some((i) => i.includes('transparentproxy')) ||
+    lowerName.includes('transparentproxy') ||
     (lowerName.includes('proxy') && functionNames.includes('admin'))
   ) {
     return { pattern: 'transparent', role: 'proxy' };
@@ -521,6 +567,7 @@ function detectDependencies(contracts: Contract[]): Dependency[] {
     }
 
     // Library usage - use import info for accurate resolution
+    // First, handle explicit "using X for Y" directives
     for (const libName of contract.usesLibraries) {
       const libContract = findContractByImport(contracts, libName, contract);
       if (libContract) {
@@ -545,6 +592,42 @@ function detectDependencies(contracts: Contract[]): Dependency[] {
           }
         }
 
+        addDependency(contract.name, libContract.name, 'uses', usedFunctions.length > 0 ? usedFunctions : undefined);
+      }
+    }
+
+    // Second, handle direct library calls (LibName.func()) without "using" directive
+    // Collect all library calls that weren't covered by usesLibraries
+    const directLibraryCalls = new Map<string, string[]>(); // libName -> [funcNames]
+
+    for (const func of [...contract.externalFunctions, ...contract.internalFunctions]) {
+      for (const call of func.calls) {
+        if (call.type === 'library' && call.target.includes('.')) {
+          const [callLibName, funcName] = call.target.split('.');
+          // Resolve import alias to actual name
+          const callImport = contract.imports.find(
+            (imp) => (imp.alias || imp.name) === callLibName
+          );
+          const actualLibName = callImport?.name || callLibName;
+
+          // Skip if already handled by usesLibraries
+          if (contract.usesLibraries.includes(actualLibName)) continue;
+
+          if (!directLibraryCalls.has(actualLibName)) {
+            directLibraryCalls.set(actualLibName, []);
+          }
+          const funcs = directLibraryCalls.get(actualLibName)!;
+          if (!funcs.includes(funcName)) {
+            funcs.push(funcName);
+          }
+        }
+      }
+    }
+
+    // Create dependencies for direct library calls
+    for (const [libName, usedFunctions] of directLibraryCalls) {
+      const libContract = findContractByImport(contracts, libName, contract);
+      if (libContract) {
         addDependency(contract.name, libContract.name, 'uses', usedFunctions.length > 0 ? usedFunctions : undefined);
       }
     }

@@ -273,3 +273,60 @@ export function getGitHubUrlForPath(filePath: string, line?: number): string | n
 export function isExternalLibrary(filePath: string): boolean {
   return findRemapping(filePath) !== null;
 }
+
+/**
+ * Library GitHub configurations for direct library viewing
+ */
+export const LIBRARY_GITHUB_CONFIG: Record<string, { repo: string; branch: string; basePath: string }> = {
+  'openzeppelin': {
+    repo: 'OpenZeppelin/openzeppelin-contracts',
+    branch: 'master',
+    basePath: 'contracts',
+  },
+  'openzeppelin-upgradeable': {
+    repo: 'OpenZeppelin/openzeppelin-contracts-upgradeable',
+    branch: 'master',
+    basePath: 'contracts',
+  },
+  'solady': {
+    repo: 'Vectorized/solady',
+    branch: 'main',
+    basePath: 'src',
+  },
+  'avalanche-teleporter': {
+    repo: 'ava-labs/icm-services',
+    branch: 'main',
+    basePath: 'contracts/teleporter',
+  },
+  'avalanche-ictt': {
+    repo: 'ava-labs/icm-services',
+    branch: 'main',
+    basePath: 'contracts/ictt',
+  },
+  'avalanche-validator-manager': {
+    repo: 'ava-labs/icm-services',
+    branch: 'main',
+    basePath: 'contracts/validator-manager',
+  },
+  'avalanche-utilities': {
+    repo: 'ava-labs/icm-services',
+    branch: 'main',
+    basePath: 'contracts/utilities',
+  },
+};
+
+/**
+ * Get GitHub URL for a library file path (when viewing a library directly)
+ */
+export function getGitHubUrlForLibrary(libraryId: string, filePath: string, line?: number): string | null {
+  const config = LIBRARY_GITHUB_CONFIG[libraryId];
+  if (!config) {
+    return null;
+  }
+
+  // Clean up the file path (remove leading slashes)
+  const cleanPath = filePath.startsWith('/') ? filePath.slice(1) : filePath;
+
+  const url = `https://github.com/${config.repo}/blob/${config.branch}/${config.basePath}/${cleanPath}`;
+  return line ? `${url}#L${line}` : url;
+}

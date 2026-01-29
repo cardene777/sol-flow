@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Upload, FolderOpen, Grid3X3, GitBranch, RefreshCw, Download, Image as ImageIcon, FileCode, ChevronDown, Pencil, Check, X, Search, Menu } from 'lucide-react';
 import Image from 'next/image';
 import { SearchBar } from '@/components/Search/SearchBar';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import type { CallGraph } from '@/types/callGraph';
 import type { LayoutMode } from '@/utils/transformToReactFlow';
 
@@ -282,6 +283,11 @@ export function Header({
             )}
           </div>
 
+          {/* Language Switcher */}
+          <div className="hidden sm:block">
+            <LanguageSwitcher />
+          </div>
+
           {/* Import */}
           <button
             data-tour="import"
@@ -380,6 +386,13 @@ export function Header({
                     <FileCode className="w-4 h-4 text-lavender" />
                     <span>SVG</span>
                   </button>
+                </div>
+
+                {/* Language */}
+                <div className="border-t border-navy-600 mt-1 pt-1">
+                  <div className="px-4 py-2">
+                    <LanguageSwitcher />
+                  </div>
                 </div>
 
                 {/* Rename (if saved project) */}

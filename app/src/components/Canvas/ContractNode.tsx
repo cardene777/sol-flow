@@ -3,7 +3,7 @@
 import { memo, useCallback, useState, useRef, useEffect } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import clsx from 'clsx';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { FunctionItem } from '@/components/ui/FunctionItem';
 import type { ContractNodeData } from '@/utils/transformToReactFlow';
@@ -12,8 +12,8 @@ import { useDiagramContext } from './DiagramCanvas';
 
 function ContractNodeComponent({ data, selected }: NodeProps<ContractNodeData>) {
   const { contract, isSelected, selectedFunction, nodeHeight } = data;
-  const { onFunctionClick, onHeightMeasured } = useDiagramContext();
-  const [showInternal, setShowInternal] = useState(false);
+  const { onFunctionClick, onHeightMeasured, onContractDetailClick } = useDiagramContext();
+  const [showInternal, setShowInternal] = useState(true);
   const nodeRef = useRef<HTMLDivElement>(null);
 
   // Measure actual height after render and report to parent
@@ -102,9 +102,9 @@ function ContractNodeComponent({ data, selected }: NodeProps<ContractNodeData>) 
         sourceCode: func.sourceCode,
         startLine: func.startLine,
       };
-      onFunctionClick(funcAsExternal, contract.name);
+      onFunctionClick(funcAsExternal, contract.name, contract.filePath);
     },
-    [onFunctionClick, contract.name]
+    [onFunctionClick, contract.name, contract.filePath]
   );
 
   return (
@@ -214,6 +214,16 @@ function ContractNodeComponent({ data, selected }: NodeProps<ContractNodeData>) 
           </span>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onContractDetailClick?.(contract);
+            }}
+            className="p-1 rounded hover:bg-navy-500/50 text-slate-400 hover:text-mint transition-colors"
+            title="View contract details"
+          >
+            <Info className="w-4 h-4" />
+          </button>
           <Badge category={contract.category} />
         </div>
       </div>
@@ -346,6 +356,7 @@ function ContractNodeComponent({ data, selected }: NodeProps<ContractNodeData>) 
         <span>{contract.internalFunctions.length} int</span>
         <span>{contract.events.length} events</span>
       </div>
+
     </div>
   );
 }

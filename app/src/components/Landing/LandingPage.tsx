@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Zap, Upload, GitBranch, Code2, Layers, Search, ArrowRight, ChevronRight, ExternalLink } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { useLanguage } from '@/lib/i18n';
+import { REPO_URL } from '@/constants';
 
 interface LandingPageProps {
   onGetStarted?: () => void;
@@ -18,11 +19,11 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       {/* Hero Section */}
       <header className="relative">
         {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-mint/10 via-transparent to-lavender/10" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,212,170,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-mint/10 via-transparent to-lavender/10 pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,212,170,0.15),transparent_50%)] pointer-events-none" />
 
         {/* Navigation */}
-        <nav className="relative z-10 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
+        <nav className="relative z-50 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-xl overflow-hidden">
               <Image
@@ -38,7 +39,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
           <div className="flex items-center gap-4">
             <LanguageSwitcher variant="landing" />
             <a
-              href="https://github.com/cardene777/sol-flow"
+              href={REPO_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer [&_*]:cursor-pointer"
@@ -331,7 +332,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
             {t.landing.footer}
           </p>
           <a
-            href="https://github.com/cardene777/sol-flow"
+            href={REPO_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="text-slate-400 hover:text-slate-200 transition-colors text-sm cursor-pointer [&_*]:cursor-pointer"

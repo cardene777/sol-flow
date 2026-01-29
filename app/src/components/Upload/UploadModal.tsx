@@ -10,9 +10,14 @@ interface FileData {
   content: string;
 }
 
+interface SourceFile {
+  path: string;
+  content: string;
+}
+
 interface UploadModalProps {
   onClose: () => void;
-  onImport: (callGraph: CallGraph) => void;
+  onImport: (callGraph: CallGraph, sourceFiles: SourceFile[]) => void;
 }
 
 export function UploadModal({ onClose, onImport }: UploadModalProps) {
@@ -187,7 +192,7 @@ export function UploadModal({ onClose, onImport }: UploadModalProps) {
       }
 
       const data = await response.json();
-      onImport(data.callGraph);
+      onImport(data.callGraph, files);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to parse files');

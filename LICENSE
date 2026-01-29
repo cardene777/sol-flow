@@ -1,21 +1,78 @@
-MIT License
+Sol-Flow Non-Commercial Open Source License
+Version 1.0
 
 Copyright (c) 2025 cardene
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This license governs the use, modification, and distribution of Sol-Flow software.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+## 1. Definitions
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+- "Software" refers to Sol-Flow and all associated source code, documentation, and assets.
+- "Commercial Use" means any use intended for or directed toward commercial advantage or monetary compensation.
+- "Network Use" means making the Software available for use by others over a network (e.g., as a web service, SaaS, or API).
+- "Derivative Work" means any work that is based on or derived from the Software.
+
+## 2. Grant of Rights
+
+Subject to the terms of this license, you are granted a non-exclusive, worldwide, royalty-free license to:
+
+a) Use the Software for non-commercial purposes only.
+b) Study, modify, and create Derivative Works of the Software.
+c) Distribute the Software and Derivative Works to others.
+
+## 3. Conditions
+
+The rights granted above are subject to the following conditions:
+
+### 3.1 Non-Commercial Use Only
+
+You may NOT use the Software or any Derivative Work for Commercial Use without prior written permission from the copyright holder. This includes but is not limited to:
+- Selling the Software or Derivative Works
+- Using the Software in a commercial product or service
+- Using the Software to provide paid services
+- Using the Software in a business context for profit
+
+### 3.2 Copyleft / Share-Alike
+
+If you distribute the Software or any Derivative Work, you must:
+- Make the complete source code available under this same license
+- Include a copy of this license with the distribution
+- Clearly indicate any modifications made to the original Software
+- Preserve all copyright notices and attributions
+
+### 3.3 Network Use Disclosure (SaaS/API)
+
+If you make the Software or any Derivative Work available for Network Use, you must:
+- Provide access to the complete source code to all users
+- Include a prominent link to the source code repository
+- License the source code under this same license
+
+### 3.4 Attribution
+
+You must give appropriate credit to the original author, provide a link to this license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the author endorses you or your use.
+
+## 4. Permitted Non-Commercial Uses
+
+The following uses are explicitly permitted:
+- Personal use and study
+- Academic and educational purposes
+- Non-profit organization use
+- Open source project contributions
+- Portfolio and demonstration purposes
+
+## 5. Commercial Licensing
+
+For commercial use, please contact the copyright holder to obtain a commercial license.
+
+## 6. No Warranty
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+## 7. Termination
+
+This license and the rights granted hereunder will terminate automatically if you fail to comply with the terms herein. Upon termination, you must destroy all copies of the Software in your possession.
+
+---
+
+For questions about this license or commercial licensing inquiries, please open an issue at:
+https://github.com/cardene777/sol-flow

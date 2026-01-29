@@ -2,10 +2,10 @@
   "id": "sample-transparent",
   "name": "Transparent Proxy Sample",
   "version": "1.0.0",
-  "generatedAt": "2026-01-27T03:58:24.630Z",
+  "generatedAt": "2026-01-29T03:50:08.494Z",
   "callGraph": {
     "version": "1.0.0",
-    "generatedAt": "2026-01-27T03:58:24.630Z",
+    "generatedAt": "2026-01-29T03:50:08.494Z",
     "projectName": "Transparent Proxy Sample",
     "structure": {
       "name": "contracts",
@@ -58,7 +58,18 @@
               }
             ],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "__Ownable_init",
+                "type": "internal",
+                "argCount": 1
+              },
+              {
+                "target": "__ReentrancyGuard_init",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -153,7 +164,13 @@
             "stateMutability": "nonpayable",
             "parameters": [],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "_disableInitializers",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "isVirtual": false,
             "sourceCode": "constructor() {\n        _disableInitializers();\n    }",
             "startLine": 21
@@ -173,7 +190,8 @@
                 "type": "uint256",
                 "indexed": false
               }
-            ]
+            ],
+            "startLine": 17
           },
           {
             "name": "Withdrawn",
@@ -188,10 +206,30 @@
                 "type": "uint256",
                 "indexed": false
               }
-            ]
+            ],
+            "startLine": 18
           }
         ],
-        "stateVariables": [],
+        "errors": [],
+        "structs": [],
+        "stateVariables": [
+          {
+            "name": "balances",
+            "type": "mapping(address => uint256)",
+            "visibility": "public",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 14
+          },
+          {
+            "name": "totalDeposits",
+            "type": "uint256",
+            "visibility": "public",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 15
+          }
+        ],
         "usesLibraries": [],
         "imports": [
           {
@@ -242,7 +280,23 @@
               }
             ],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "__Ownable_init",
+                "type": "internal",
+                "argCount": 1
+              },
+              {
+                "target": "__ReentrancyGuard_init",
+                "type": "internal",
+                "argCount": 0
+              },
+              {
+                "target": "__Pausable_init",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -312,7 +366,13 @@
             "stateMutability": "nonpayable",
             "parameters": [],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "owner",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -347,7 +407,13 @@
             "stateMutability": "nonpayable",
             "parameters": [],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "_pause",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -362,7 +428,13 @@
             "stateMutability": "nonpayable",
             "parameters": [],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "_unpause",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "emits": [],
             "modifiers": [],
             "isVirtual": false,
@@ -442,7 +514,13 @@
             "stateMutability": "nonpayable",
             "parameters": [],
             "returnValues": [],
-            "calls": [],
+            "calls": [
+              {
+                "target": "_disableInitializers",
+                "type": "internal",
+                "argCount": 0
+              }
+            ],
             "isVirtual": false,
             "sourceCode": "constructor() {\n        _disableInitializers();\n    }",
             "startLine": 26
@@ -462,7 +540,8 @@
                 "type": "uint256",
                 "indexed": false
               }
-            ]
+            ],
+            "startLine": 20
           },
           {
             "name": "Withdrawn",
@@ -482,7 +561,8 @@
                 "type": "uint256",
                 "indexed": false
               }
-            ]
+            ],
+            "startLine": 21
           },
           {
             "name": "FeeCollected",
@@ -497,7 +577,8 @@
                 "type": "uint256",
                 "indexed": false
               }
-            ]
+            ],
+            "startLine": 22
           },
           {
             "name": "WithdrawalFeeUpdated",
@@ -512,10 +593,46 @@
                 "type": "uint256",
                 "indexed": false
               }
-            ]
+            ],
+            "startLine": 23
           }
         ],
-        "stateVariables": [],
+        "errors": [],
+        "structs": [],
+        "stateVariables": [
+          {
+            "name": "balances",
+            "type": "mapping(address => uint256)",
+            "visibility": "public",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 15
+          },
+          {
+            "name": "totalDeposits",
+            "type": "uint256",
+            "visibility": "public",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 16
+          },
+          {
+            "name": "withdrawalFee",
+            "type": "uint256",
+            "visibility": "public",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 17
+          },
+          {
+            "name": "collectedFees",
+            "type": "uint256",
+            "visibility": "public",
+            "isConstant": false,
+            "isImmutable": false,
+            "startLine": 18
+          }
+        ],
         "usesLibraries": [],
         "imports": [
           {
@@ -583,6 +700,8 @@
           }
         ],
         "events": [],
+        "errors": [],
+        "structs": [],
         "stateVariables": [],
         "usesLibraries": [],
         "imports": [

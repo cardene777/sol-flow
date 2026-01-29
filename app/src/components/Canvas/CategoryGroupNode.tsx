@@ -23,7 +23,47 @@ interface CategoryStyle {
 
 // Preset styles for well-known categories (OpenZeppelin, common patterns)
 const PRESET_STYLES: Record<string, CategoryStyle> = {
-  // OpenZeppelin categories (with prefix)
+  // Token categories (hierarchical)
+  'token/erc20': { bg: 'rgba(34, 197, 94, 0.15)', borderColor: '#22c55e', textColor: '#4ade80', icon: '🪙' },
+  'token/erc721': { bg: 'rgba(59, 130, 246, 0.15)', borderColor: '#3b82f6', textColor: '#60a5fa', icon: '🖼️' },
+  'token/erc1155': { bg: 'rgba(168, 85, 247, 0.15)', borderColor: '#a855f7', textColor: '#c084fc', icon: '🎮' },
+  'token/erc6909': { bg: 'rgba(236, 72, 153, 0.15)', borderColor: '#ec4899', textColor: '#f472b6', icon: '💎' },
+  'token/common': { bg: 'rgba(34, 197, 94, 0.12)', borderColor: '#22c55e', textColor: '#4ade80', icon: '🔗' },
+  token: { bg: 'rgba(34, 197, 94, 0.15)', borderColor: '#22c55e', textColor: '#4ade80', icon: '🪙' },
+  tokens: { bg: 'rgba(34, 197, 94, 0.15)', borderColor: '#22c55e', textColor: '#4ade80', icon: '🪙' },
+  // Proxy categories (hierarchical)
+  'proxy/beacon': { bg: 'rgba(6, 182, 212, 0.15)', borderColor: '#06b6d4', textColor: '#22d3ee', icon: '📡' },
+  'proxy/transparent': { bg: 'rgba(245, 158, 11, 0.15)', borderColor: '#f59e0b', textColor: '#fbbf24', icon: '🔍' },
+  'proxy/erc1967': { bg: 'rgba(139, 92, 246, 0.15)', borderColor: '#8b5cf6', textColor: '#a78bfa', icon: '⬡' },
+  'proxy/utils': { bg: 'rgba(245, 158, 11, 0.12)', borderColor: '#f59e0b', textColor: '#fbbf24', icon: '🔧' },
+  proxy: { bg: 'rgba(245, 158, 11, 0.15)', borderColor: '#f59e0b', textColor: '#fbbf24', icon: '🔄' },
+  // Utils categories (hierarchical)
+  'utils/cryptography': { bg: 'rgba(239, 68, 68, 0.15)', borderColor: '#ef4444', textColor: '#f87171', icon: '🔐' },
+  'utils/math': { bg: 'rgba(59, 130, 246, 0.15)', borderColor: '#3b82f6', textColor: '#60a5fa', icon: '🔢' },
+  'utils/structs': { bg: 'rgba(168, 85, 247, 0.15)', borderColor: '#a855f7', textColor: '#c084fc', icon: '🗃️' },
+  'utils/introspection': { bg: 'rgba(6, 182, 212, 0.15)', borderColor: '#06b6d4', textColor: '#22d3ee', icon: '🔎' },
+  'utils/types': { bg: 'rgba(16, 185, 129, 0.15)', borderColor: '#10b981', textColor: '#34d399', icon: '📝' },
+  utils: { bg: 'rgba(100, 116, 139, 0.15)', borderColor: '#64748b', textColor: '#94a3b8', icon: '🔧' },
+  utilities: { bg: 'rgba(100, 116, 139, 0.15)', borderColor: '#64748b', textColor: '#94a3b8', icon: '🔧' },
+  // Access categories (hierarchical)
+  'access/manager': { bg: 'rgba(59, 130, 246, 0.15)', borderColor: '#3b82f6', textColor: '#60a5fa', icon: '👤' },
+  'access/extensions': { bg: 'rgba(59, 130, 246, 0.12)', borderColor: '#3b82f6', textColor: '#60a5fa', icon: '🔌' },
+  access: { bg: 'rgba(59, 130, 246, 0.15)', borderColor: '#3b82f6', textColor: '#60a5fa', icon: '🔐' },
+  auth: { bg: 'rgba(59, 130, 246, 0.15)', borderColor: '#3b82f6', textColor: '#60a5fa', icon: '🔐' },
+  // Governance categories (hierarchical)
+  'governance/extensions': { bg: 'rgba(168, 85, 247, 0.12)', borderColor: '#a855f7', textColor: '#c084fc', icon: '🔌' },
+  'governance/utils': { bg: 'rgba(168, 85, 247, 0.12)', borderColor: '#a855f7', textColor: '#c084fc', icon: '🔧' },
+  governance: { bg: 'rgba(168, 85, 247, 0.15)', borderColor: '#a855f7', textColor: '#c084fc', icon: '🏛️' },
+  // Other top-level categories
+  account: { bg: 'rgba(6, 182, 212, 0.15)', borderColor: '#06b6d4', textColor: '#22d3ee', icon: '👤' },
+  finance: { bg: 'rgba(16, 185, 129, 0.15)', borderColor: '#10b981', textColor: '#34d399', icon: '💰' },
+  metatx: { bg: 'rgba(236, 72, 153, 0.15)', borderColor: '#ec4899', textColor: '#f472b6', icon: '📡' },
+  crosschain: { bg: 'rgba(249, 115, 22, 0.15)', borderColor: '#f97316', textColor: '#fb923c', icon: '🌐' },
+  interface: { bg: 'rgba(99, 102, 241, 0.15)', borderColor: '#6366f1', textColor: '#818cf8', icon: '📋' },
+  interfaces: { bg: 'rgba(99, 102, 241, 0.15)', borderColor: '#6366f1', textColor: '#818cf8', icon: '📋' },
+  library: { bg: 'rgba(234, 179, 8, 0.15)', borderColor: '#eab308', textColor: '#facc15', icon: '📚' },
+  other: { bg: 'rgba(100, 116, 139, 0.15)', borderColor: '#64748b', textColor: '#94a3b8', icon: '📦' },
+  // OpenZeppelin categories (with prefix) - legacy
   'openzeppelin/access': { bg: 'rgba(59, 130, 246, 0.15)', borderColor: '#3b82f6', textColor: '#60a5fa', icon: '🔐' },
   'openzeppelin/token': { bg: 'rgba(34, 197, 94, 0.15)', borderColor: '#22c55e', textColor: '#4ade80', icon: '🪙' },
   'openzeppelin/proxy': { bg: 'rgba(245, 158, 11, 0.15)', borderColor: '#f59e0b', textColor: '#fbbf24', icon: '🔄' },
@@ -39,20 +79,6 @@ const PRESET_STYLES: Record<string, CategoryStyle> = {
   'oz-upgradeable/proxy': { bg: 'rgba(251, 191, 36, 0.15)', borderColor: '#fbbf24', textColor: '#fcd34d', icon: '🔄' },
   'oz-upgradeable/utils': { bg: 'rgba(148, 163, 184, 0.15)', borderColor: '#94a3b8', textColor: '#cbd5e1', icon: '🔧' },
   'oz-upgradeable/governance': { bg: 'rgba(192, 132, 252, 0.15)', borderColor: '#c084fc', textColor: '#d8b4fe', icon: '🏛️' },
-  // Legacy categories (for backwards compatibility)
-  access: { bg: 'rgba(59, 130, 246, 0.15)', borderColor: '#3b82f6', textColor: '#60a5fa', icon: '🔐' },
-  account: { bg: 'rgba(6, 182, 212, 0.15)', borderColor: '#06b6d4', textColor: '#22d3ee', icon: '👤' },
-  finance: { bg: 'rgba(16, 185, 129, 0.15)', borderColor: '#10b981', textColor: '#34d399', icon: '💰' },
-  governance: { bg: 'rgba(168, 85, 247, 0.15)', borderColor: '#a855f7', textColor: '#c084fc', icon: '🏛️' },
-  metatx: { bg: 'rgba(236, 72, 153, 0.15)', borderColor: '#ec4899', textColor: '#f472b6', icon: '📡' },
-  proxy: { bg: 'rgba(245, 158, 11, 0.15)', borderColor: '#f59e0b', textColor: '#fbbf24', icon: '🔄' },
-  token: { bg: 'rgba(34, 197, 94, 0.15)', borderColor: '#22c55e', textColor: '#4ade80', icon: '🪙' },
-  utils: { bg: 'rgba(100, 116, 139, 0.15)', borderColor: '#64748b', textColor: '#94a3b8', icon: '🔧' },
-  utilities: { bg: 'rgba(100, 116, 139, 0.15)', borderColor: '#64748b', textColor: '#94a3b8', icon: '🔧' },
-  interface: { bg: 'rgba(99, 102, 241, 0.15)', borderColor: '#6366f1', textColor: '#818cf8', icon: '📋' },
-  interfaces: { bg: 'rgba(99, 102, 241, 0.15)', borderColor: '#6366f1', textColor: '#818cf8', icon: '📋' },
-  library: { bg: 'rgba(234, 179, 8, 0.15)', borderColor: '#eab308', textColor: '#facc15', icon: '📚' },
-  other: { bg: 'rgba(100, 116, 139, 0.15)', borderColor: '#64748b', textColor: '#94a3b8', icon: '📦' },
   // Avalanche ICM categories
   teleporter: { bg: 'rgba(239, 68, 68, 0.15)', borderColor: '#ef4444', textColor: '#f87171', icon: '📡' },
   ictt: { bg: 'rgba(249, 115, 22, 0.15)', borderColor: '#f97316', textColor: '#fb923c', icon: '🪙' },
@@ -72,8 +98,6 @@ const PRESET_STYLES: Record<string, CategoryStyle> = {
   'solady/utils': { bg: 'rgba(234, 179, 8, 0.15)', borderColor: '#eab308', textColor: '#facc15', icon: '🔧' },
   'solady/accounts': { bg: 'rgba(234, 179, 8, 0.15)', borderColor: '#eab308', textColor: '#facc15', icon: '👤' },
   solady: { bg: 'rgba(234, 179, 8, 0.15)', borderColor: '#eab308', textColor: '#facc15', icon: '⚡' },
-  auth: { bg: 'rgba(59, 130, 246, 0.15)', borderColor: '#3b82f6', textColor: '#60a5fa', icon: '🔐' },
-  tokens: { bg: 'rgba(34, 197, 94, 0.15)', borderColor: '#22c55e', textColor: '#4ade80', icon: '🪙' },
 };
 
 // Generate a consistent color from a string (for unknown categories)

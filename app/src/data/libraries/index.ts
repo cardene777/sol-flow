@@ -100,7 +100,6 @@ export async function loadLibrary(libraryId: string): Promise<LibraryCacheData |
 
   const info = AVAILABLE_LIBRARIES.find(l => l.id === libraryId);
   if (!info) {
-    console.error(`Unknown library: ${libraryId}`);
     return null;
   }
 
@@ -110,8 +109,7 @@ export async function loadLibrary(libraryId: string): Promise<LibraryCacheData |
     const cacheData = data.default || data;
     libraryCache.set(libraryId, cacheData);
     return cacheData;
-  } catch (error) {
-    console.error(`Failed to load library ${libraryId}:`, error);
+  } catch {
     return null;
   }
 }
