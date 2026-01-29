@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Source Code Tab**: View full source code with Solidity syntax highlighting in Contract Detail Modal
+  - Multi-line comment support (`/* */`, `/** */`)
+  - NatSpec comment highlighting (`///`, `/** */`)
+  - Keyword, type, and built-in highlighting
+  - Line numbers and copy button
+- **Sidebar Quick View**: Hover over contract names to reveal a button that opens Contract Detail Modal
+- **Improved Temp Edge UX**: Temporary edges now show an X icon on hover for easy deletion (removed "一時" label)
+- **Enhanced Onboarding Tour**: Added steps for new features (Contract Details, Function Flow, Edit Mode)
+- **Documentation**: Added comprehensive documentation in `/docs` (English and Japanese)
+  - FEATURES.md - Detailed feature documentation
+  - DATA_TYPES.md - TypeScript type definitions
+  - PARSER.md - Solidity parser implementation
+  - PROXY_PATTERNS.md - Proxy pattern detection
+  - LIBRARIES.md - Built-in library guide
+
+### Changed
+- Contract source code now includes full file content (comments, imports, pragma) instead of just contract body
+
 ## [1.0.0] - 2026-01-29
 
 ### Added

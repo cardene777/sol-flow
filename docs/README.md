@@ -1,88 +1,112 @@
-# Sol-Flow ドキュメント
+# Sol-Flow Documentation
 
-Solidityスマートコントラクトの依存関係可視化ツール
+Interactive visualization tool for Solidity smart contracts.
 
-## ドキュメント一覧
+[日本語版はこちら](./ja/README.md)
 
-| ファイル | 説明 |
-|---------|------|
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | システムアーキテクチャ、データフロー、コンポーネント構成 |
-| [API.md](./API.md) | API エンドポイントのリファレンス |
-| [DEPLOYMENT.md](./DEPLOYMENT.md) | Vercelデプロイメントガイド |
+## Documentation Index
 
-## クイックスタート
+| Document | Description |
+|----------|-------------|
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | System architecture, data flow, component structure |
+| [API.md](./API.md) | API endpoint reference |
+| [FEATURES.md](./FEATURES.md) | Detailed feature documentation |
+| [DATA_TYPES.md](./DATA_TYPES.md) | TypeScript type definitions (CallGraph, Contract, etc.) |
+| [PARSER.md](./PARSER.md) | Solidity parser implementation details |
+| [PROXY_PATTERNS.md](./PROXY_PATTERNS.md) | Proxy pattern detection and grouping |
+| [LIBRARIES.md](./LIBRARIES.md) | Built-in libraries and how to add new ones |
 
-### ローカル開発
+## Quick Start
 
-```bash
-cd app
-npm install
-npm run dev
-```
-
-### ビルド
+### Local Development
 
 ```bash
 cd app
-npm run build
+pnpm install
+pnpm dev
 ```
 
-### Vercelデプロイ
+### Build
 
-1. GitHubにプッシュ
-2. Vercelでプロジェクトをインポート
-3. Root Directoryを `app` に設定
-4. デプロイ
+```bash
+cd app
+pnpm build
+```
 
-## 主要機能
+### Vercel Deployment
 
-### 1. コントラクト可視化
-- 継承関係 (inherits)
-- インターフェース実装 (implements)
-- ライブラリ使用 (uses)
-- delegatecall関係
+1. Push to GitHub
+2. Import project in Vercel
+3. Set Root Directory to `app`
+4. Deploy
 
-### 2. プロキシパターン検出
+## Key Features
+
+### 1. Contract Visualization
+- Inheritance relationships (inherits)
+- Interface implementation (implements)
+- Library usage (uses)
+- delegatecall relationships
+
+### 2. Proxy Pattern Detection
 - ERC-7546 (Upgradeable Dictionary)
 - UUPS
 - Transparent Proxy
 - Diamond (EIP-2535)
 - Beacon Proxy
 
-### 3. カテゴリ分類
-- Access Control
-- Token (ERC20, ERC721, ERC1155)
-- Governance
-- Proxy
-- Finance
-- Utilities
+### 3. Category Classification
+Dynamic category detection based on directory structure:
+- OpenZeppelin/access, OpenZeppelin/token, etc.
+- Solady/auth, Solady/tokens, etc.
+- Avalanche ICM categories
 
-### 4. プロジェクト管理
-- プロジェクト保存/読み込み
-- 事前パース済みライブラリ (OpenZeppelin, Solady)
-- カスタムコントラクトのアップロード
+### 4. Project Management
+- Save/load projects
+- Pre-parsed libraries (OpenZeppelin, Solady, Avalanche ICM)
+- Custom contract upload
 
-## 技術スタック
+### 5. Source Code Viewer
+- Full source code display with syntax highlighting
+- Multi-line comment support
+- NatSpec documentation highlighting
+- Line numbers and copy functionality
 
-| 技術 | 用途 |
-|------|------|
-| Next.js 14+ | フレームワーク |
+## Tech Stack
+
+| Technology | Purpose |
+|------------|---------|
+| Next.js 15 | Framework (App Router) |
 | React 19 | UI |
-| React Flow | グラフ描画 |
-| TypeScript | 型安全性 |
-| Tailwind CSS | スタイリング |
-| Vercel | ホスティング |
+| React Flow | Graph rendering |
+| TypeScript | Type safety |
+| Tailwind CSS | Styling |
+| @solidity-parser/parser | Solidity parsing |
 
-## プロジェクト構成
+## Project Structure
 
 ```
 sol-flow/
-├── app/           # Next.jsアプリケーション
-├── contracts/     # サンプルコントラクト (ERC-7546)
-├── library/       # ライブラリソースコード (参照用)
-└── docs/          # ドキュメント
+├── app/               # Next.js application
+│   ├── src/
+│   │   ├── app/       # App Router (pages, API routes)
+│   │   ├── components/# React components
+│   │   ├── lib/       # Parser, utilities
+│   │   ├── data/      # Pre-parsed library JSON
+│   │   ├── types/     # TypeScript definitions
+│   │   └── utils/     # Helper functions
+│   └── scripts/       # Build scripts
+├── library/           # Library source code (Git submodules)
+│   ├── openzeppelin-contracts/
+│   ├── openzeppelin-contracts-upgradeable/
+│   ├── solady/
+│   └── icm-services/
+├── contracts/         # Sample contracts
+└── docs/              # Documentation
 ```
 
-## ライセンス
+## License
 
-MIT
+Sol-Flow Non-Commercial Open Source License
+
+See [LICENSE](../LICENSE) for details.

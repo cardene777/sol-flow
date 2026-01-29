@@ -211,6 +211,7 @@ export function MainLayout({
                 diagramRef.current?.focusNode(name);
               }, 100);
             }}
+            onViewContractDetail={handleContractDetailClick}
             visibleCategories={visibleCategories}
             onCategoryToggle={handleCategoryToggle}
           />
@@ -275,6 +276,7 @@ export function MainLayout({
             {/* Edit Mode Toggle - only for user projects */}
             {currentProjectId && onEditModeChange && (
               <button
+                data-tour="edit-mode"
                 onClick={() => onEditModeChange(!isEditMode)}
                 className={`flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg transition-colors ${
                   isEditMode

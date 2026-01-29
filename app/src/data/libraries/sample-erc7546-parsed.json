@@ -1,0 +1,858 @@
+{
+  "id": "sample-erc7546",
+  "name": "ERC-7546 Modular Proxy Sample",
+  "version": "1.0.0",
+  "generatedAt": "2026-01-30T00:00:00.000Z",
+  "callGraph": {
+    "version": "1.0.0",
+    "generatedAt": "2026-01-30T00:00:00.000Z",
+    "projectName": "ERC-7546 Modular Proxy Sample",
+    "structure": {
+      "name": "contracts",
+      "type": "directory",
+      "path": "contracts",
+      "children": [
+        {
+          "name": "ModularProxy.sol",
+          "type": "file",
+          "path": "ModularProxy.sol",
+          "contractName": "ModularProxy"
+        },
+        {
+          "name": "Dictionary.sol",
+          "type": "file",
+          "path": "Dictionary.sol",
+          "contractName": "Dictionary"
+        },
+        {
+          "name": "IDictionary.sol",
+          "type": "file",
+          "path": "IDictionary.sol",
+          "contractName": "IDictionary"
+        },
+        {
+          "name": "CounterFacet.sol",
+          "type": "file",
+          "path": "CounterFacet.sol",
+          "contractName": "CounterFacet"
+        },
+        {
+          "name": "StorageFacet.sol",
+          "type": "file",
+          "path": "StorageFacet.sol",
+          "contractName": "StorageFacet"
+        },
+        {
+          "name": "AdminFacet.sol",
+          "type": "file",
+          "path": "AdminFacet.sol",
+          "contractName": "AdminFacet"
+        }
+      ]
+    },
+    "contracts": [
+      {
+        "name": "IDictionary",
+        "filePath": "IDictionary.sol",
+        "kind": "interface",
+        "inherits": [],
+        "implements": [],
+        "category": "other",
+        "externalFunctions": [
+          {
+            "name": "getImplementation",
+            "signature": "getImplementation(bytes4)",
+            "selector": "0x6f2d3de5",
+            "visibility": "external",
+            "stateMutability": "view",
+            "parameters": [
+              {
+                "name": "selector",
+                "type": "bytes4"
+              }
+            ],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "address"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function getImplementation(bytes4 selector) external view returns (address);",
+            "startLine": 8
+          },
+          {
+            "name": "setImplementation",
+            "signature": "setImplementation(bytes4,address)",
+            "selector": "0x8965b83a",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "selector",
+                "type": "bytes4"
+              },
+              {
+                "name": "implementation",
+                "type": "address"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function setImplementation(bytes4 selector, address implementation) external;",
+            "startLine": 9
+          }
+        ],
+        "internalFunctions": [],
+        "events": [
+          {
+            "name": "ImplementationSet",
+            "parameters": [
+              {
+                "name": "selector",
+                "type": "bytes4",
+                "indexed": true
+              },
+              {
+                "name": "implementation",
+                "type": "address",
+                "indexed": true
+              }
+            ],
+            "sourceCode": "event ImplementationSet(bytes4 indexed selector, address indexed implementation);"
+          }
+        ],
+        "errors": [],
+        "structs": [],
+        "stateVariables": [],
+        "usesLibraries": [],
+        "imports": [],
+        "sourceCode": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\n/// @title IDictionary - ERC-7546 Dictionary Interface\n/// @notice Maps function selectors to implementation addresses\ninterface IDictionary {\n    event ImplementationSet(bytes4 indexed selector, address indexed implementation);\n    function getImplementation(bytes4 selector) external view returns (address);\n    function setImplementation(bytes4 selector, address implementation) external;\n}",
+        "proxyPattern": "eip7546",
+        "proxyRole": null
+      },
+      {
+        "name": "Dictionary",
+        "filePath": "Dictionary.sol",
+        "kind": "contract",
+        "inherits": [],
+        "implements": ["IDictionary"],
+        "category": "other",
+        "externalFunctions": [
+          {
+            "name": "getImplementation",
+            "signature": "getImplementation(bytes4)",
+            "selector": "0x6f2d3de5",
+            "visibility": "external",
+            "stateMutability": "view",
+            "parameters": [
+              {
+                "name": "selector",
+                "type": "bytes4"
+              }
+            ],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "address"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function getImplementation(bytes4 selector) external view override returns (address) {\n        return implementations[selector];\n    }",
+            "startLine": 22
+          },
+          {
+            "name": "setImplementation",
+            "signature": "setImplementation(bytes4,address)",
+            "selector": "0x8965b83a",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "selector",
+                "type": "bytes4"
+              },
+              {
+                "name": "implementation",
+                "type": "address"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [
+              {
+                "name": "ImplementationSet",
+                "args": ["selector", "implementation"]
+              }
+            ],
+            "modifiers": ["onlyOwner"],
+            "isVirtual": false,
+            "sourceCode": "function setImplementation(bytes4 selector, address implementation) external override onlyOwner {\n        implementations[selector] = implementation;\n        emit ImplementationSet(selector, implementation);\n    }",
+            "startLine": 26
+          },
+          {
+            "name": "batchSetImplementations",
+            "signature": "batchSetImplementations(bytes4[],address[])",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "selectors",
+                "type": "bytes4[]"
+              },
+              {
+                "name": "impls",
+                "type": "address[]"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [
+              {
+                "name": "ImplementationSet",
+                "args": ["selectors[i]", "impls[i]"]
+              }
+            ],
+            "modifiers": ["onlyOwner"],
+            "isVirtual": false,
+            "sourceCode": "function batchSetImplementations(bytes4[] calldata selectors, address[] calldata impls) external onlyOwner {\n        require(selectors.length == impls.length, \"Length mismatch\");\n        for (uint256 i = 0; i < selectors.length; i++) {\n            implementations[selectors[i]] = impls[i];\n            emit ImplementationSet(selectors[i], impls[i]);\n        }\n    }",
+            "startLine": 31
+          },
+          {
+            "name": "owner",
+            "signature": "owner()",
+            "selector": "",
+            "visibility": "public",
+            "stateMutability": "view",
+            "parameters": [],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "address"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function owner() public view returns (address) {\n        return _owner;\n    }",
+            "startLine": 39
+          }
+        ],
+        "internalFunctions": [],
+        "events": [
+          {
+            "name": "ImplementationSet",
+            "parameters": [
+              {
+                "name": "selector",
+                "type": "bytes4",
+                "indexed": true
+              },
+              {
+                "name": "implementation",
+                "type": "address",
+                "indexed": true
+              }
+            ],
+            "sourceCode": "event ImplementationSet(bytes4 indexed selector, address indexed implementation);"
+          }
+        ],
+        "errors": [],
+        "structs": [],
+        "stateVariables": [
+          {
+            "name": "_owner",
+            "type": "address",
+            "visibility": "private"
+          },
+          {
+            "name": "implementations",
+            "type": "mapping(bytes4 => address)",
+            "visibility": "private"
+          }
+        ],
+        "usesLibraries": [],
+        "imports": ["IDictionary.sol"],
+        "sourceCode": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\nimport \"./IDictionary.sol\";\n\n/// @title Dictionary - ERC-7546 Dictionary Implementation\n/// @notice Manages the mapping of function selectors to implementation addresses\ncontract Dictionary is IDictionary {\n    address private _owner;\n    mapping(bytes4 => address) private implementations;\n\n    modifier onlyOwner() {\n        require(msg.sender == _owner, \"Not owner\");\n        _;\n    }\n\n    constructor() {\n        _owner = msg.sender;\n    }\n\n    function getImplementation(bytes4 selector) external view override returns (address) {\n        return implementations[selector];\n    }\n\n    function setImplementation(bytes4 selector, address implementation) external override onlyOwner {\n        implementations[selector] = implementation;\n        emit ImplementationSet(selector, implementation);\n    }\n\n    function batchSetImplementations(bytes4[] calldata selectors, address[] calldata impls) external onlyOwner {\n        require(selectors.length == impls.length, \"Length mismatch\");\n        for (uint256 i = 0; i < selectors.length; i++) {\n            implementations[selectors[i]] = impls[i];\n            emit ImplementationSet(selectors[i], impls[i]);\n        }\n    }\n\n    function owner() public view returns (address) {\n        return _owner;\n    }\n}",
+        "proxyPattern": "eip7546",
+        "proxyRole": "dictionary"
+      },
+      {
+        "name": "ModularProxy",
+        "filePath": "ModularProxy.sol",
+        "kind": "contract",
+        "inherits": [],
+        "implements": [],
+        "category": "other",
+        "externalFunctions": [
+          {
+            "name": "dictionary",
+            "signature": "dictionary()",
+            "selector": "",
+            "visibility": "public",
+            "stateMutability": "view",
+            "parameters": [],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "address"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function dictionary() public view returns (address) {\n        return _dictionary;\n    }",
+            "startLine": 25
+          }
+        ],
+        "internalFunctions": [
+          {
+            "name": "_fallback",
+            "signature": "_fallback()",
+            "visibility": "internal",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [
+              {
+                "target": "IDictionary.getImplementation",
+                "type": "external",
+                "argCount": 1
+              },
+              {
+                "target": "_delegate",
+                "type": "internal",
+                "argCount": 1
+              }
+            ],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function _fallback() internal {\n        address impl = IDictionary(_dictionary).getImplementation(msg.sig);\n        require(impl != address(0), \"Function not found\");\n        _delegate(impl);\n    }",
+            "startLine": 29
+          },
+          {
+            "name": "_delegate",
+            "signature": "_delegate(address)",
+            "visibility": "internal",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "implementation",
+                "type": "address"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function _delegate(address implementation) internal {\n        assembly {\n            calldatacopy(0, 0, calldatasize())\n            let result := delegatecall(gas(), implementation, 0, calldatasize(), 0, 0)\n            returndatacopy(0, 0, returndatasize())\n            switch result\n            case 0 { revert(0, returndatasize()) }\n            default { return(0, returndatasize()) }\n        }\n    }",
+            "startLine": 35
+          }
+        ],
+        "events": [],
+        "errors": [],
+        "structs": [],
+        "stateVariables": [
+          {
+            "name": "_dictionary",
+            "type": "address",
+            "visibility": "private"
+          }
+        ],
+        "usesLibraries": [],
+        "imports": ["IDictionary.sol"],
+        "sourceCode": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\nimport \"./IDictionary.sol\";\n\n/// @title ModularProxy - ERC-7546 Modular Proxy\n/// @notice A proxy that routes calls to implementations based on function selector\ncontract ModularProxy {\n    address private _dictionary;\n\n    constructor(address dictionary_) {\n        _dictionary = dictionary_;\n    }\n\n    function dictionary() public view returns (address) {\n        return _dictionary;\n    }\n\n    function _fallback() internal {\n        address impl = IDictionary(_dictionary).getImplementation(msg.sig);\n        require(impl != address(0), \"Function not found\");\n        _delegate(impl);\n    }\n\n    function _delegate(address implementation) internal {\n        assembly {\n            calldatacopy(0, 0, calldatasize())\n            let result := delegatecall(gas(), implementation, 0, calldatasize(), 0, 0)\n            returndatacopy(0, 0, returndatasize())\n            switch result\n            case 0 { revert(0, returndatasize()) }\n            default { return(0, returndatasize()) }\n        }\n    }\n\n    fallback() external payable {\n        _fallback();\n    }\n\n    receive() external payable {\n        _fallback();\n    }\n}",
+        "proxyPattern": "eip7546",
+        "proxyRole": "proxy"
+      },
+      {
+        "name": "CounterFacet",
+        "filePath": "CounterFacet.sol",
+        "kind": "contract",
+        "inherits": [],
+        "implements": [],
+        "category": "other",
+        "externalFunctions": [
+          {
+            "name": "count",
+            "signature": "count()",
+            "selector": "0x06661abd",
+            "visibility": "external",
+            "stateMutability": "view",
+            "parameters": [],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function count() external view returns (uint256) {\n        return _count;\n    }",
+            "startLine": 15
+          },
+          {
+            "name": "increment",
+            "signature": "increment()",
+            "selector": "0xd09de08a",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [],
+            "emits": [
+              {
+                "name": "CountIncremented",
+                "args": ["_count"]
+              }
+            ],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function increment() external {\n        _count += 1;\n        emit CountIncremented(_count);\n    }",
+            "startLine": 19
+          },
+          {
+            "name": "decrement",
+            "signature": "decrement()",
+            "selector": "0x2baeceb7",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [],
+            "emits": [
+              {
+                "name": "CountDecremented",
+                "args": ["_count"]
+              }
+            ],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function decrement() external {\n        require(_count > 0, \"Counter: cannot decrement below zero\");\n        _count -= 1;\n        emit CountDecremented(_count);\n    }",
+            "startLine": 24
+          }
+        ],
+        "internalFunctions": [],
+        "events": [
+          {
+            "name": "CountIncremented",
+            "parameters": [
+              {
+                "name": "newCount",
+                "type": "uint256",
+                "indexed": false
+              }
+            ],
+            "sourceCode": "event CountIncremented(uint256 newCount);"
+          },
+          {
+            "name": "CountDecremented",
+            "parameters": [
+              {
+                "name": "newCount",
+                "type": "uint256",
+                "indexed": false
+              }
+            ],
+            "sourceCode": "event CountDecremented(uint256 newCount);"
+          }
+        ],
+        "errors": [],
+        "structs": [],
+        "stateVariables": [
+          {
+            "name": "_count",
+            "type": "uint256",
+            "visibility": "private"
+          }
+        ],
+        "usesLibraries": [],
+        "imports": [],
+        "sourceCode": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\n/// @title CounterFacet - Counter Implementation for ERC-7546\n/// @notice Provides counter functionality as a modular implementation\ncontract CounterFacet {\n    uint256 private _count;\n\n    event CountIncremented(uint256 newCount);\n    event CountDecremented(uint256 newCount);\n\n    function count() external view returns (uint256) {\n        return _count;\n    }\n\n    function increment() external {\n        _count += 1;\n        emit CountIncremented(_count);\n    }\n\n    function decrement() external {\n        require(_count > 0, \"Counter: cannot decrement below zero\");\n        _count -= 1;\n        emit CountDecremented(_count);\n    }\n}",
+        "proxyPattern": "eip7546",
+        "proxyRole": "implementation"
+      },
+      {
+        "name": "StorageFacet",
+        "filePath": "StorageFacet.sol",
+        "kind": "contract",
+        "inherits": [],
+        "implements": [],
+        "category": "other",
+        "externalFunctions": [
+          {
+            "name": "getValue",
+            "signature": "getValue(bytes32)",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "view",
+            "parameters": [
+              {
+                "name": "key",
+                "type": "bytes32"
+              }
+            ],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "bytes32"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function getValue(bytes32 key) external view returns (bytes32) {\n        return _storage[key];\n    }",
+            "startLine": 14
+          },
+          {
+            "name": "setValue",
+            "signature": "setValue(bytes32,bytes32)",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "key",
+                "type": "bytes32"
+              },
+              {
+                "name": "value",
+                "type": "bytes32"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [
+              {
+                "name": "ValueSet",
+                "args": ["key", "value"]
+              }
+            ],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function setValue(bytes32 key, bytes32 value) external {\n        _storage[key] = value;\n        emit ValueSet(key, value);\n    }",
+            "startLine": 18
+          },
+          {
+            "name": "deleteValue",
+            "signature": "deleteValue(bytes32)",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "key",
+                "type": "bytes32"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [
+              {
+                "name": "ValueDeleted",
+                "args": ["key"]
+              }
+            ],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function deleteValue(bytes32 key) external {\n        delete _storage[key];\n        emit ValueDeleted(key);\n    }",
+            "startLine": 23
+          }
+        ],
+        "internalFunctions": [],
+        "events": [
+          {
+            "name": "ValueSet",
+            "parameters": [
+              {
+                "name": "key",
+                "type": "bytes32",
+                "indexed": true
+              },
+              {
+                "name": "value",
+                "type": "bytes32",
+                "indexed": false
+              }
+            ],
+            "sourceCode": "event ValueSet(bytes32 indexed key, bytes32 value);"
+          },
+          {
+            "name": "ValueDeleted",
+            "parameters": [
+              {
+                "name": "key",
+                "type": "bytes32",
+                "indexed": true
+              }
+            ],
+            "sourceCode": "event ValueDeleted(bytes32 indexed key);"
+          }
+        ],
+        "errors": [],
+        "structs": [],
+        "stateVariables": [
+          {
+            "name": "_storage",
+            "type": "mapping(bytes32 => bytes32)",
+            "visibility": "private"
+          }
+        ],
+        "usesLibraries": [],
+        "imports": [],
+        "sourceCode": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\n/// @title StorageFacet - Key-Value Storage Implementation for ERC-7546\n/// @notice Provides key-value storage functionality as a modular implementation\ncontract StorageFacet {\n    mapping(bytes32 => bytes32) private _storage;\n\n    event ValueSet(bytes32 indexed key, bytes32 value);\n    event ValueDeleted(bytes32 indexed key);\n\n    function getValue(bytes32 key) external view returns (bytes32) {\n        return _storage[key];\n    }\n\n    function setValue(bytes32 key, bytes32 value) external {\n        _storage[key] = value;\n        emit ValueSet(key, value);\n    }\n\n    function deleteValue(bytes32 key) external {\n        delete _storage[key];\n        emit ValueDeleted(key);\n    }\n}",
+        "proxyPattern": "eip7546",
+        "proxyRole": "implementation"
+      },
+      {
+        "name": "AdminFacet",
+        "filePath": "AdminFacet.sol",
+        "kind": "contract",
+        "inherits": [],
+        "implements": [],
+        "category": "access",
+        "externalFunctions": [
+          {
+            "name": "admin",
+            "signature": "admin()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "view",
+            "parameters": [],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "address"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function admin() external view returns (address) {\n        return _admin;\n    }",
+            "startLine": 17
+          },
+          {
+            "name": "setAdmin",
+            "signature": "setAdmin(address)",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [
+              {
+                "name": "newAdmin",
+                "type": "address"
+              }
+            ],
+            "returnValues": [],
+            "calls": [],
+            "emits": [
+              {
+                "name": "AdminChanged",
+                "args": ["_admin", "newAdmin"]
+              }
+            ],
+            "modifiers": ["onlyAdmin"],
+            "isVirtual": false,
+            "sourceCode": "function setAdmin(address newAdmin) external onlyAdmin {\n        require(newAdmin != address(0), \"Invalid admin\");\n        address oldAdmin = _admin;\n        _admin = newAdmin;\n        emit AdminChanged(oldAdmin, newAdmin);\n    }",
+            "startLine": 21
+          },
+          {
+            "name": "pause",
+            "signature": "pause()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [],
+            "emits": [
+              {
+                "name": "Paused",
+                "args": ["_admin"]
+              }
+            ],
+            "modifiers": ["onlyAdmin"],
+            "isVirtual": false,
+            "sourceCode": "function pause() external onlyAdmin {\n        _paused = true;\n        emit Paused(_admin);\n    }",
+            "startLine": 28
+          },
+          {
+            "name": "unpause",
+            "signature": "unpause()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "nonpayable",
+            "parameters": [],
+            "returnValues": [],
+            "calls": [],
+            "emits": [
+              {
+                "name": "Unpaused",
+                "args": ["_admin"]
+              }
+            ],
+            "modifiers": ["onlyAdmin"],
+            "isVirtual": false,
+            "sourceCode": "function unpause() external onlyAdmin {\n        _paused = false;\n        emit Unpaused(_admin);\n    }",
+            "startLine": 33
+          },
+          {
+            "name": "paused",
+            "signature": "paused()",
+            "selector": "",
+            "visibility": "external",
+            "stateMutability": "view",
+            "parameters": [],
+            "returnValues": [
+              {
+                "name": "",
+                "type": "bool"
+              }
+            ],
+            "calls": [],
+            "emits": [],
+            "modifiers": [],
+            "isVirtual": false,
+            "sourceCode": "function paused() external view returns (bool) {\n        return _paused;\n    }",
+            "startLine": 38
+          }
+        ],
+        "internalFunctions": [],
+        "events": [
+          {
+            "name": "AdminChanged",
+            "parameters": [
+              {
+                "name": "oldAdmin",
+                "type": "address",
+                "indexed": true
+              },
+              {
+                "name": "newAdmin",
+                "type": "address",
+                "indexed": true
+              }
+            ],
+            "sourceCode": "event AdminChanged(address indexed oldAdmin, address indexed newAdmin);"
+          },
+          {
+            "name": "Paused",
+            "parameters": [
+              {
+                "name": "account",
+                "type": "address",
+                "indexed": false
+              }
+            ],
+            "sourceCode": "event Paused(address account);"
+          },
+          {
+            "name": "Unpaused",
+            "parameters": [
+              {
+                "name": "account",
+                "type": "address",
+                "indexed": false
+              }
+            ],
+            "sourceCode": "event Unpaused(address account);"
+          }
+        ],
+        "errors": [],
+        "structs": [],
+        "stateVariables": [
+          {
+            "name": "_admin",
+            "type": "address",
+            "visibility": "private"
+          },
+          {
+            "name": "_paused",
+            "type": "bool",
+            "visibility": "private"
+          }
+        ],
+        "usesLibraries": [],
+        "imports": [],
+        "sourceCode": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\n/// @title AdminFacet - Admin Management Implementation for ERC-7546\n/// @notice Provides admin and pause functionality as a modular implementation\ncontract AdminFacet {\n    address private _admin;\n    bool private _paused;\n\n    event AdminChanged(address indexed oldAdmin, address indexed newAdmin);\n    event Paused(address account);\n    event Unpaused(address account);\n\n    modifier onlyAdmin() {\n        require(msg.sender == _admin, \"Not admin\");\n        _;\n    }\n\n    function admin() external view returns (address) {\n        return _admin;\n    }\n\n    function setAdmin(address newAdmin) external onlyAdmin {\n        require(newAdmin != address(0), \"Invalid admin\");\n        address oldAdmin = _admin;\n        _admin = newAdmin;\n        emit AdminChanged(oldAdmin, newAdmin);\n    }\n\n    function pause() external onlyAdmin {\n        _paused = true;\n        emit Paused(_admin);\n    }\n\n    function unpause() external onlyAdmin {\n        _paused = false;\n        emit Unpaused(_admin);\n    }\n\n    function paused() external view returns (bool) {\n        return _paused;\n    }\n}",
+        "proxyPattern": "eip7546",
+        "proxyRole": "implementation"
+      }
+    ],
+    "dependencies": [
+      {
+        "from": "ModularProxy",
+        "to": "Dictionary",
+        "type": "delegatecall"
+      },
+      {
+        "from": "ModularProxy",
+        "to": "CounterFacet",
+        "type": "delegatecall"
+      },
+      {
+        "from": "ModularProxy",
+        "to": "StorageFacet",
+        "type": "delegatecall"
+      },
+      {
+        "from": "ModularProxy",
+        "to": "AdminFacet",
+        "type": "delegatecall"
+      },
+      {
+        "from": "Dictionary",
+        "to": "IDictionary",
+        "type": "implements"
+      },
+      {
+        "from": "Dictionary",
+        "to": "CounterFacet",
+        "type": "registers"
+      },
+      {
+        "from": "Dictionary",
+        "to": "StorageFacet",
+        "type": "registers"
+      },
+      {
+        "from": "Dictionary",
+        "to": "AdminFacet",
+        "type": "registers"
+      }
+    ],
+    "proxyGroups": [
+      {
+        "pattern": "eip7546",
+        "name": "ERC-7546 Modular Proxy",
+        "proxy": "ModularProxy",
+        "dictionary": "Dictionary",
+        "implementations": ["CounterFacet", "StorageFacet", "AdminFacet"]
+      }
+    ],
+    "stats": {
+      "totalContracts": 5,
+      "totalLibraries": 0,
+      "totalInterfaces": 1,
+      "totalFunctions": 18
+    }
+  }
+}

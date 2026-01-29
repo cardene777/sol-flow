@@ -132,6 +132,8 @@ export interface Contract {
   // External library flag (OpenZeppelin, Solady, etc.)
   isExternalLibrary?: boolean;
   librarySource?: 'openzeppelin' | 'openzeppelin-upgradeable' | 'solady' | 'avalanche-icm';
+  // Full source code of the contract
+  sourceCode?: string;
 }
 
 /** Dependency Type */

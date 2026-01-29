@@ -10,6 +10,7 @@ import sampleUupsData from '@/data/libraries/sample-uups-parsed.json';
 import sampleTransparentData from '@/data/libraries/sample-transparent-parsed.json';
 import sampleDiamondData from '@/data/libraries/sample-diamond-parsed.json';
 import sampleBeaconData from '@/data/libraries/sample-beacon-parsed.json';
+import sampleErc7546Data from '@/data/libraries/sample-erc7546-parsed.json';
 // Avalanche ICM libraries
 import avalancheTeleporterData from '@/data/libraries/avalanche-teleporter-parsed.json';
 import avalancheIcttData from '@/data/libraries/avalanche-ictt-parsed.json';
@@ -25,6 +26,7 @@ const libraryDataMap: Record<string, unknown> = {
   'sample-transparent': sampleTransparentData,
   'sample-diamond': sampleDiamondData,
   'sample-beacon': sampleBeaconData,
+  'sample-erc7546': sampleErc7546Data,
   // Avalanche ICM
   'avalanche-teleporter': avalancheTeleporterData,
   'avalanche-ictt': avalancheIcttData,
@@ -44,6 +46,7 @@ const SAMPLE_LIBRARIES = new Set([
   'sample-transparent',
   'sample-diamond',
   'sample-beacon',
+  'sample-erc7546',
 ]);
 
 /**

@@ -138,6 +138,14 @@ export const LIBRARY_GROUPS: LibraryGroup[] = [
         icon: Radio,
         color: 'orange',
       },
+      {
+        id: 'sample-erc7546',
+        name: 'ERC-7546 Modular',
+        version: 'v1.0.0',
+        description: 'Function selector to implementation mapping',
+        icon: Layers,
+        color: 'emerald',
+      },
     ],
   },
 ];

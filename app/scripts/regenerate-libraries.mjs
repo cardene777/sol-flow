@@ -296,6 +296,7 @@ function parseContract(node, source, filePath) {
     stateVariables,
     usesLibraries,
     imports: [],
+    sourceCode: source, // Full file content including comments and imports
   };
 }
 

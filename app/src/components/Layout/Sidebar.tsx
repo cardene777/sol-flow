@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronRight, ChevronDown, FileCode2, Folder, FolderOpen } from 'lucide-react';
+import { ChevronRight, ChevronDown, FileCode2, Folder, FolderOpen, Code2 } from 'lucide-react';
 import clsx from 'clsx';
 import type { CallGraph, DirectoryNode, Contract, ContractCategory } from '@/types/callGraph';
 import { getCategoryStyle } from '@/components/Canvas/CategoryGroupNode';
@@ -10,6 +10,7 @@ interface SidebarProps {
   callGraph: CallGraph;
   selectedContract: string | null;
   onSelectContract: (name: string) => void;
+  onViewContractDetail?: (contract: Contract) => void;
   visibleCategories?: ContractCategory[];
   onCategoryToggle?: (category: ContractCategory) => void;
 }
@@ -39,6 +40,7 @@ export function Sidebar({
   callGraph,
   selectedContract,
   onSelectContract,
+  onViewContractDetail,
   visibleCategories,
   onCategoryToggle,
 }: SidebarProps) {
@@ -111,6 +113,7 @@ export function Sidebar({
               contracts={callGraph.contracts}
               selectedContract={selectedContract}
               onSelectContract={onSelectContract}
+              onViewContractDetail={onViewContractDetail}
             />
           )}
           {!callGraph.structure?.children?.length && (
@@ -379,11 +382,13 @@ interface TreeNodeProps {
   contracts: Contract[];
   selectedContract: string | null;
   onSelectContract: (name: string) => void;
+  onViewContractDetail?: (contract: Contract) => void;
   depth?: number;
 }
 
-function TreeNode({ node, contracts, selectedContract, onSelectContract, depth = 0 }: TreeNodeProps) {
+function TreeNode({ node, contracts, selectedContract, onSelectContract, onViewContractDetail, depth = 0 }: TreeNodeProps) {
   const [isOpen, setIsOpen] = useState(depth < 2);
+  const [isHovered, setIsHovered] = useState(false);
 
   const isDirectory = node.type === 'directory';
   const hasChildren = isDirectory && node.children && node.children.length > 0;
@@ -403,59 +408,87 @@ function TreeNode({ node, contracts, selectedContract, onSelectContract, depth =
     }
   };
 
+  const handleViewDetail = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (contract && onViewContractDetail) {
+      onViewContractDetail(contract);
+    }
+  };
+
   return (
     <div>
-      <button
-        onClick={handleClick}
+      <div
         className={clsx(
-          'w-full flex items-center gap-1.5 px-2 py-1 rounded text-sm text-left',
+          'w-full flex items-center gap-1.5 px-2 py-1 rounded text-sm',
           'hover:bg-navy-600 transition-colors',
           isSelected && 'bg-mint/10 text-mint'
         )}
         style={{ paddingLeft: `${depth * 12 + 8}px` }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Expand/Collapse Icon */}
-        {hasChildren ? (
-          isOpen ? (
-            <ChevronDown className="w-4 h-4 text-slate-500 flex-shrink-0" />
-          ) : (
-            <ChevronRight className="w-4 h-4 text-slate-500 flex-shrink-0" />
-          )
-        ) : (
-          <span className="w-4" />
-        )}
-
-        {/* Icon */}
-        {isDirectory ? (
-          isOpen ? (
-            <FolderOpen className="w-4 h-4 text-amber flex-shrink-0" />
-          ) : (
-            <Folder className="w-4 h-4 text-amber flex-shrink-0" />
-          )
-        ) : (
-          <FileCode2
-            className={clsx(
-              'w-4 h-4 flex-shrink-0',
-              contract?.kind === 'library' ? 'text-amber' : 'text-mint'
-            )}
-          />
-        )}
-
-        {/* Name */}
-        <span
-          className={clsx(
-            'truncate font-display',
-            isSelected ? 'text-mint' : 'text-slate-300'
-          )}
+        <button
+          onClick={handleClick}
+          className="flex items-center gap-1.5 flex-1 text-left min-w-0"
         >
-          {node.name}
-        </span>
+          {/* Expand/Collapse Icon */}
+          {hasChildren ? (
+            isOpen ? (
+              <ChevronDown className="w-4 h-4 text-slate-500 flex-shrink-0" />
+            ) : (
+              <ChevronRight className="w-4 h-4 text-slate-500 flex-shrink-0" />
+            )
+          ) : (
+            <span className="w-4 flex-shrink-0" />
+          )}
+
+          {/* Icon */}
+          {isDirectory ? (
+            isOpen ? (
+              <FolderOpen className="w-4 h-4 text-amber flex-shrink-0" />
+            ) : (
+              <Folder className="w-4 h-4 text-amber flex-shrink-0" />
+            )
+          ) : (
+            <FileCode2
+              className={clsx(
+                'w-4 h-4 flex-shrink-0',
+                contract?.kind === 'library' ? 'text-amber' : 'text-mint'
+              )}
+            />
+          )}
+
+          {/* Name */}
+          <span
+            className={clsx(
+              'truncate font-display',
+              isSelected ? 'text-mint' : 'text-slate-300'
+            )}
+          >
+            {node.name}
+          </span>
+        </button>
+
+        {/* View source button - appears on hover */}
+        {contract && onViewContractDetail && (
+          <button
+            onClick={handleViewDetail}
+            className={clsx(
+              'p-1 rounded transition-all flex-shrink-0',
+              'hover:bg-navy-500 text-slate-400 hover:text-mint',
+              isHovered ? 'opacity-100' : 'opacity-0'
+            )}
+            title="View contract details"
+          >
+            <Code2 className="w-3.5 h-3.5" />
+          </button>
+        )}
 
         {/* Contract kind badge */}
         {contract && (
           <span
             className={clsx(
-              'ml-auto text-[10px] px-1.5 rounded',
+              'text-[10px] px-1.5 rounded flex-shrink-0',
               contract.kind === 'library' && 'bg-amber/20 text-amber',
               contract.kind === 'interface' && 'bg-indigo-500/20 text-indigo-400',
               contract.kind === 'contract' && 'bg-mint/20 text-mint'
@@ -464,7 +497,7 @@ function TreeNode({ node, contracts, selectedContract, onSelectContract, depth =
             {contract.kind === 'library' ? 'lib' : contract.kind === 'interface' ? 'iface' : ''}
           </span>
         )}
-      </button>
+      </div>
 
       {/* Children */}
       {isOpen && hasChildren && (
@@ -476,6 +509,7 @@ function TreeNode({ node, contracts, selectedContract, onSelectContract, depth =
               contracts={contracts}
               selectedContract={selectedContract}
               onSelectContract={onSelectContract}
+              onViewContractDetail={onViewContractDetail}
               depth={depth + 1}
             />
           ))}

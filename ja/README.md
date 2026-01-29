@@ -23,6 +23,7 @@
   <a href="#はじめに">はじめに</a> •
   <a href="#使い方">使い方</a> •
   <a href="#内蔵ライブラリ">内蔵ライブラリ</a> •
+  <a href="../docs/ja/guides/README.md">ガイド</a> •
   <a href="#コントリビュート">コントリビュート</a> •
   <a href="../README.md">English</a>
 </p>
@@ -57,6 +58,9 @@ OpenZeppelin、Solady、Avalanche ICM等の主要ライブラリがプリロー�
 
 ### ✏️ 編集モード
 静的解析では捉えられない関係性をカスタムエッジで追加できます。プロキシ関係やクロスコントラクトの相互作用をドキュメント化するのに最適です。
+
+### 📝 ソースコードビューア
+Solidityシンタックスハイライト付きでコントラクトの完全なソースコードを表示。コメント、インポート、NatSpecドキュメントも適切にカラーリングされます。
 
 ## デモ
 
@@ -200,7 +204,7 @@ sol-flow/
 - [OpenZeppelin](https://openzeppelin.com/) - スマートコントラクトライブラリ
 - [Solady](https://github.com/Vectorized/solady) - ガス最適化されたSolidityスニペット
 - [React Flow](https://reactflow.dev/) - グラフ可視化ライブラリ
-- [Avalanche](https://www.avax.network/) - ICMライブラリ
+- [Ava Labs](https://www.avalabs.org/) - Avalanche ICMライブラリ
 
 ---
 

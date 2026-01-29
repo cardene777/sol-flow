@@ -15,7 +15,20 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "Sol-Flow - Solidity Contract Visualizer",
-  description: "Visualize Solidity smart contract call graphs and dependencies",
+  description: "Visualize Solidity smart contract dependencies, inheritance structures, and function flows as interactive diagrams.",
+  metadataBase: new URL("https://sol-flow.vercel.app"),
+  openGraph: {
+    title: "Sol-Flow - Solidity Contract Visualizer",
+    description: "Visualize Solidity smart contract dependencies, inheritance structures, and function flows as interactive diagrams.",
+    siteName: "Sol-Flow",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sol-Flow - Solidity Contract Visualizer",
+    description: "Visualize Solidity smart contract dependencies, inheritance structures, and function flows as interactive diagrams.",
+  },
 };
 
 export default function RootLayout({
