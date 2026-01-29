@@ -1,19 +1,42 @@
 ---
 name: Feature Request
-about: Suggest an idea for this project
+about: Propose a new feature or enhancement
 title: '[Feature] '
 labels: enhancement
 assignees: ''
 ---
 
-## Is your feature request related to a problem?
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+## Summary
+<!-- Brief description of the feature -->
 
-## Describe the solution you'd like
-A clear and concise description of what you want to happen.
+## Motivation
+<!-- Why is this feature needed? What problem does it solve? -->
 
-## Describe alternatives you've considered
-A clear and concise description of any alternative solutions or features you've considered.
+## Proposed Solution
+<!-- Describe the solution you'd like -->
 
-## Additional context
-Add any other context or screenshots about the feature request here.
+## Design / Implementation Notes
+<!-- Technical details, approach, affected files, etc. -->
+
+### Affected Components
+- [ ] Canvas / Diagram
+- [ ] Sidebar / Navigation
+- [ ] Parser / Call Graph
+- [ ] UI Components
+- [ ] API Routes
+- [ ] Other:
+
+### Key Files
+<!-- List main files that will be modified -->
+
+## Acceptance Criteria
+<!-- List of requirements that must be met -->
+- [ ]
+- [ ]
+- [ ]
+
+## Alternatives Considered
+<!-- Any alternative solutions or features you've considered -->
+
+## Additional Context
+<!-- Screenshots, mockups, references, etc. -->

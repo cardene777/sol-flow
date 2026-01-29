@@ -24,7 +24,7 @@
   <a href="#usage">Usage</a> •
   <a href="#built-in-libraries">Built-in Libraries</a> •
   <a href="#contributing">Contributing</a> •
-  <a href="README-ja.md">日本語</a>
+  <a href="ja/README.md">日本語</a>
 </p>
 
 ---
