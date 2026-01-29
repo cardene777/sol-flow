@@ -10,7 +10,6 @@ import ReactFlow, {
   useReactFlow,
   ReactFlowProvider,
   getNodesBounds,
-  getViewportForBounds,
   type OnNodesChange,
   type OnEdgesChange,
   type Connection,
@@ -18,6 +17,20 @@ import ReactFlow, {
 } from 'reactflow';
 import { toPng, toSvg } from 'html-to-image';
 import 'reactflow/dist/style.css';
+
+// Suppress React Flow's false positive warning about nodeTypes/edgeTypes in development
+// This occurs due to React StrictMode's double-rendering, not actual instability
+// See: https://reactflow.dev/error#002
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  const originalWarn = console.warn;
+  console.warn = (...args: unknown[]) => {
+    const message = args[0];
+    if (typeof message === 'string' && message.includes('[React Flow]') && message.includes('nodeTypes or edgeTypes')) {
+      return; // Suppress this specific warning
+    }
+    originalWarn.apply(console, args);
+  };
+}
 
 import { ContractNode } from './ContractNode';
 import { LibraryNode } from './LibraryNode';
@@ -30,10 +43,11 @@ import { TempEdgesBadge } from './TempEdgesBadge';
 import { transformToReactFlow, type LayoutMode } from '@/utils/transformToReactFlow';
 import type { CallGraph, ExternalFunction, ContractCategory, DependencyType, UserEdge } from '@/types/callGraph';
 
-// Context for function click handler and height measurement
+// Context for function click handler, height measurement, and contract detail
 interface DiagramContextType {
-  onFunctionClick: (func: ExternalFunction, contractName: string) => void;
+  onFunctionClick: (func: ExternalFunction, contractName: string, contractFilePath?: string) => void;
   onHeightMeasured?: (contractName: string, height: number) => void;
+  onContractDetailClick?: (contract: import('@/types/callGraph').Contract) => void;
 }
 
 export const DiagramContext = createContext<DiagramContextType | null>(null);
@@ -49,6 +63,7 @@ export function useDiagramContext() {
 export interface DiagramCanvasHandle {
   exportAsPng: (filename?: string) => Promise<void>;
   exportAsSvg: (filename?: string) => Promise<void>;
+  focusNode: (nodeId: string) => void;
 }
 
 export interface TempEdge {
@@ -64,7 +79,7 @@ interface DiagramCanvasProps {
   callGraph: CallGraph;
   selectedContract: string | null;
   selectedFunction: string | null;
-  onSelectContract: (name: string | null) => void;
+  onSelectContract: (name: string | null, filePath?: string | null) => void;
   onSelectFunction: (func: ExternalFunction | null) => void;
   enableCategoryGroups?: boolean;
   visibleCategories?: ContractCategory[];
@@ -77,6 +92,10 @@ interface DiagramCanvasProps {
   onClearTempEdges?: () => void;
   onAddUserEdge?: (edge: UserEdge) => void;
   onDeleteEdge?: (edgeId: string) => void;
+  // Library contracts visibility
+  showLibraryContracts?: boolean;
+  // Contract detail modal
+  onContractDetailClick?: (contract: import('@/types/callGraph').Contract) => void;
 }
 
 const nodeTypes = {
@@ -108,17 +127,19 @@ const DiagramCanvasInner = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(f
   onClearTempEdges,
   onAddUserEdge,
   onDeleteEdge,
+  showLibraryContracts = false,
+  onContractDetailClick,
 }, ref) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const { getNodes } = useReactFlow();
+  const { getNodes, setCenter, getZoom } = useReactFlow();
 
   // State for edge type modal
   const [pendingConnection, setPendingConnection] = useState<Connection | null>(null);
   const [showEdgeTypeModal, setShowEdgeTypeModal] = useState(false);
 
   // State for height measurement and layout
-  // Use a key to track which callGraph the measurements belong to
-  const currentCallGraphId = `${callGraph.projectName}-${callGraph.contracts.length}-${callGraph.generatedAt}`;
+  // Use a key to track which callGraph the measurements belong to (include showLibraryContracts to reset when toggled)
+  const currentCallGraphId = `${callGraph.projectName}-${callGraph.contracts.length}-${callGraph.generatedAt}-lib:${showLibraryContracts}`;
   const [measurementState, setMeasurementState] = useState<{
     callGraphId: string;
     heights: Map<string, number>;
@@ -129,14 +150,22 @@ const DiagramCanvasInner = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(f
     phase: 'measuring',
   });
 
-  // Count only contracts that will be rendered as ContractNode (not interfaces/libraries)
+  // Count contracts that will be rendered as ContractNode (must match transformToReactFlow filtering)
   const contractNodeCount = useMemo(() => {
-    let contracts = callGraph.contracts.filter(c => c.kind === 'contract' || c.kind === 'abstract');
+    let contracts = callGraph.contracts.filter(c => {
+      if (c.kind === 'contract' || c.kind === 'abstract') return true;
+      if (c.kind === 'library' && showLibraryContracts) return true;
+      return false;
+    });
+    // Filter out external library contracts unless showLibraryContracts is true
+    if (!showLibraryContracts) {
+      contracts = contracts.filter(c => !c.isExternalLibrary);
+    }
     if (visibleCategories) {
       contracts = contracts.filter(c => visibleCategories.includes(c.category));
     }
     return contracts.length;
-  }, [callGraph.contracts, visibleCategories]);
+  }, [callGraph.contracts, visibleCategories, showLibraryContracts]);
 
   // Check if we have valid measurements for current callGraph
   const isCurrentMeasurement = measurementState.callGraphId === currentCallGraphId;
@@ -188,8 +217,8 @@ const DiagramCanvasInner = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(f
   }, [measurementState.phase, isCurrentMeasurement]);
 
   const handleFunctionClick = useCallback(
-    (func: ExternalFunction, contractName: string) => {
-      onSelectContract(contractName);
+    (func: ExternalFunction, contractName: string, contractFilePath?: string) => {
+      onSelectContract(contractName, contractFilePath);
       onSelectFunction(func);
     },
     [onSelectContract, onSelectFunction]
@@ -197,17 +226,18 @@ const DiagramCanvasInner = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(f
 
   const { nodes: initialNodes, edges: initialEdges } = useMemo(
     () => {
-      // Only use measured heights if ready and measurements are for current callGraph
-      const shouldUseMeasuredHeights = isReady && measurementState.heights.size > 0;
+      // Use measured heights if we have any for current callGraph (don't wait for all measurements)
+      const shouldUseMeasuredHeights = isCurrentMeasurement && measurementState.heights.size > 0;
 
       return transformToReactFlow(callGraph, selectedContract, selectedFunction, {
         enableCategoryGroups,
         visibleCategories,
         layoutMode,
         measuredHeights: shouldUseMeasuredHeights ? measurementState.heights : undefined,
+        showLibraryContracts,
       });
     },
-    [callGraph, selectedContract, selectedFunction, enableCategoryGroups, visibleCategories, layoutMode, isReady, measurementState.heights]
+    [callGraph, selectedContract, selectedFunction, enableCategoryGroups, visibleCategories, layoutMode, isCurrentMeasurement, measurementState.heights, showLibraryContracts]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -370,11 +400,42 @@ const DiagramCanvasInner = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(f
     }
   }, [getNodes, callGraph.projectName]);
 
-  // Expose export functions via ref
+  // Focus on a specific node by centering the view
+  const focusNode = useCallback((nodeId: string) => {
+    const nodes = getNodes();
+    const targetNode = nodes.find(n => n.id === nodeId);
+    if (targetNode) {
+      // Calculate absolute position by traversing parent chain
+      // Nodes inside groups have positions relative to their parent
+      let absoluteX = targetNode.position.x;
+      let absoluteY = targetNode.position.y;
+
+      // Traverse up the parent chain to get absolute position
+      let currentNode = targetNode;
+      while (currentNode.parentId) {
+        const parentNode = nodes.find(n => n.id === currentNode.parentId);
+        if (parentNode) {
+          absoluteX += parentNode.position.x;
+          absoluteY += parentNode.position.y;
+          currentNode = parentNode;
+        } else {
+          break;
+        }
+      }
+
+      const x = absoluteX + (targetNode.width || 200) / 2;
+      const y = absoluteY + (targetNode.height || 100) / 2;
+      const zoom = Math.max(getZoom(), 0.8); // Ensure minimum zoom level
+      setCenter(x, y, { zoom, duration: 500 });
+    }
+  }, [getNodes, setCenter, getZoom]);
+
+  // Expose functions via ref
   useImperativeHandle(ref, () => ({
     exportAsPng: (filename?: string) => exportImage('png', filename),
     exportAsSvg: (filename?: string) => exportImage('svg', filename),
-  }), [exportImage]);
+    focusNode,
+  }), [exportImage, focusNode]);
 
   const handleNodesChange: OnNodesChange = useCallback(
     (changes) => {
@@ -391,17 +452,18 @@ const DiagramCanvasInner = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(f
   );
 
   const handleNodeClick = useCallback(
-    (_: React.MouseEvent, node: { id: string; type?: string }) => {
+    (_: React.MouseEvent, node: { id: string; type?: string; data?: { contract?: { filePath?: string } } }) => {
       // Ignore clicks on group nodes
       if (node.type === 'proxyGroupNode' || node.type === 'categoryGroupNode' || node.type === 'proxyPatternGroupNode') return;
-      onSelectContract(node.id === selectedContract ? null : node.id);
+      const filePath = node.data?.contract?.filePath;
+      onSelectContract(node.id === selectedContract ? null : node.id, filePath);
       onSelectFunction(null);
     },
     [selectedContract, onSelectContract, onSelectFunction]
   );
 
   const handlePaneClick = useCallback(() => {
-    onSelectContract(null);
+    onSelectContract(null, null);
     onSelectFunction(null);
   }, [onSelectContract, onSelectFunction]);
 
@@ -409,8 +471,9 @@ const DiagramCanvasInner = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(f
     () => ({
       onFunctionClick: handleFunctionClick,
       onHeightMeasured: measurementState.phase === 'measuring' ? handleHeightMeasured : undefined,
+      onContractDetailClick,
     }),
-    [handleFunctionClick, handleHeightMeasured, measurementState.phase]
+    [handleFunctionClick, handleHeightMeasured, measurementState.phase, onContractDetailClick]
   );
 
   return (
@@ -454,7 +517,7 @@ const DiagramCanvasInner = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(f
           edgeTypes={edgeTypes}
           fitView
           fitViewOptions={{ padding: 0.2 }}
-          minZoom={0.1}
+          minZoom={0.01}
           maxZoom={2}
           connectionLineStyle={{ stroke: isEditMode && !isLibrary ? '#00d4aa' : '#ef4444', strokeDasharray: isEditMode && !isLibrary ? 'none' : '5,5' }}
           defaultEdgeOptions={{
@@ -520,11 +583,12 @@ const DiagramCanvasInner = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(f
 export const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
   function DiagramCanvas(props, ref) {
     // Generate a unique key for the callGraph to force complete remount on project switch
+    // Key is on inner component to preserve ReactFlowProvider's nodeTypes/edgeTypes reference check
     const callGraphKey = `${props.callGraph.projectName}-${props.callGraph.contracts.length}-${props.callGraph.generatedAt}`;
 
     return (
-      <ReactFlowProvider key={callGraphKey}>
-        <DiagramCanvasInner {...props} ref={ref} />
+      <ReactFlowProvider>
+        <DiagramCanvasInner key={callGraphKey} {...props} ref={ref} />
       </ReactFlowProvider>
     );
   }

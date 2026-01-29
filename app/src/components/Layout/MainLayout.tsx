@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { Edit3, PanelLeft, X } from 'lucide-react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { Edit3, PanelLeft, X, Library } from 'lucide-react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { DiagramCanvas, type DiagramCanvasHandle, type TempEdge } from '@/components/Canvas/DiagramCanvas';
 import { FunctionFlowModal } from '@/components/FunctionFlow/FunctionFlowModal';
-import type { CallGraph, ExternalFunction, ContractCategory, UserEdge } from '@/types/callGraph';
+import { ContractDetailModal } from '@/components/Canvas/ContractDetailModal';
+import type { CallGraph, ExternalFunction, ContractCategory, UserEdge, Contract } from '@/types/callGraph';
 import type { LayoutMode } from '@/utils/transformToReactFlow';
 
 interface MainLayoutProps {
@@ -31,6 +32,11 @@ interface MainLayoutProps {
   onClearTempEdges?: () => void;
   onAddUserEdge?: (edge: UserEdge) => void;
   onDeleteEdge?: (edgeId: string) => void;
+  // Library contracts toggle
+  showLibraryContracts?: boolean;
+  onShowLibraryContractsChange?: (show: boolean) => void;
+  // Reload key for forcing re-render
+  reloadKey?: number;
 }
 
 export function MainLayout({
@@ -54,15 +60,33 @@ export function MainLayout({
   onClearTempEdges,
   onAddUserEdge,
   onDeleteEdge,
+  showLibraryContracts = false,
+  onShowLibraryContractsChange,
+  reloadKey = 0,
 }: MainLayoutProps) {
-  // Generate a unique key for the canvas to force re-render when project/library changes
-  const canvasKey = currentProjectId || currentLibraryId || 'default';
+  // Generate a unique key for the canvas to force re-render when project/library changes, libraries toggled, or reload
+  const canvasKey = `${currentProjectId || currentLibraryId || 'default'}-lib:${showLibraryContracts}-reload:${reloadKey}`;
 
   // Ref for diagram canvas export functions
   const diagramRef = useRef<DiagramCanvasHandle>(null);
 
   // Mobile sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Track the selected contract's file path for disambiguation when multiple contracts have the same name
+  const [selectedContractPath, setSelectedContractPath] = useState<string | null>(null);
+
+  // Contract detail modal state
+  const [detailContract, setDetailContract] = useState<Contract | null>(null);
+
+  const handleContractDetailClick = useCallback((contract: Contract) => {
+    setDetailContract(contract);
+  }, []);
+
+  // Check if there are Solidity 'library' kind contracts (not regular contracts from external packages)
+  const hasLibraryContracts = useMemo(() => {
+    return callGraph.contracts.some(c => c.kind === 'library');
+  }, [callGraph.contracts]);
 
   // Close sidebar on window resize to desktop
   useEffect(() => {
@@ -112,8 +136,12 @@ export function MainLayout({
   }, []);
 
   // Find the contract for the selected function
+  // Use file path for disambiguation when multiple contracts have the same name
   const selectedContractData = selectedContract
-    ? callGraph.contracts.find((c) => c.name === selectedContract)
+    ? selectedContractPath
+      ? callGraph.contracts.find((c) => c.name === selectedContract && c.filePath === selectedContractPath)
+        || callGraph.contracts.find((c) => c.name === selectedContract)
+      : callGraph.contracts.find((c) => c.name === selectedContract)
     : null;
 
   return (
@@ -124,6 +152,13 @@ export function MainLayout({
         onSelectContract={(name) => {
           onSelectContract(name);
           onSelectFunction(null);
+          setSelectedContractPath(null); // Clear file path when selecting from header dropdown
+          // Auto-zoom to the selected contract
+          if (name) {
+            setTimeout(() => {
+              diagramRef.current?.focusNode(name);
+            }, 100);
+          }
         }}
         onImportClick={onImportClick}
         onProjectManagerClick={onProjectManagerClick}
@@ -169,7 +204,12 @@ export function MainLayout({
             onSelectContract={(name) => {
               onSelectContract(name);
               onSelectFunction(null);
+              setSelectedContractPath(null); // Clear file path when selecting from sidebar
               setSidebarOpen(false); // Close sidebar on mobile after selection
+              // Auto-zoom to the selected contract
+              setTimeout(() => {
+                diagramRef.current?.focusNode(name);
+              }, 100);
             }}
             visibleCategories={visibleCategories}
             onCategoryToggle={handleCategoryToggle}
@@ -184,7 +224,10 @@ export function MainLayout({
             callGraph={callGraph}
             selectedContract={selectedContract}
             selectedFunction={selectedFunction?.name ?? null}
-            onSelectContract={onSelectContract}
+            onSelectContract={(name, filePath) => {
+              onSelectContract(name);
+              setSelectedContractPath(filePath ?? null);
+            }}
             onSelectFunction={onSelectFunction}
             enableCategoryGroups={true}
             visibleCategories={visibleCategories}
@@ -196,6 +239,8 @@ export function MainLayout({
             onClearTempEdges={onClearTempEdges}
             onAddUserEdge={onAddUserEdge}
             onDeleteEdge={onDeleteEdge}
+            showLibraryContracts={showLibraryContracts}
+            onContractDetailClick={handleContractDetailClick}
           />
 
           {/* Mobile Sidebar Toggle */}
@@ -207,23 +252,44 @@ export function MainLayout({
             <PanelLeft className="w-4 h-4" />
           </button>
 
-          {/* Edit Mode Toggle - only for user projects */}
-          {currentProjectId && onEditModeChange && (
-            <button
-              onClick={() => onEditModeChange(!isEditMode)}
-              className={`absolute top-4 right-4 z-10 flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg transition-colors ${
-                isEditMode
-                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                  : 'bg-navy-700 hover:bg-navy-600 text-slate-300'
-              }`}
-              title={isEditMode ? 'Exit Edit Mode' : 'Enter Edit Mode'}
-            >
-              <Edit3 className="w-4 h-4" />
-              <span className="text-sm font-medium hidden sm:block">
-                {isEditMode ? 'Editing' : 'Edit'}
-              </span>
-            </button>
-          )}
+          {/* Top-right controls */}
+          <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+            {/* Library Contracts Toggle - only when there are library contracts */}
+            {hasLibraryContracts && onShowLibraryContractsChange && (
+              <button
+                onClick={() => onShowLibraryContractsChange(!showLibraryContracts)}
+                className={`flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg transition-colors ${
+                  showLibraryContracts
+                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                    : 'bg-navy-700 hover:bg-navy-600 text-slate-300'
+                }`}
+                title={showLibraryContracts ? 'Hide Library Contracts' : 'Show Library Contracts'}
+              >
+                <Library className="w-4 h-4" />
+                <span className="text-sm font-medium hidden sm:block">
+                  {showLibraryContracts ? 'Libraries' : 'Libraries'}
+                </span>
+              </button>
+            )}
+
+            {/* Edit Mode Toggle - only for user projects */}
+            {currentProjectId && onEditModeChange && (
+              <button
+                onClick={() => onEditModeChange(!isEditMode)}
+                className={`flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg transition-colors ${
+                  isEditMode
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                    : 'bg-navy-700 hover:bg-navy-600 text-slate-300'
+                }`}
+                title={isEditMode ? 'Exit Edit Mode' : 'Enter Edit Mode'}
+              >
+                <Edit3 className="w-4 h-4" />
+                <span className="text-sm font-medium hidden sm:block">
+                  {isEditMode ? 'Editing' : 'Edit'}
+                </span>
+              </button>
+            )}
+          </div>
         </main>
       </div>
 
@@ -233,7 +299,18 @@ export function MainLayout({
           func={selectedFunction}
           contract={selectedContractData}
           callGraph={callGraph}
+          libraryId={currentLibraryId}
           onClose={() => onSelectFunction(null)}
+        />
+      )}
+
+      {/* Contract Detail Modal */}
+      {detailContract && (
+        <ContractDetailModal
+          contract={detailContract}
+          libraryId={currentLibraryId}
+          allContracts={callGraph.contracts}
+          onClose={() => setDetailContract(null)}
         />
       )}
     </div>
