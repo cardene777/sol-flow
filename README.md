@@ -23,6 +23,7 @@
   <a href="#getting-started">Getting Started</a> •
   <a href="#usage">Usage</a> •
   <a href="#built-in-libraries">Built-in Libraries</a> •
+  <a href="docs/guides/README.md">Guides</a> •
   <a href="#contributing">Contributing</a> •
   <a href="ja/README.md">日本語</a>
 </p>
@@ -57,6 +58,9 @@ Major libraries like OpenZeppelin, Solady, and Avalanche ICM are preloaded and r
 
 ### ✏️ Edit Mode
 Add custom edges to document relationships not captured by static analysis. Perfect for documenting proxy relationships and cross-contract interactions.
+
+### 📝 Source Code Viewer
+View full contract source code with Solidity syntax highlighting. Includes comments, imports, and NatSpec documentation with proper color coding.
 
 ## Demo
 
@@ -200,7 +204,7 @@ See the [LICENSE](LICENSE) file for details. For commercial licensing inquiries,
 - [OpenZeppelin](https://openzeppelin.com/) - Smart contract library
 - [Solady](https://github.com/Vectorized/solady) - Gas optimized Solidity snippets
 - [React Flow](https://reactflow.dev/) - Graph visualization library
-- [Avalanche](https://www.avax.network/) - ICM libraries
+- [Ava Labs](https://www.avalabs.org/) - Avalanche ICM libraries
 
 ---
 

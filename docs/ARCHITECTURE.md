@@ -1,144 +1,183 @@
-# Sol-Flow アーキテクチャ
+# Sol-Flow Architecture
 
-## 概要
+## Overview
 
-Sol-Flowは、Solidityスマートコントラクトの依存関係を可視化するWebアプリケーションです。
-コントラクト間の継承、実装、利用関係をインタラクティブなグラフとして表示します。
+Sol-Flow is a web application that visualizes dependencies in Solidity smart contracts.
+It displays inheritance, implementation, and usage relationships between contracts as an interactive graph.
 
-## ディレクトリ構成
+## Directory Structure
 
 ```
 sol-flow/
-├── app/                          # Next.js アプリケーション
+├── app/                          # Next.js Application
 │   ├── src/
-│   │   ├── app/                  # App Router (Next.js 14+)
+│   │   ├── app/                  # App Router (Next.js 15)
 │   │   │   ├── api/              # API Routes
-│   │   │   │   ├── libraries/    # ライブラリ取得API
-│   │   │   │   └── parse/        # Solidityパース API
-│   │   │   └── page.tsx          # メインページ
-│   │   ├── components/           # React コンポーネント
-│   │   │   ├── Canvas/           # React Flow キャンバス
-│   │   │   ├── Layout/           # レイアウト
-│   │   │   ├── Projects/         # プロジェクト管理
-│   │   │   ├── Sidebar/          # サイドバー
-│   │   │   └── Upload/           # アップロード
+│   │   │   │   ├── libraries/    # Library fetch API
+│   │   │   │   └── parse/        # Solidity parse API
+│   │   │   └── page.tsx          # Main page
+│   │   ├── components/           # React Components
+│   │   │   ├── Canvas/           # React Flow canvas
+│   │   │   ├── Layout/           # Layout components
+│   │   │   ├── Projects/         # Project management
+│   │   │   └── Upload/           # File upload
 │   │   ├── data/
-│   │   │   └── libraries/        # 事前パース済みライブラリJSON
-│   │   ├── lib/                  # ユーティリティ
-│   │   │   ├── callGraphBuilder.ts  # グラフ構築
-│   │   │   ├── parser.ts         # Solidityパーサー
-│   │   │   └── storage.ts        # localStorage管理
-│   │   ├── types/                # TypeScript型定義
+│   │   │   └── libraries/        # Pre-parsed library JSON
+│   │   ├── lib/                  # Core utilities
+│   │   │   ├── callGraphBuilder.ts  # Graph construction
+│   │   │   ├── solidityParser.ts    # Solidity parser
+│   │   │   └── storage.ts        # localStorage management
+│   │   ├── types/                # TypeScript type definitions
 │   │   └── utils/
-│   │       └── transformToReactFlow.ts  # React Flow変換
-│   └── public/                   # 静的ファイル
-├── contracts/                    # サンプルコントラクト (ERC-7546)
-├── library/                      # ライブラリソースコード
+│   │       └── transformToReactFlow.ts  # React Flow transformation
+│   └── public/                   # Static files
+├── library/                      # Library source code
 │   ├── openzeppelin-contracts/
 │   ├── openzeppelin-contracts-upgradeable/
-│   └── solady/
-└── docs/                         # ドキュメント
+│   ├── solady/
+│   └── icm-services/
+├── contracts/                    # Sample contracts (ERC-7546)
+└── docs/                         # Documentation
 ```
 
-## データフロー
+## Data Flow
 
 ```
 ┌─────────────────┐
-│ Solidityファイル │
+│ Solidity Files  │
 │  (.sol files)   │
 └────────┬────────┘
-         │ アップロード
+         │ Upload
          ▼
 ┌─────────────────┐
-│   /api/parse    │ Solidityパーサー
-│   parser.ts     │ (正規表現ベース)
+│   /api/parse    │ Solidity Parser
+│ solidityParser  │ (@solidity-parser/parser)
 └────────┬────────┘
          │ Contract[]
          ▼
 ┌─────────────────┐
-│ callGraphBuilder│ 依存関係検出
-│      .ts        │ プロキシパターン検出
+│ callGraphBuilder│ Dependency Detection
+│      .ts        │ Proxy Pattern Detection
 └────────┬────────┘
          │ CallGraph
          ▼
 ┌─────────────────┐
-│ transformTo     │ React Flow形式に変換
-│ ReactFlow.ts    │ ノード/エッジ生成
+│ transformTo     │ Transform to React Flow
+│ ReactFlow.ts    │ Generate nodes/edges
 └────────┬────────┘
          │ nodes[], edges[]
          ▼
 ┌─────────────────┐
-│  React Flow     │ インタラクティブ表示
+│  React Flow     │ Interactive Display
 │  DiagramCanvas  │
 └─────────────────┘
 ```
 
-## 主要コンポーネント
+## Key Components
 
-### 1. Solidityパーサー (`lib/parser.ts`)
+### 1. Solidity Parser (`lib/solidityParser.ts`)
 
-正規表現を使用してSolidityファイルを解析:
-- コントラクト/インターフェース/ライブラリの検出
-- 継承関係 (`is`)
-- 実装関係 (`implements`)
-- import文の解析
-- 関数シグネチャの抽出
+Uses `@solidity-parser/parser` to analyze Solidity files:
+- Detect contracts/interfaces/libraries
+- Extract inheritance relationships (`is`)
+- Extract implementations (`implements`)
+- Parse import statements
+- Extract function signatures and calls
 
 ### 2. CallGraphBuilder (`lib/callGraphBuilder.ts`)
 
-コントラクト間の依存関係を構築:
-- 継承グラフの構築
-- プロキシパターンの検出 (ERC-7546, UUPS, Diamond, Beacon, Transparent)
-- `delegatecall`関係の検出
-- カテゴリ分類 (access, token, proxy, etc.)
+Builds dependency graph between contracts:
+- Construct inheritance graph
+- Detect proxy patterns (ERC-7546, UUPS, Diamond, Beacon, Transparent)
+- Detect `delegatecall` relationships
+- Category classification
 
-**検出されるプロキシパターン:**
+**Detected Proxy Patterns:**
 - **ERC-7546**: Dictionary + Proxy + Implementation
-- **UUPS**: UUPSUpgradeable継承
+- **UUPS**: UUPSUpgradeable inheritance
 - **Transparent**: TransparentUpgradeableProxy
 - **Diamond**: EIP-2535
 - **Beacon**: BeaconProxy
 
-### 3. React Flow変換 (`utils/transformToReactFlow.ts`)
+### 3. React Flow Transformation (`utils/transformToReactFlow.ts`)
 
-CallGraphをReact Flowのノード/エッジに変換:
-- カテゴリグループノードの生成
-- プロキシパターングループの生成
-- エッジの重複防止
-- ハンドル位置のオフセット計算
+Transforms CallGraph to React Flow nodes/edges:
+- Generate category group nodes
+- Generate proxy pattern groups
+- Prevent edge duplication
+- Calculate handle position offsets
+- Apply dagre layout algorithm
 
-### 4. ノードタイプ
+### 4. Node Types
 
-| タイプ | 説明 |
-|--------|------|
-| `contractNode` | コントラクトノード |
-| `categoryGroupNode` | カテゴリグループ (Access, Token等) |
-| `proxyPatternGroupNode` | プロキシパターングループ (ERC-7546等) |
+| Type | Description |
+|------|-------------|
+| `contractNode` | Contract node |
+| `categoryGroupNode` | Category group (Access, Token, etc.) |
+| `proxyPatternGroupNode` | Proxy pattern group (ERC-7546, etc.) |
 
-### 5. エッジタイプ
+### 5. Edge Types
 
-| タイプ | 色 | 説明 |
-|--------|-----|------|
-| `inherits` | 青 | 継承関係 |
-| `implements` | 紫 | インターフェース実装 |
-| `uses` | 黄 (破線) | ライブラリ使用 |
-| `delegatecall` | ピンク (破線) | delegatecall |
-| `registers` | 紫 (破線) | Dictionary登録 |
+| Type | Color | Description |
+|------|-------|-------------|
+| `inherits` | Blue | Inheritance |
+| `implements` | Purple | Interface implementation |
+| `uses` | Yellow (dashed) | Library usage |
+| `delegatecall` | Pink (dashed) | delegatecall |
+| `registers` | Violet (dashed) | Dictionary registration |
 
-## 状態管理
+## State Management
 
-- **React State**: コンポーネント状態
-- **localStorage**: プロジェクト保存
-  - `sol-flow-projects`: 保存済みプロジェクト一覧
-  - `sol-flow-project-{id}`: 各プロジェクトのCallGraph
-  - `sol-flow-current-project`: 現在のプロジェクトID
-  - `sol-flow-current-library`: 現在のライブラリID
+- **React State**: Component state
+- **localStorage**: Project persistence
+  - `sol-flow-projects`: List of saved projects
+  - `sol-flow-project-{id}`: Each project's CallGraph
+  - `sol-flow-current-project`: Current project ID
+  - `sol-flow-current-library`: Current library ID
 
-## 事前パース済みライブラリ
+## Pre-parsed Libraries
 
-`/app/src/data/libraries/` に以下のJSONファイル:
-- `openzeppelin-parsed.json` (919KB)
-- `openzeppelin-upgradeable-parsed.json` (1.1MB)
-- `solady-parsed.json` (764KB)
+Located in `/app/src/data/libraries/`:
+- `openzeppelin-parsed.json`
+- `openzeppelin-upgradeable-parsed.json`
+- `solady-parsed.json`
+- `avalanche-teleporter-parsed.json`
+- `avalanche-ictt-parsed.json`
+- `avalanche-validator-manager-parsed.json`
 
-これらはビルド時にバンドルされ、APIから提供されます。
+These are bundled at build time and served via API.
+
+## Component Hierarchy
+
+```
+MainLayout
+├── Header
+│   ├── Search
+│   ├── ProjectSelector
+│   ├── EditModeToggle
+│   └── ExportButton
+├── Sidebar
+│   ├── CategoryFilter
+│   ├── ContractTree
+│   │   └── TreeNode (recursive)
+│   └── LibraryToggle
+└── DiagramCanvas
+    ├── ReactFlow
+    │   ├── ContractNode
+    │   ├── CategoryGroupNode
+    │   └── ProxyPatternGroupNode
+    ├── DependencyEdge
+    ├── FunctionFlowModal
+    └── ContractDetailModal
+```
+
+## API Overview
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/parse` | POST | Parse Solidity files |
+| `/api/libraries` | GET | List available libraries |
+| `/api/libraries/[id]` | GET | Get specific library data |
+| `/api/libraries/default` | GET | Get default library |
+
+See [API.md](./API.md) for detailed documentation.

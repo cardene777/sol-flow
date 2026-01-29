@@ -1,8 +1,9 @@
 'use client';
 
 import { memo } from 'react';
-import { EdgeLabelRenderer, getBezierPath, type EdgeProps } from 'reactflow';
+import { EdgeLabelRenderer, getBezierPath, type EdgeProps, useReactFlow } from 'reactflow';
 import clsx from 'clsx';
+import { X } from 'lucide-react';
 
 interface DependencyEdgeData {
   type: 'inherits' | 'implements' | 'uses' | 'delegatecall' | 'registers' | 'imports';
@@ -14,8 +15,9 @@ interface DependencyEdgeData {
   isSelected?: boolean;
   sourceOffset?: number;  // Offset for source handle (to prevent overlapping lines)
   targetOffset?: number;  // Offset for target handle
-  isTemporary?: boolean;  // Temp edge (green dashed, disappears on reload)
+  isTemporary?: boolean;  // Temp edge (red dashed, disappears on reload)
   isUserEdge?: boolean;   // User-added permanent edge
+  onDelete?: (edgeId: string) => void;  // Callback to delete edge
 }
 
 function DependencyEdgeComponent({
@@ -30,6 +32,8 @@ function DependencyEdgeComponent({
   selected,
   style,
 }: EdgeProps<DependencyEdgeData>) {
+  const { setEdges } = useReactFlow();
+
   // Apply offsets to prevent overlapping lines from the same node
   const sourceOffset = data?.sourceOffset || 0;
   const targetOffset = data?.targetOffset || 0;
@@ -82,11 +86,24 @@ function DependencyEdgeComponent({
   const isDashed = isTemporary || strokeDasharray || edgeType === 'uses' || edgeType === 'delegatecall' || edgeType === 'registers' || edgeType === 'imports';
 
   // Don't show label for bundled edges with low counts (reduces clutter)
-  // Show label for temp edges and user edges
-  const showLabel = isTemporary || isUserEdge || (isBundled ? (data?.bundleCount || 0) >= 2 : false);
+  // User edges and temp edges don't show labels (they show X on hover instead)
+  const showLabel = !isUserEdge && !isTemporary && (isBundled ? (data?.bundleCount || 0) >= 2 : false);
 
   // For selected edges, use bright color; for temp edges, use bright red
   const finalStrokeColor = isSelected ? '#00ff88' : isTemporary ? '#f87171' : baseStrokeColor;
+
+  // Handle delete for temp edges and user edges
+  const handleDelete = () => {
+    if (data?.onDelete) {
+      data.onDelete(id);
+    } else {
+      // Fallback: remove edge directly via React Flow
+      setEdges((edges) => edges.filter((e) => e.id !== id));
+    }
+  };
+
+  // Show delete button for temp edges and user edges
+  const showDeleteButton = isTemporary || isUserEdge;
 
   return (
     <>
@@ -140,8 +157,35 @@ function DependencyEdgeComponent({
         } : undefined}
       />
 
-      {/* Edge Label */}
-      {showLabel && (
+      {/* Delete button for temp edges and user edges - always visible */}
+      {showDeleteButton && (
+        <EdgeLabelRenderer>
+          <div
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              pointerEvents: 'all',
+              zIndex: 10000,
+            }}
+          >
+            <button
+              className={clsx(
+                "p-1 rounded-full text-white shadow-lg transition-all border-2 opacity-60 hover:opacity-100 hover:scale-110",
+                isTemporary
+                  ? "bg-red-600 hover:bg-red-500 border-red-400"
+                  : "bg-cyan-600 hover:bg-cyan-500 border-cyan-400"
+              )}
+              onClick={handleDelete}
+              title="Delete edge"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        </EdgeLabelRenderer>
+      )}
+
+      {/* Edge Label for non-temp edges */}
+      {showLabel && !isTemporary && (
         <EdgeLabelRenderer>
           <div
             style={{
@@ -149,25 +193,20 @@ function DependencyEdgeComponent({
               transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
               pointerEvents: 'all',
               opacity: isBundled ? 0.8 : 1,
-              cursor: isTemporary ? 'pointer' : 'default',
             }}
             className={clsx(
-              'rounded font-medium',
-              isTemporary
-                ? 'px-3 py-1 text-xs text-white border-2 border-red-500 bg-red-600 shadow-lg hover:bg-red-700 transition-colors'
-                : 'px-2 py-0.5 text-[10px] bg-navy-700 border',
-              isUserEdge && !isTemporary && 'text-cyan-400 border-cyan-500/30',
-              !isTemporary && !isUserEdge && edgeType === 'inherits' && 'text-blue-400 border-blue-500/30',
-              !isTemporary && !isUserEdge && edgeType === 'implements' && 'text-indigo-400 border-indigo-500/30',
-              !isTemporary && !isUserEdge && edgeType === 'uses' && 'text-amber border-amber/30',
-              !isTemporary && !isUserEdge && edgeType === 'delegatecall' && 'text-pink-400 border-pink-500/30',
-              !isTemporary && !isUserEdge && edgeType === 'registers' && 'text-violet-400 border-violet-500/30',
-              !isTemporary && !isUserEdge && edgeType === 'imports' && 'text-slate-400 border-slate-500/30',
+              'rounded font-medium px-2 py-0.5 text-[10px] bg-navy-700 border',
+              isUserEdge && 'text-cyan-400 border-cyan-500/30',
+              !isUserEdge && edgeType === 'inherits' && 'text-blue-400 border-blue-500/30',
+              !isUserEdge && edgeType === 'implements' && 'text-indigo-400 border-indigo-500/30',
+              !isUserEdge && edgeType === 'uses' && 'text-amber border-amber/30',
+              !isUserEdge && edgeType === 'delegatecall' && 'text-pink-400 border-pink-500/30',
+              !isUserEdge && edgeType === 'registers' && 'text-violet-400 border-violet-500/30',
+              !isUserEdge && edgeType === 'imports' && 'text-slate-400 border-slate-500/30',
               isBundled && 'bg-navy-800'
             )}
-            title={isTemporary ? 'クリックで削除' : undefined}
           >
-            {isTemporary ? `一時 ✕` : (data?.label || edgeType)}
+            {data?.label || edgeType}
           </div>
         </EdgeLabelRenderer>
       )}

@@ -1,33 +1,33 @@
-# Sol-Flow API リファレンス
+# Sol-Flow API Reference
 
-## エンドポイント一覧
+## Endpoint Overview
 
-| メソッド | パス | 説明 |
-|---------|------|------|
-| POST | `/api/parse` | Solidityファイルをパース |
-| GET | `/api/libraries` | 利用可能なライブラリ一覧 |
-| GET | `/api/libraries/[id]` | 特定ライブラリのCallGraph取得 |
-| GET | `/api/libraries/default` | デフォルトライブラリ取得 |
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/parse` | Parse Solidity files |
+| GET | `/api/libraries` | List available libraries |
+| GET | `/api/libraries/[id]` | Get specific library CallGraph |
+| GET | `/api/libraries/default` | Get default library |
 
 ---
 
 ## POST /api/parse
 
-Solidityファイルをパースし、CallGraphを生成します。
+Parses Solidity files and generates a CallGraph.
 
-### リクエスト
+### Request
 
 ```typescript
 {
   files: Array<{
-    path: string;     // ファイルパス
-    content: string;  // ファイル内容
+    path: string;     // File path
+    content: string;  // File content
   }>;
-  projectName: string;  // プロジェクト名
+  projectName: string;  // Project name
 }
 ```
 
-### レスポンス
+### Response
 
 ```typescript
 {
@@ -35,77 +35,7 @@ Solidityファイルをパースし、CallGraphを生成します。
 }
 ```
 
-### CallGraph型
-
-```typescript
-interface CallGraph {
-  version: string;
-  generatedAt: string;
-  projectName: string;
-  structure: DirectoryNode;
-  contracts: Contract[];
-  dependencies: Dependency[];
-  proxyGroups: ProxyGroup[];
-  stats: Stats;
-}
-
-interface Contract {
-  name: string;
-  filePath: string;
-  kind: 'contract' | 'interface' | 'library' | 'abstract';
-  inherits: string[];
-  implements: string[];
-  imports: string[];
-  functions: FunctionInfo[];
-  category: ContractCategory;
-  proxyPattern?: ProxyPatternType;
-  proxyRole?: ProxyRole;
-  proxyGroupId?: string;
-}
-
-interface Dependency {
-  from: string;
-  to: string;
-  type: DependencyType;
-  functions?: string[];
-}
-
-type DependencyType =
-  | 'inherits'
-  | 'implements'
-  | 'uses'
-  | 'delegatecall'
-  | 'registers'
-  | 'imports';
-
-type ContractCategory =
-  | 'access'
-  | 'account'
-  | 'finance'
-  | 'governance'
-  | 'metatx'
-  | 'proxy'
-  | 'token'
-  | 'utils'
-  | 'interface'
-  | 'library'
-  | 'other';
-
-type ProxyPatternType =
-  | 'eip7546'
-  | 'uups'
-  | 'transparent'
-  | 'diamond'
-  | 'beacon';
-
-type ProxyRole =
-  | 'proxy'
-  | 'dictionary'
-  | 'implementation'
-  | 'storage';
-```
-
-### 使用例
+### Example
 
 ```javascript
 const response = await fetch('/api/parse', {
@@ -127,9 +57,9 @@ const { callGraph } = await response.json();
 
 ## GET /api/libraries
 
-利用可能な事前パース済みライブラリの一覧を取得します。
+Retrieves the list of available pre-parsed libraries.
 
-### レスポンス
+### Response
 
 ```typescript
 {
@@ -141,7 +71,7 @@ const { callGraph } = await response.json();
 }
 ```
 
-### 使用例
+### Example
 
 ```javascript
 const response = await fetch('/api/libraries');
@@ -149,7 +79,10 @@ const { libraries } = await response.json();
 // [
 //   { id: 'openzeppelin', name: 'OpenZeppelin Contracts', version: '5.0.0' },
 //   { id: 'openzeppelin-upgradeable', name: 'OpenZeppelin Upgradeable', version: '5.0.0' },
-//   { id: 'solady', name: 'Solady', version: 'latest' }
+//   { id: 'solady', name: 'Solady', version: 'latest' },
+//   { id: 'avalanche-teleporter', name: 'Avalanche Teleporter', version: 'latest' },
+//   { id: 'avalanche-ictt', name: 'Avalanche ICTT', version: 'latest' },
+//   { id: 'avalanche-validator-manager', name: 'Avalanche Validator Manager', version: 'latest' }
 // ]
 ```
 
@@ -157,15 +90,26 @@ const { libraries } = await response.json();
 
 ## GET /api/libraries/[id]
 
-特定のライブラリのCallGraphを取得します。
+Retrieves the CallGraph for a specific library.
 
-### パラメータ
+### Parameters
 
-| 名前 | 型 | 説明 |
-|------|-----|------|
-| id | string | ライブラリID (`openzeppelin`, `openzeppelin-upgradeable`, `solady`) |
+| Name | Type | Description |
+|------|------|-------------|
+| id | string | Library ID |
 
-### レスポンス
+### Available Library IDs
+
+| ID | Library |
+|----|---------|
+| `openzeppelin` | OpenZeppelin Contracts |
+| `openzeppelin-upgradeable` | OpenZeppelin Upgradeable |
+| `solady` | Solady |
+| `avalanche-teleporter` | Avalanche Teleporter |
+| `avalanche-ictt` | Avalanche ICTT |
+| `avalanche-validator-manager` | Avalanche Validator Manager |
+
+### Response
 
 ```typescript
 {
@@ -178,7 +122,7 @@ const { libraries } = await response.json();
 }
 ```
 
-### 使用例
+### Example
 
 ```javascript
 const response = await fetch('/api/libraries/openzeppelin');
@@ -189,29 +133,143 @@ const { library, callGraph } = await response.json();
 
 ## GET /api/libraries/default
 
-デフォルトライブラリ (OpenZeppelin) のCallGraphを取得します。
+Retrieves the default library (OpenZeppelin).
 
-### レスポンス
+### Response
 
-`GET /api/libraries/openzeppelin` と同じ。
+Same as `GET /api/libraries/openzeppelin`.
 
 ---
 
-## エラーレスポンス
+## Data Types
 
-すべてのエンドポイントは、エラー時に以下の形式でレスポンスを返します:
+### CallGraph
+
+See [DATA_TYPES.md](./DATA_TYPES.md) for complete type definitions.
 
 ```typescript
-{
-  error: string;  // エラーメッセージ
+interface CallGraph {
+  version: string;
+  generatedAt: string;
+  projectName: string;
+  structure: DirectoryNode;
+  contracts: Contract[];
+  dependencies: Dependency[];
+  proxyGroups: ProxyGroup[];
+  stats: Stats;
+  userEdges?: UserEdge[];
+  deletedEdgeIds?: string[];
 }
 ```
 
-### HTTPステータスコード
+### Contract
 
-| コード | 説明 |
-|--------|------|
-| 200 | 成功 |
-| 400 | リクエスト不正 |
-| 404 | リソースが見つからない |
-| 500 | サーバーエラー |
+```typescript
+interface Contract {
+  name: string;
+  filePath: string;
+  kind: 'contract' | 'interface' | 'library' | 'abstract';
+  inherits: string[];
+  implements: string[];
+  usesLibraries: string[];
+  imports: ImportInfo[];
+  externalFunctions: ExternalFunction[];
+  internalFunctions: InternalFunction[];
+  events: EventDefinition[];
+  errors: ErrorDefinition[];
+  structs?: StructDefinition[];
+  stateVariables?: StateVariable[];
+  category: ContractCategory;
+  proxyPattern?: ProxyPatternType;
+  proxyRole?: ProxyRole;
+  proxyGroupId?: string;
+  isExternalLibrary?: boolean;
+  librarySource?: string;
+  sourceCode?: string;
+}
+```
+
+### Dependency
+
+```typescript
+interface Dependency {
+  from: string;
+  to: string;
+  type: DependencyType;
+  functions?: string[];
+}
+
+type DependencyType =
+  | 'inherits'
+  | 'implements'
+  | 'uses'
+  | 'delegatecall'
+  | 'registers'
+  | 'imports';
+```
+
+### ProxyPatternType
+
+```typescript
+type ProxyPatternType =
+  | 'eip7546'
+  | 'uups'
+  | 'transparent'
+  | 'diamond'
+  | 'beacon';
+```
+
+### ProxyRole
+
+```typescript
+type ProxyRole =
+  | 'proxy'
+  | 'dictionary'
+  | 'implementation'
+  | 'beacon'
+  | 'facet';
+```
+
+---
+
+## Error Responses
+
+All endpoints return errors in the following format:
+
+```typescript
+{
+  error: string;  // Error message
+}
+```
+
+### HTTP Status Codes
+
+| Code | Description |
+|------|-------------|
+| 200 | Success |
+| 400 | Bad Request |
+| 404 | Resource Not Found |
+| 500 | Internal Server Error |
+
+### Error Examples
+
+**400 Bad Request**
+```json
+{
+  "error": "Missing required field: files"
+}
+```
+
+**404 Not Found**
+```json
+{
+  "error": "Library not found: invalid-id"
+}
+```
+
+**500 Internal Server Error**
+```json
+{
+  "error": "Failed to parse Solidity files"
+}
+```

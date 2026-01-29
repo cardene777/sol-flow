@@ -264,10 +264,17 @@ const DiagramCanvasInner = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(f
     }));
   }, [tempEdges]);
 
-  // Compute combined edges (initialEdges + temp edges)
+  // Compute combined edges (initialEdges + temp edges) with onDelete callback
   const combinedEdges = useMemo(() => {
-    return [...initialEdges, ...tempEdgesForReactFlow];
-  }, [initialEdges, tempEdgesForReactFlow]);
+    const addOnDelete = (edge: Edge): Edge => ({
+      ...edge,
+      data: {
+        ...edge.data,
+        onDelete: onDeleteEdge,
+      },
+    });
+    return [...initialEdges.map(addOnDelete), ...tempEdgesForReactFlow.map(addOnDelete)];
+  }, [initialEdges, tempEdgesForReactFlow, onDeleteEdge]);
 
   // Update nodes when selection changes
   useEffect(() => {

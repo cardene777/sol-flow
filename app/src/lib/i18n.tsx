@@ -25,6 +25,12 @@ interface LandingTranslations {
   feature5Description: string;
   feature6Title: string;
   feature6Description: string;
+  feature7Title: string;
+  feature7Description: string;
+  feature8Title: string;
+  feature8Description: string;
+  feature9Title: string;
+  feature9Description: string;
   howToUse: string;
   howToUseDescription: string;
   step1Title: string;
@@ -102,6 +108,12 @@ const translations: Record<Language, Translations> = {
       feature5Description: 'Just drag and drop Solidity files. External libraries (OpenZeppelin, Solady, etc.) are automatically resolved.',
       feature6Title: 'Built-in Libraries',
       feature6Description: 'Major libraries like OpenZeppelin, Solady, Avalanche ICM are preloaded. Reference them immediately.',
+      feature7Title: 'Contract Details',
+      feature7Description: 'View complete contract information including state variables, functions, events, errors, and full source code with syntax highlighting.',
+      feature8Title: 'Edit Mode',
+      feature8Description: 'Add custom edges to document relationships not detected by static analysis. Perfect for proxy patterns and runtime interactions.',
+      feature9Title: 'Export Diagrams',
+      feature9Description: 'Export your diagrams as PNG or SVG images. Great for documentation, presentations, and audit reports.',
       howToUse: 'How to Use',
       howToUseDescription: 'Visualize your contracts in 3 steps',
       step1Title: 'Import Contracts',
@@ -170,6 +182,12 @@ const translations: Record<Language, Translations> = {
       feature5Description: 'Solidityファイルをドラッグ&ドロップするだけ。外部ライブラリ（OpenZeppelin、Solady等）は自動解決されます。',
       feature6Title: 'ライブラリ内蔵',
       feature6Description: 'OpenZeppelin、Solady、Avalanche ICM等の主要ライブラリがプリロード済み。すぐに参照できます。',
+      feature7Title: 'コントラクト詳細',
+      feature7Description: '状態変数、関数、イベント、エラー、ソースコードをシンタックスハイライト付きで確認できます。',
+      feature8Title: '編集モード',
+      feature8Description: '静的解析で検出されない関係を手動で追加。プロキシパターンや動的な相互作用の文書化に最適です。',
+      feature9Title: 'エクスポート',
+      feature9Description: 'ダイアグラムをPNGまたはSVG形式で出力。ドキュメント、プレゼンテーション、監査レポートに活用できます。',
       howToUse: '使い方',
       howToUseDescription: '3つのステップで、あなたのコントラクトを可視化',
       step1Title: 'コントラクトをインポート',

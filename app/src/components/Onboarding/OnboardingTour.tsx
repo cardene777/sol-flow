@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, ChevronLeft, ChevronRight, Upload, Search, MousePointer, Maximize2, Code2, Download } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Upload, Search, MousePointer, Maximize2, Code2, Download, Edit3, FileCode, Eye } from 'lucide-react';
 
 interface OnboardingTourProps {
   onComplete: () => void;
@@ -28,7 +28,7 @@ const tourSteps: TourStep[] = [
   {
     id: 'sidebar',
     title: 'サイドバー',
-    description: 'コントラクトがカテゴリ別に表示されます。クリックでコントラクトを選択、カテゴリヘッダーで表示/非表示を切り替えできます。',
+    description: 'コントラクトがカテゴリ別に表示されます。コントラクト名にホバーするとコードアイコンが表示され、クリックすると詳細を確認できます。',
     icon: <MousePointer className="w-6 h-6" />,
     targetSelector: '[data-tour="sidebar"]',
     tooltipPosition: 'right',
@@ -36,15 +36,29 @@ const tourSteps: TourStep[] = [
   {
     id: 'canvas',
     title: 'ダイアグラムキャンバス',
-    description: 'コントラクトの依存関係図が表示されます。マウスホイールでズーム、ドラッグで移動。コントラクトをクリックすると展開されます。',
+    description: 'コントラクトの依存関係図が表示されます。マウスホイールでズーム、ドラッグで移動。コントラクトノードをクリックすると関数一覧が表示されます。',
     icon: <Maximize2 className="w-6 h-6" />,
     targetSelector: '[data-tour="canvas"]',
     tooltipPosition: 'left',
   },
   {
+    id: 'contract-details',
+    title: 'コントラクト詳細',
+    description: '展開したノードの「View Details」ボタンをクリックすると、変数、関数、イベント、ソースコードが確認できます。ソースコードはシンタックスハイライト付きで表示されます。',
+    icon: <FileCode className="w-6 h-6" />,
+    tooltipPosition: 'center',
+  },
+  {
+    id: 'function-flow',
+    title: '関数フロー',
+    description: '展開したノード内の関数名をクリックすると、その関数の呼び出しフローとソースコードが表示されます。内部呼び出し、ライブラリ呼び出し、発行イベントなどが確認できます。',
+    icon: <Eye className="w-6 h-6" />,
+    tooltipPosition: 'center',
+  },
+  {
     id: 'search',
     title: '検索機能',
-    description: 'コントラクト名、関数名、イベント名を検索できます。Ctrl+K（Mac: Cmd+K）でフォーカス。',
+    description: 'コントラクト名、関数名、イベント名を検索できます。Ctrl+K（Mac: Cmd+K）でフォーカス。検索結果をクリックすると自動でズームします。',
     icon: <Search className="w-6 h-6" />,
     targetSelector: '[data-tour="search"]',
     tooltipPosition: 'bottom',
@@ -52,10 +66,17 @@ const tourSteps: TourStep[] = [
   {
     id: 'import',
     title: 'インポート',
-    description: '自分のSolidityファイルをインポートできます。OpenZeppelin等の外部ライブラリは自動解決されます。',
+    description: '自分のSolidityファイルをインポートできます。OpenZeppelin等の外部ライブラリは自動解決されます。ドラッグ&ドロップまたはフォルダ選択でアップロード可能です。',
     icon: <Upload className="w-6 h-6" />,
     targetSelector: '[data-tour="import"]',
     tooltipPosition: 'bottom',
+  },
+  {
+    id: 'edit-mode',
+    title: '編集モード',
+    description: '保存したプロジェクトでは編集モードが使えます。コントラクト間をドラッグしてカスタムエッジを追加できます。静的解析では捉えられない関係をドキュメント化するのに便利です。',
+    icon: <Edit3 className="w-6 h-6" />,
+    tooltipPosition: 'center',
   },
   {
     id: 'export',
@@ -68,7 +89,7 @@ const tourSteps: TourStep[] = [
   {
     id: 'complete',
     title: '準備完了!',
-    description: 'これで基本操作は完了です。右上のヘルプボタン（?）からいつでも詳細なドキュメントを確認できます。',
+    description: 'これで基本操作は完了です。右上のヘルプボタン（?）からいつでも詳細なドキュメントを確認できます。さあ、コントラクトを探索しましょう！',
     icon: <Code2 className="w-6 h-6" />,
     tooltipPosition: 'center',
   },

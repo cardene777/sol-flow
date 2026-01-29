@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { X, ChevronDown, ChevronRight, Variable, Zap, AlertTriangle, FunctionSquare, ExternalLink, Braces } from 'lucide-react';
+import { X, ChevronDown, ChevronRight, Variable, Zap, AlertTriangle, FunctionSquare, ExternalLink, Braces, FileCode, Copy, Check } from 'lucide-react';
 import clsx from 'clsx';
 import type { Contract, StateVariable, EventDefinition, ErrorDefinition, StructDefinition, ExternalFunction, InternalFunction, CallGraph } from '@/types/callGraph';
 import { getGitHubUrlForPath, getGitHubUrlForLibrary, isExternalLibrary, LIBRARY_GITHUB_CONFIG } from '@/config/remappings';
@@ -246,7 +246,7 @@ function collectInheritedElements(
   return result;
 }
 
-type TabType = 'variables' | 'structs' | 'events' | 'errors' | 'functions';
+type TabType = 'variables' | 'structs' | 'events' | 'errors' | 'functions' | 'source';
 
 export function ContractDetailModal({ contract, libraryId, allContracts = [], onClose }: ContractDetailModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>('variables');
@@ -269,12 +269,13 @@ export function ContractDetailModal({ contract, libraryId, allContracts = [], on
     return getContractGitHubUrl(contract, libraryId);
   }, [contract, libraryId]);
 
-  const tabs: { id: TabType; label: string; icon: React.ReactNode; count: number }[] = [
-    { id: 'variables', label: '変数', icon: <Variable className="w-4 h-4" />, count: stateVariables.length },
-    { id: 'structs', label: '構造体', icon: <Braces className="w-4 h-4" />, count: structs.length },
-    { id: 'events', label: 'イベント', icon: <Zap className="w-4 h-4" />, count: events.length },
-    { id: 'errors', label: 'エラー', icon: <AlertTriangle className="w-4 h-4" />, count: errors.length },
-    { id: 'functions', label: '関数', icon: <FunctionSquare className="w-4 h-4" />, count: (contract.externalFunctions?.length || 0) + (contract.internalFunctions?.length || 0) },
+  const tabs: { id: TabType; label: string; icon: React.ReactNode; count?: number }[] = [
+    { id: 'variables', label: 'Variables', icon: <Variable className="w-4 h-4" />, count: stateVariables.length },
+    { id: 'structs', label: 'Structs', icon: <Braces className="w-4 h-4" />, count: structs.length },
+    { id: 'events', label: 'Events', icon: <Zap className="w-4 h-4" />, count: events.length },
+    { id: 'errors', label: 'Errors', icon: <AlertTriangle className="w-4 h-4" />, count: errors.length },
+    { id: 'functions', label: 'Functions', icon: <FunctionSquare className="w-4 h-4" />, count: (contract.externalFunctions?.length || 0) + (contract.internalFunctions?.length || 0) },
+    { id: 'source', label: 'Source', icon: <FileCode className="w-4 h-4" /> },
   ];
 
   return (
@@ -331,9 +332,11 @@ export function ContractDetailModal({ contract, libraryId, allContracts = [], on
             >
               {tab.icon}
               {tab.label}
-              <span className="text-[10px] bg-navy-700 px-1.5 py-0.5 rounded">
-                {tab.count}
-              </span>
+              {tab.count !== undefined && (
+                <span className="text-[10px] bg-navy-700 px-1.5 py-0.5 rounded">
+                  {tab.count}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -353,6 +356,9 @@ export function ContractDetailModal({ contract, libraryId, allContracts = [], on
               libraryId={libraryId}
             />
           )}
+          {activeTab === 'source' && (
+            <SourceCodeTab sourceCode={contract.sourceCode} />
+          )}
         </div>
       </div>
     </div>
@@ -361,7 +367,7 @@ export function ContractDetailModal({ contract, libraryId, allContracts = [], on
 
 function VariablesTable({ variables, currentContract, allContracts, libraryId }: { variables: InheritedStateVariable[]; currentContract: Contract; allContracts: Contract[]; libraryId?: string | null }) {
   if (variables.length === 0) {
-    return <EmptyState message="状態変数が定義されていません" />;
+    return <EmptyState message="No state variables defined" />;
   }
 
   const constants = variables.filter(v => v.isConstant);
@@ -372,11 +378,11 @@ function VariablesTable({ variables, currentContract, allContracts, libraryId }:
 
   return (
     <div className="space-y-6">
-      {constants.length > 0 && <VariableSection title="定数" variables={constants} currentContract={currentContract} allContracts={allContracts} libraryId={libraryId} />}
-      {immutables.length > 0 && <VariableSection title="不変値" variables={immutables} currentContract={currentContract} allContracts={allContracts} libraryId={libraryId} />}
-      {mappings.length > 0 && <MappingSection title="マッピング" variables={mappings} currentContract={currentContract} allContracts={allContracts} libraryId={libraryId} />}
-      {arrays.length > 0 && <VariableSection title="配列" variables={arrays} currentContract={currentContract} allContracts={allContracts} libraryId={libraryId} />}
-      {regular.length > 0 && <VariableSection title="状態変数" variables={regular} currentContract={currentContract} allContracts={allContracts} libraryId={libraryId} />}
+      {constants.length > 0 && <VariableSection title="Constants" variables={constants} currentContract={currentContract} allContracts={allContracts} libraryId={libraryId} />}
+      {immutables.length > 0 && <VariableSection title="Immutables" variables={immutables} currentContract={currentContract} allContracts={allContracts} libraryId={libraryId} />}
+      {mappings.length > 0 && <MappingSection title="Mappings" variables={mappings} currentContract={currentContract} allContracts={allContracts} libraryId={libraryId} />}
+      {arrays.length > 0 && <VariableSection title="Arrays" variables={arrays} currentContract={currentContract} allContracts={allContracts} libraryId={libraryId} />}
+      {regular.length > 0 && <VariableSection title="State Variables" variables={regular} currentContract={currentContract} allContracts={allContracts} libraryId={libraryId} />}
     </div>
   );
 }
@@ -398,10 +404,10 @@ function VariableSection({ title, variables, currentContract, allContracts, libr
         <div className="text-sm">
           {/* Header */}
           <div className="grid grid-cols-4 gap-4 text-slate-500 border-b border-navy-600 pb-2 mb-1">
-            <div className="font-medium">名前</div>
-            <div className="font-medium">型</div>
-            <div className="font-medium">可視性</div>
-            <div className="font-medium">定義元</div>
+            <div className="font-medium">Name</div>
+            <div className="font-medium">Type</div>
+            <div className="font-medium">Visibility</div>
+            <div className="font-medium">Source</div>
           </div>
           {/* Rows */}
           {variables.map((v, i) => (
@@ -460,11 +466,11 @@ function MappingSection({ title, variables, currentContract, allContracts, libra
         <div className="text-sm">
           {/* Header */}
           <div className="grid grid-cols-5 gap-4 text-slate-500 border-b border-navy-600 pb-2 mb-1">
-            <div className="font-medium">名前</div>
-            <div className="font-medium">キーの型</div>
-            <div className="font-medium">バリューの型</div>
-            <div className="font-medium">可視性</div>
-            <div className="font-medium">定義元</div>
+            <div className="font-medium">Name</div>
+            <div className="font-medium">Key Type</div>
+            <div className="font-medium">Value Type</div>
+            <div className="font-medium">Visibility</div>
+            <div className="font-medium">Source</div>
           </div>
           {/* Rows */}
           {variables.map((v, i) => {
@@ -504,7 +510,7 @@ function MappingSection({ title, variables, currentContract, allContracts, libra
 
 function EventsTable({ events, currentContract, allContracts, libraryId }: { events: InheritedEventDefinition[]; currentContract: Contract; allContracts: Contract[]; libraryId?: string | null }) {
   if (events.length === 0) {
-    return <EmptyState message="イベントが定義されていません" />;
+    return <EmptyState message="No events defined" />;
   }
 
   return (
@@ -525,9 +531,9 @@ function EventsTable({ events, currentContract, allContracts, libraryId }: { eve
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-slate-500 border-b border-navy-700">
-                  <th className="px-4 py-2 font-medium">パラメータ</th>
-                  <th className="px-4 py-2 font-medium">型</th>
-                  <th className="px-4 py-2 font-medium">インデックス</th>
+                  <th className="px-4 py-2 font-medium">Parameter</th>
+                  <th className="px-4 py-2 font-medium">Type</th>
+                  <th className="px-4 py-2 font-medium">Indexed</th>
                 </tr>
               </thead>
               <tbody>
@@ -547,7 +553,7 @@ function EventsTable({ events, currentContract, allContracts, libraryId }: { eve
               </tbody>
             </table>
           ) : (
-            <div className="px-4 py-3 text-sm text-slate-500">パラメータなし</div>
+            <div className="px-4 py-3 text-sm text-slate-500">No parameters</div>
           )}
         </div>
       ))}
@@ -557,7 +563,7 @@ function EventsTable({ events, currentContract, allContracts, libraryId }: { eve
 
 function ErrorsTable({ errors, currentContract, allContracts, libraryId }: { errors: InheritedErrorDefinition[]; currentContract: Contract; allContracts: Contract[]; libraryId?: string | null }) {
   if (errors.length === 0) {
-    return <EmptyState message="カスタムエラーが定義されていません" />;
+    return <EmptyState message="No custom errors defined" />;
   }
 
   return (
@@ -578,8 +584,8 @@ function ErrorsTable({ errors, currentContract, allContracts, libraryId }: { err
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-slate-500 border-b border-navy-700">
-                  <th className="px-4 py-2 font-medium">パラメータ</th>
-                  <th className="px-4 py-2 font-medium">型</th>
+                  <th className="px-4 py-2 font-medium">Parameter</th>
+                  <th className="px-4 py-2 font-medium">Type</th>
                 </tr>
               </thead>
               <tbody>
@@ -592,7 +598,7 @@ function ErrorsTable({ errors, currentContract, allContracts, libraryId }: { err
               </tbody>
             </table>
           ) : (
-            <div className="px-4 py-3 text-sm text-slate-500">パラメータなし</div>
+            <div className="px-4 py-3 text-sm text-slate-500">No parameters</div>
           )}
         </div>
       ))}
@@ -602,7 +608,7 @@ function ErrorsTable({ errors, currentContract, allContracts, libraryId }: { err
 
 function StructsTable({ structs, currentContract, allContracts, libraryId }: { structs: InheritedStructDefinition[]; currentContract: Contract; allContracts: Contract[]; libraryId?: string | null }) {
   if (structs.length === 0) {
-    return <EmptyState message="構造体が定義されていません" />;
+    return <EmptyState message="No structs defined" />;
   }
 
   return (
@@ -623,8 +629,8 @@ function StructsTable({ structs, currentContract, allContracts, libraryId }: { s
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-slate-500 border-b border-navy-700">
-                  <th className="px-4 py-2 font-medium">メンバー名</th>
-                  <th className="px-4 py-2 font-medium">型</th>
+                  <th className="px-4 py-2 font-medium">Member</th>
+                  <th className="px-4 py-2 font-medium">Type</th>
                 </tr>
               </thead>
               <tbody>
@@ -637,7 +643,7 @@ function StructsTable({ structs, currentContract, allContracts, libraryId }: { s
               </tbody>
             </table>
           ) : (
-            <div className="px-4 py-3 text-sm text-slate-500">メンバーなし</div>
+            <div className="px-4 py-3 text-sm text-slate-500">No members</div>
           )}
         </div>
       ))}
@@ -662,7 +668,7 @@ function FunctionsTable({
   const [showInternal, setShowInternal] = useState(true);
 
   if (externalFunctions.length === 0 && internalFunctions.length === 0) {
-    return <EmptyState message="関数が定義されていません" />;
+    return <EmptyState message="No functions defined" />;
   }
 
   return (
@@ -674,7 +680,7 @@ function FunctionsTable({
             className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-3 hover:text-white"
           >
             {showExternal ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            外部 / 公開関数
+            External / Public Functions
             <span className="text-xs text-slate-500">({externalFunctions.length})</span>
           </button>
           {showExternal && (
@@ -694,7 +700,7 @@ function FunctionsTable({
             className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-3 hover:text-white"
           >
             {showInternal ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            内部 / プライベート関数
+            Internal / Private Functions
             <span className="text-xs text-slate-500">({internalFunctions.length})</span>
           </button>
           {showInternal && (
@@ -748,7 +754,7 @@ function FunctionCard({ func, type, currentContract, allContracts, libraryId }: 
         </button>
         <div className="flex items-center gap-3">
           <span className="text-xs text-slate-500">
-            引数 {func.parameters.length} → 戻り値 {func.returnValues.length}
+            Params {func.parameters.length} → Returns {func.returnValues.length}
           </span>
           <InheritanceBadge
             contractName={inheritedFrom || currentContract.name}
@@ -763,13 +769,13 @@ function FunctionCard({ func, type, currentContract, allContracts, libraryId }: 
       {isOpen && (
         <div className="p-4 space-y-4">
           <div>
-            <h4 className="text-xs uppercase tracking-wider text-slate-500 mb-2">引数</h4>
+            <h4 className="text-xs uppercase tracking-wider text-slate-500 mb-2">Parameters</h4>
             {func.parameters.length > 0 ? (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-slate-500 border-b border-navy-700">
-                    <th className="pb-2 pr-4 font-medium">名前</th>
-                    <th className="pb-2 pr-4 font-medium">型</th>
+                    <th className="pb-2 pr-4 font-medium">Name</th>
+                    <th className="pb-2 pr-4 font-medium">Type</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -782,18 +788,18 @@ function FunctionCard({ func, type, currentContract, allContracts, libraryId }: 
                 </tbody>
               </table>
             ) : (
-              <div className="text-sm text-slate-500">引数なし</div>
+              <div className="text-sm text-slate-500">No parameters</div>
             )}
           </div>
 
           <div>
-            <h4 className="text-xs uppercase tracking-wider text-slate-500 mb-2">戻り値</h4>
+            <h4 className="text-xs uppercase tracking-wider text-slate-500 mb-2">Return Values</h4>
             {func.returnValues.length > 0 ? (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-slate-500 border-b border-navy-700">
-                    <th className="pb-2 pr-4 font-medium">名前</th>
-                    <th className="pb-2 pr-4 font-medium">型</th>
+                    <th className="pb-2 pr-4 font-medium">Name</th>
+                    <th className="pb-2 pr-4 font-medium">Type</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -806,13 +812,270 @@ function FunctionCard({ func, type, currentContract, allContracts, libraryId }: 
                 </tbody>
               </table>
             ) : (
-              <div className="text-sm text-slate-500">戻り値なし</div>
+              <div className="text-sm text-slate-500">No return values</div>
             )}
           </div>
         </div>
       )}
     </div>
   );
+}
+
+function SourceCodeTab({ sourceCode }: { sourceCode?: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (sourceCode) {
+      await navigator.clipboard.writeText(sourceCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  if (!sourceCode) {
+    return <EmptyState message="Source code not available" />;
+  }
+
+  return (
+    <div className="relative">
+      {/* Copy button */}
+      <button
+        onClick={handleCopy}
+        className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy-700 hover:bg-navy-600 text-slate-300 hover:text-white transition-colors text-sm"
+        title="Copy source code"
+      >
+        {copied ? (
+          <>
+            <Check className="w-4 h-4 text-green-400" />
+            <span>Copied!</span>
+          </>
+        ) : (
+          <>
+            <Copy className="w-4 h-4" />
+            <span>Copy</span>
+          </>
+        )}
+      </button>
+
+      {/* Source code with line numbers and syntax highlighting */}
+      <div className="overflow-x-auto bg-navy-950 rounded-lg border border-navy-700">
+        <pre className="text-sm leading-relaxed">
+          <code>
+            <SourceCodeHighlighted sourceCode={sourceCode} />
+          </code>
+        </pre>
+      </div>
+    </div>
+  );
+}
+
+// Solidity syntax highlighting with multi-line comment support
+function SourceCodeHighlighted({ sourceCode }: { sourceCode: string }) {
+  const lines = sourceCode.split('\n');
+  let inMultiLineComment = false;
+
+  return (
+    <>
+      {lines.map((line, index) => {
+        const { highlighted, stillInComment } = highlightSolidityLine(line, inMultiLineComment);
+        inMultiLineComment = stillInComment;
+        return (
+          <div key={index} className="flex hover:bg-navy-800/50">
+            <span className="flex-shrink-0 w-12 px-3 py-0.5 text-right text-slate-600 select-none border-r border-navy-700 bg-navy-900/50">
+              {index + 1}
+            </span>
+            <span className="flex-1 px-4 py-0.5 text-slate-300 font-mono whitespace-pre">
+              {highlighted}
+            </span>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+// Solidity keyword and type sets
+const SOLIDITY_KEYWORDS = new Set([
+  // Declaration keywords
+  'contract', 'interface', 'library', 'abstract', 'function', 'modifier',
+  'event', 'error', 'struct', 'enum', 'mapping', 'constructor', 'fallback', 'receive',
+  // Visibility
+  'public', 'private', 'internal', 'external',
+  // Mutability
+  'view', 'pure', 'payable', 'nonpayable',
+  // Modifiers
+  'virtual', 'override', 'constant', 'immutable', 'indexed', 'anonymous',
+  // Control flow
+  'returns', 'return', 'if', 'else', 'for', 'while', 'do', 'break', 'continue',
+  'try', 'catch', 'revert', 'require', 'assert', 'throw',
+  // Other keywords
+  'emit', 'new', 'delete', 'this', 'super', 'is', 'using', 'import', 'from', 'as',
+  'pragma', 'solidity', 'memory', 'storage', 'calldata', 'assembly', 'let', 'true', 'false',
+  'wei', 'gwei', 'ether', 'seconds', 'minutes', 'hours', 'days', 'weeks', 'years',
+  'unchecked',
+]);
+
+const SOLIDITY_TYPES = new Set([
+  'address', 'bool', 'string', 'bytes', 'byte',
+  'int', 'uint',
+  'int8', 'int16', 'int24', 'int32', 'int40', 'int48', 'int56', 'int64',
+  'int72', 'int80', 'int88', 'int96', 'int104', 'int112', 'int120', 'int128',
+  'int136', 'int144', 'int152', 'int160', 'int168', 'int176', 'int184', 'int192',
+  'int200', 'int208', 'int216', 'int224', 'int232', 'int240', 'int248', 'int256',
+  'uint8', 'uint16', 'uint24', 'uint32', 'uint40', 'uint48', 'uint56', 'uint64',
+  'uint72', 'uint80', 'uint88', 'uint96', 'uint104', 'uint112', 'uint120', 'uint128',
+  'uint136', 'uint144', 'uint152', 'uint160', 'uint168', 'uint176', 'uint184', 'uint192',
+  'uint200', 'uint208', 'uint216', 'uint224', 'uint232', 'uint240', 'uint248', 'uint256',
+  'bytes1', 'bytes2', 'bytes3', 'bytes4', 'bytes5', 'bytes6', 'bytes7', 'bytes8',
+  'bytes9', 'bytes10', 'bytes11', 'bytes12', 'bytes13', 'bytes14', 'bytes15', 'bytes16',
+  'bytes17', 'bytes18', 'bytes19', 'bytes20', 'bytes21', 'bytes22', 'bytes23', 'bytes24',
+  'bytes25', 'bytes26', 'bytes27', 'bytes28', 'bytes29', 'bytes30', 'bytes31', 'bytes32',
+]);
+
+const SOLIDITY_BUILTINS = new Set([
+  'msg', 'block', 'tx', 'abi', 'type',
+  'keccak256', 'sha256', 'ripemd160', 'ecrecover',
+  'addmod', 'mulmod', 'selfdestruct',
+  'gasleft', 'blockhash',
+]);
+
+function highlightSolidityLine(line: string, inMultiLineComment: boolean): { highlighted: React.ReactNode; stillInComment: boolean } {
+  const parts: React.ReactNode[] = [];
+  let key = 0;
+  let i = 0;
+  let currentInComment = inMultiLineComment;
+
+  while (i < line.length) {
+    // If we're in a multi-line comment, look for the end
+    if (currentInComment) {
+      const endIdx = line.indexOf('*/', i);
+      if (endIdx !== -1) {
+        parts.push(<span key={key++} className="text-green-600 italic">{line.slice(i, endIdx + 2)}</span>);
+        i = endIdx + 2;
+        currentInComment = false;
+      } else {
+        parts.push(<span key={key++} className="text-green-600 italic">{line.slice(i)}</span>);
+        return { highlighted: parts, stillInComment: true };
+      }
+      continue;
+    }
+
+    // Check for single-line comment
+    if (line.slice(i, i + 2) === '//') {
+      // NatSpec with /// gets special color
+      const isNatSpec = line.slice(i, i + 3) === '///';
+      parts.push(
+        <span key={key++} className={isNatSpec ? "text-green-500 italic" : "text-green-600 italic"}>
+          {line.slice(i)}
+        </span>
+      );
+      return { highlighted: parts, stillInComment: false };
+    }
+
+    // Check for multi-line comment start
+    if (line.slice(i, i + 2) === '/*') {
+      const isNatSpec = line.slice(i, i + 3) === '/**';
+      const endIdx = line.indexOf('*/', i + 2);
+      if (endIdx !== -1) {
+        parts.push(
+          <span key={key++} className={isNatSpec ? "text-green-500 italic" : "text-green-600 italic"}>
+            {line.slice(i, endIdx + 2)}
+          </span>
+        );
+        i = endIdx + 2;
+      } else {
+        parts.push(
+          <span key={key++} className={isNatSpec ? "text-green-500 italic" : "text-green-600 italic"}>
+            {line.slice(i)}
+          </span>
+        );
+        return { highlighted: parts, stillInComment: true };
+      }
+      continue;
+    }
+
+    // Check for string
+    if (line[i] === '"' || line[i] === "'") {
+      const quote = line[i];
+      let j = i + 1;
+      while (j < line.length && line[j] !== quote) {
+        if (line[j] === '\\') j++; // Skip escaped char
+        j++;
+      }
+      parts.push(<span key={key++} className="text-amber-400">{line.slice(i, j + 1)}</span>);
+      i = j + 1;
+      continue;
+    }
+
+    // Check for hex number
+    if (line.slice(i, i + 2) === '0x') {
+      let j = i + 2;
+      while (j < line.length && /[0-9a-fA-F]/.test(line[j])) j++;
+      parts.push(<span key={key++} className="text-purple-400">{line.slice(i, j)}</span>);
+      i = j;
+      continue;
+    }
+
+    // Check for number
+    if (/[0-9]/.test(line[i])) {
+      let j = i;
+      while (j < line.length && /[0-9_]/.test(line[j])) j++;
+      // Check for decimal
+      if (line[j] === '.' && /[0-9]/.test(line[j + 1])) {
+        j++;
+        while (j < line.length && /[0-9_]/.test(line[j])) j++;
+      }
+      // Check for exponent
+      if ((line[j] === 'e' || line[j] === 'E') && /[0-9+-]/.test(line[j + 1])) {
+        j++;
+        if (line[j] === '+' || line[j] === '-') j++;
+        while (j < line.length && /[0-9]/.test(line[j])) j++;
+      }
+      parts.push(<span key={key++} className="text-purple-400">{line.slice(i, j)}</span>);
+      i = j;
+      continue;
+    }
+
+    // Check for identifier (keyword, type, etc.)
+    if (/[a-zA-Z_$]/.test(line[i])) {
+      let j = i;
+      while (j < line.length && /[a-zA-Z0-9_$]/.test(line[j])) j++;
+      const word = line.slice(i, j);
+
+      if (SOLIDITY_KEYWORDS.has(word)) {
+        parts.push(<span key={key++} className="text-pink-400 font-medium">{word}</span>);
+      } else if (SOLIDITY_TYPES.has(word)) {
+        parts.push(<span key={key++} className="text-cyan-400">{word}</span>);
+      } else if (SOLIDITY_BUILTINS.has(word)) {
+        parts.push(<span key={key++} className="text-yellow-400">{word}</span>);
+      } else if (word[0] === word[0].toUpperCase() && word[0] !== '_') {
+        // PascalCase - likely contract/interface/struct name
+        parts.push(<span key={key++} className="text-blue-400">{word}</span>);
+      } else if (word.startsWith('_')) {
+        // Internal function or variable
+        parts.push(<span key={key++} className="text-slate-400">{word}</span>);
+      } else {
+        parts.push(<span key={key++}>{word}</span>);
+      }
+      i = j;
+      continue;
+    }
+
+    // Check for operators
+    if (/[+\-*/%=<>!&|^~?:]/.test(line[i])) {
+      let j = i;
+      while (j < line.length && /[+\-*/%=<>!&|^~?:]/.test(line[j])) j++;
+      parts.push(<span key={key++} className="text-rose-400">{line.slice(i, j)}</span>);
+      i = j;
+      continue;
+    }
+
+    // Default: just add the character
+    parts.push(<span key={key++}>{line[i]}</span>);
+    i++;
+  }
+
+  return { highlighted: parts.length > 0 ? parts : line, stillInComment: currentInComment };
 }
 
 function EmptyState({ message }: { message: string }) {

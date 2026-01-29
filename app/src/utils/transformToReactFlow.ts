@@ -1994,9 +1994,9 @@ export function transformToReactFlow(
         type: 'dependencyEdge',
         sourceHandle,
         targetHandle,
+        zIndex: 1000,
         data: {
           type: userEdge.type,
-          label: userEdge.label || userEdge.type,
           isUserEdge: true,
         },
         style: {

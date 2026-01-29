@@ -197,6 +197,7 @@ function parseContractDefinition(
     errors,
     structs,
     stateVariables,
+    sourceCode, // Full file content including comments and imports
   };
 }
 

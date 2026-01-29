@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Zap, Upload, GitBranch, Code2, Layers, Search, ArrowRight, ChevronRight, ExternalLink } from 'lucide-react';
+import { Zap, Upload, GitBranch, Code2, Layers, Search, ArrowRight, ChevronRight, ExternalLink, FileText, PenTool, Download } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { useLanguage } from '@/lib/i18n';
 import { REPO_URL } from '@/constants';
@@ -34,7 +34,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 className="w-full h-full object-cover"
               />
             </div>
-            <span className="font-display font-bold text-xl">Sol-Flow</span>
+            <span className="font-display font-bold text-xl bg-gradient-to-r from-mint to-white bg-clip-text text-transparent">Sol-Flow</span>
           </div>
           <div className="flex items-center gap-4">
             <LanguageSwitcher variant="landing" />
@@ -170,6 +170,39 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 {t.landing.feature6Description}
               </p>
             </div>
+
+            {/* Feature 7 */}
+            <div className="bg-navy-700/50 border border-navy-600 rounded-xl p-6 hover:border-emerald-400/30 transition-colors">
+              <div className="w-12 h-12 rounded-lg bg-emerald-400/20 flex items-center justify-center mb-4">
+                <FileText className="w-6 h-6 text-emerald-400" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">{t.landing.feature7Title}</h3>
+              <p className="text-slate-400">
+                {t.landing.feature7Description}
+              </p>
+            </div>
+
+            {/* Feature 8 */}
+            <div className="bg-navy-700/50 border border-navy-600 rounded-xl p-6 hover:border-cyan-400/30 transition-colors">
+              <div className="w-12 h-12 rounded-lg bg-cyan-400/20 flex items-center justify-center mb-4">
+                <PenTool className="w-6 h-6 text-cyan-400" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">{t.landing.feature8Title}</h3>
+              <p className="text-slate-400">
+                {t.landing.feature8Description}
+              </p>
+            </div>
+
+            {/* Feature 9 */}
+            <div className="bg-navy-700/50 border border-navy-600 rounded-xl p-6 hover:border-rose-400/30 transition-colors">
+              <div className="w-12 h-12 rounded-lg bg-rose-400/20 flex items-center justify-center mb-4">
+                <Download className="w-6 h-6 text-rose-400" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">{t.landing.feature9Title}</h3>
+              <p className="text-slate-400">
+                {t.landing.feature9Description}
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -184,18 +217,18 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-8 items-stretch">
             {/* Step 1 */}
-            <div className="relative">
-              <div className="absolute -top-4 -left-4 w-12 h-12 rounded-full bg-mint/20 flex items-center justify-center text-mint font-bold text-xl">
+            <div className="relative h-full">
+              <div className="absolute -top-4 -left-4 w-12 h-12 rounded-full bg-mint/20 flex items-center justify-center text-mint font-bold text-xl z-10">
                 1
               </div>
-              <div className="bg-navy-800 border border-navy-600 rounded-xl p-6 pt-10">
+              <div className="bg-navy-800 border border-navy-600 rounded-xl p-6 pt-10 h-full flex flex-col">
                 <h3 className="text-xl font-semibold mb-3">{t.landing.step1Title}</h3>
-                <p className="text-slate-400 mb-4">
+                <p className="text-slate-400 mb-4 flex-grow">
                   {t.landing.step1Description}
                 </p>
-                <div className="bg-navy-900 rounded-lg p-4 text-sm font-mono text-slate-300">
+                <div className="bg-navy-900 rounded-lg p-4 text-sm font-mono text-slate-300 mt-auto">
                   <span className="text-mint">src/</span>
                   <br />
                   ├── MyToken.sol
@@ -208,16 +241,16 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
             </div>
 
             {/* Step 2 */}
-            <div className="relative">
-              <div className="absolute -top-4 -left-4 w-12 h-12 rounded-full bg-lavender/20 flex items-center justify-center text-lavender font-bold text-xl">
+            <div className="relative h-full">
+              <div className="absolute -top-4 -left-4 w-12 h-12 rounded-full bg-lavender/20 flex items-center justify-center text-lavender font-bold text-xl z-10">
                 2
               </div>
-              <div className="bg-navy-800 border border-navy-600 rounded-xl p-6 pt-10">
+              <div className="bg-navy-800 border border-navy-600 rounded-xl p-6 pt-10 h-full flex flex-col">
                 <h3 className="text-xl font-semibold mb-3">{t.landing.step2Title}</h3>
-                <p className="text-slate-400 mb-4">
+                <p className="text-slate-400 mb-4 flex-grow">
                   {t.landing.step2Description}
                 </p>
-                <ul className="space-y-2 text-sm text-slate-300">
+                <ul className="space-y-2 text-sm text-slate-300 mt-auto">
                   <li className="flex items-center gap-2">
                     <ChevronRight className="w-4 h-4 text-mint" />
                     {t.landing.step2Item1}
@@ -235,16 +268,16 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
             </div>
 
             {/* Step 3 */}
-            <div className="relative">
-              <div className="absolute -top-4 -left-4 w-12 h-12 rounded-full bg-amber/20 flex items-center justify-center text-amber font-bold text-xl">
+            <div className="relative h-full">
+              <div className="absolute -top-4 -left-4 w-12 h-12 rounded-full bg-amber/20 flex items-center justify-center text-amber font-bold text-xl z-10">
                 3
               </div>
-              <div className="bg-navy-800 border border-navy-600 rounded-xl p-6 pt-10">
+              <div className="bg-navy-800 border border-navy-600 rounded-xl p-6 pt-10 h-full flex flex-col">
                 <h3 className="text-xl font-semibold mb-3">{t.landing.step3Title}</h3>
-                <p className="text-slate-400 mb-4">
+                <p className="text-slate-400 mb-4 flex-grow">
                   {t.landing.step3Description}
                 </p>
-                <ul className="space-y-2 text-sm text-slate-300">
+                <ul className="space-y-2 text-sm text-slate-300 mt-auto">
                   <li className="flex items-center gap-2">
                     <span className="text-mint">○</span>
                     external view/pure
@@ -326,7 +359,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 className="w-full h-full object-cover"
               />
             </div>
-            <span className="font-display font-semibold">Sol-Flow</span>
+            <span className="font-display font-semibold bg-gradient-to-r from-mint to-white bg-clip-text text-transparent">Sol-Flow</span>
           </div>
           <p className="text-slate-500 text-sm">
             {t.landing.footer}

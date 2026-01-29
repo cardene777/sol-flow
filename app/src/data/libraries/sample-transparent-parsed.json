@@ -2,10 +2,10 @@
   "id": "sample-transparent",
   "name": "Transparent Proxy Sample",
   "version": "1.0.0",
-  "generatedAt": "2026-01-29T03:50:08.494Z",
+  "generatedAt": "2026-01-29T07:46:51.592Z",
   "callGraph": {
     "version": "1.0.0",
-    "generatedAt": "2026-01-29T03:50:08.494Z",
+    "generatedAt": "2026-01-29T07:46:51.592Z",
     "projectName": "Transparent Proxy Sample",
     "structure": {
       "name": "contracts",
@@ -251,6 +251,7 @@
             "isExternal": true
           }
         ],
+        "sourceCode": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\nimport \"@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol\";\nimport \"@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol\";\nimport \"@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol\";\n\n/**\n * @title TokenVaultV1\n * @dev A simple vault for storing ETH - Version 1\n * Used with Transparent Proxy pattern\n */\ncontract TokenVaultV1 is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable {\n    mapping(address => uint256) public balances;\n    uint256 public totalDeposits;\n\n    event Deposited(address indexed user, uint256 amount);\n    event Withdrawn(address indexed user, uint256 amount);\n\n    /// @custom:oz-upgrades-unsafe-allow constructor\n    constructor() {\n        _disableInitializers();\n    }\n\n    function initialize(address initialOwner) public initializer {\n        __Ownable_init(initialOwner);\n        __ReentrancyGuard_init();\n    }\n\n    function deposit() external payable nonReentrant {\n        require(msg.value > 0, \"Vault: deposit amount must be greater than zero\");\n        balances[msg.sender] += msg.value;\n        totalDeposits += msg.value;\n        emit Deposited(msg.sender, msg.value);\n    }\n\n    function withdraw(uint256 amount) external nonReentrant {\n        require(amount > 0, \"Vault: withdraw amount must be greater than zero\");\n        require(balances[msg.sender] >= amount, \"Vault: insufficient balance\");\n\n        balances[msg.sender] -= amount;\n        totalDeposits -= amount;\n\n        (bool success, ) = msg.sender.call{value: amount}(\"\");\n        require(success, \"Vault: transfer failed\");\n\n        emit Withdrawn(msg.sender, amount);\n    }\n\n    function getBalance(address user) external view returns (uint256) {\n        return balances[user];\n    }\n\n    function getTotalDeposits() external view returns (uint256) {\n        return totalDeposits;\n    }\n}\n",
         "proxyPattern": "transparent",
         "proxyRole": "implementation"
       },
@@ -660,6 +661,7 @@
             "isExternal": true
           }
         ],
+        "sourceCode": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\nimport \"@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol\";\nimport \"@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol\";\nimport \"@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol\";\nimport \"@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol\";\n\n/**\n * @title TokenVaultV2\n * @dev A vault for storing ETH with pause functionality - Version 2\n * Used with Transparent Proxy pattern\n */\ncontract TokenVaultV2 is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable {\n    mapping(address => uint256) public balances;\n    uint256 public totalDeposits;\n    uint256 public withdrawalFee; // in basis points (100 = 1%)\n    uint256 public collectedFees;\n\n    event Deposited(address indexed user, uint256 amount);\n    event Withdrawn(address indexed user, uint256 amount, uint256 fee);\n    event FeeCollected(address indexed collector, uint256 amount);\n    event WithdrawalFeeUpdated(uint256 oldFee, uint256 newFee);\n\n    /// @custom:oz-upgrades-unsafe-allow constructor\n    constructor() {\n        _disableInitializers();\n    }\n\n    function initialize(address initialOwner) public initializer {\n        __Ownable_init(initialOwner);\n        __ReentrancyGuard_init();\n        __Pausable_init();\n    }\n\n    function initializeV2(uint256 _withdrawalFee) public reinitializer(2) {\n        require(_withdrawalFee <= 1000, \"Vault: fee too high\"); // max 10%\n        withdrawalFee = _withdrawalFee;\n    }\n\n    function deposit() external payable nonReentrant whenNotPaused {\n        require(msg.value > 0, \"Vault: deposit amount must be greater than zero\");\n        balances[msg.sender] += msg.value;\n        totalDeposits += msg.value;\n        emit Deposited(msg.sender, msg.value);\n    }\n\n    function withdraw(uint256 amount) external nonReentrant whenNotPaused {\n        require(amount > 0, \"Vault: withdraw amount must be greater than zero\");\n        require(balances[msg.sender] >= amount, \"Vault: insufficient balance\");\n\n        uint256 fee = (amount * withdrawalFee) / 10000;\n        uint256 amountAfterFee = amount - fee;\n\n        balances[msg.sender] -= amount;\n        totalDeposits -= amount;\n        collectedFees += fee;\n\n        (bool success, ) = msg.sender.call{value: amountAfterFee}(\"\");\n        require(success, \"Vault: transfer failed\");\n\n        emit Withdrawn(msg.sender, amountAfterFee, fee);\n    }\n\n    function collectFees() external onlyOwner nonReentrant {\n        uint256 fees = collectedFees;\n        require(fees > 0, \"Vault: no fees to collect\");\n        collectedFees = 0;\n\n        (bool success, ) = owner().call{value: fees}(\"\");\n        require(success, \"Vault: fee transfer failed\");\n\n        emit FeeCollected(owner(), fees);\n    }\n\n    function setWithdrawalFee(uint256 _withdrawalFee) external onlyOwner {\n        require(_withdrawalFee <= 1000, \"Vault: fee too high\");\n        uint256 oldFee = withdrawalFee;\n        withdrawalFee = _withdrawalFee;\n        emit WithdrawalFeeUpdated(oldFee, _withdrawalFee);\n    }\n\n    function pause() external onlyOwner {\n        _pause();\n    }\n\n    function unpause() external onlyOwner {\n        _unpause();\n    }\n\n    function getBalance(address user) external view returns (uint256) {\n        return balances[user];\n    }\n\n    function getTotalDeposits() external view returns (uint256) {\n        return totalDeposits;\n    }\n\n    function getCollectedFees() external view returns (uint256) {\n        return collectedFees;\n    }\n}\n",
         "proxyPattern": "transparent",
         "proxyRole": "implementation"
       },
@@ -712,6 +714,7 @@
             "isExternal": true
           }
         ],
+        "sourceCode": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\nimport \"@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol\";\n\n/**\n * @title MyTransparentProxy\n * @dev Transparent Upgradeable Proxy contract.\n * Admin functions are only callable by the ProxyAdmin contract.\n */\ncontract MyTransparentProxy is TransparentUpgradeableProxy {\n    constructor(\n        address _logic,\n        address initialOwner,\n        bytes memory _data\n    ) TransparentUpgradeableProxy(_logic, initialOwner, _data) {}\n}\n",
         "proxyPattern": "transparent",
         "proxyRole": "proxy"
       }

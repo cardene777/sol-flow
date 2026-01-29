@@ -86,6 +86,12 @@ export const AVAILABLE_LIBRARIES: LibraryInfo[] = [
     version: '1.0.0',
     fileName: 'sample-beacon-parsed.json',
   },
+  {
+    id: 'sample-erc7546',
+    name: 'ERC-7546 Modular Proxy Sample',
+    version: '1.0.0',
+    fileName: 'sample-erc7546-parsed.json',
+  },
 ];
 
 // Cache for loaded libraries
