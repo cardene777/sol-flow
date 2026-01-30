@@ -590,18 +590,31 @@ function determineCategory(
   // Split path into segments for generic handling
   const segments = filePath.split('/').filter(s => s.length > 0);
 
-  // Skip common prefixes to find the meaningful category directory
-  const skipPrefixes = [
-    'contracts', 'src', 'lib', 'node_modules',
-  ];
+  // Common non-meaningful directory names to skip (case-insensitive)
+  const skipPrefixes = new Set([
+    'contracts', 'contract', 'src', 'lib', 'node_modules',
+    'core', 'base', 'main', 'app', 'packages', 'modules',
+    'solidity', 'sol', 'smart-contracts', 'smartcontracts',
+  ]);
 
-  // Find the first meaningful directory
+  // Generic structural directories to skip
+  const skipGeneric = new Set([
+    'interfaces', 'interface', 'libraries', 'library',
+    'abstract', 'abstracts', 'internal', 'external',
+    'mocks', 'mock', 'test', 'tests', 'scripts', 'script',
+    'deploy', 'deployments', 'migrations',
+  ]);
+
+  // Find the first meaningful directory from the path
   for (let i = 0; i < segments.length - 1; i++) {
     const segment = segments[i];
     const lowerSegment = segment.toLowerCase();
 
     // Skip common non-meaningful directories
-    if (skipPrefixes.includes(lowerSegment)) continue;
+    if (skipPrefixes.has(lowerSegment)) continue;
+
+    // Skip generic structural directories
+    if (skipGeneric.has(lowerSegment)) continue;
 
     // Skip segments starting with @ (scoped packages) or containing version
     if (segment.startsWith('@') || segment.includes('@')) continue;
@@ -609,7 +622,10 @@ function determineCategory(
     // Skip file extensions
     if (segment.endsWith('.sol')) continue;
 
-    // Found a meaningful directory name
+    // Skip very short names (likely abbreviations or single letters)
+    if (segment.length <= 2) continue;
+
+    // Found a meaningful directory name - use it as category
     return segment;
   }
 
