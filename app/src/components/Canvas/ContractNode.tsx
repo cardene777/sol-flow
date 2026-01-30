@@ -150,9 +150,6 @@ function ContractNodeComponent({ data, selected }: NodeProps<ContractNodeData>) 
           if (contract.librarySource === 'solady') {
             return 'Solady';
           }
-          if (contract.librarySource === 'avalanche-icm') {
-            return 'Avalanche ICM';
-          }
           return 'External Library';
         };
 
@@ -162,7 +159,6 @@ function ContractNodeComponent({ data, selected }: NodeProps<ContractNodeData>) 
             contract.librarySource === 'openzeppelin' && 'bg-gradient-to-r from-blue-600/20 to-indigo-600/10',
             contract.librarySource === 'openzeppelin-upgradeable' && 'bg-gradient-to-r from-indigo-600/20 to-purple-600/10',
             contract.librarySource === 'solady' && 'bg-gradient-to-r from-yellow-600/20 to-orange-600/10',
-            contract.librarySource === 'avalanche-icm' && 'bg-gradient-to-r from-red-600/20 to-orange-600/10',
             !contract.librarySource && 'bg-gradient-to-r from-slate-600/20 to-slate-500/10'
           )}>
             <span className="text-[10px]">📦</span>
@@ -170,7 +166,6 @@ function ContractNodeComponent({ data, selected }: NodeProps<ContractNodeData>) 
               contract.librarySource === 'openzeppelin' && 'text-blue-300',
               contract.librarySource === 'openzeppelin-upgradeable' && 'text-indigo-300',
               contract.librarySource === 'solady' && 'text-yellow-300',
-              contract.librarySource === 'avalanche-icm' && 'text-red-300',
               !contract.librarySource && 'text-slate-300'
             )}>
               {getLibraryDisplayName()}

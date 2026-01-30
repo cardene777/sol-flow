@@ -278,24 +278,9 @@ function determineCategory(
 | `@openzeppelin/contracts/.../access/` | `OpenZeppelin/access` |
 | `@openzeppelin/contracts-upgradeable/.../proxy/` | `OZ-Upgradeable/proxy` |
 | `solady/src/auth/` | `Solady/auth` |
-| `@teleporter/...` | `teleporter` |
 | (interface kind) | `interface` |
 | (library kind) | `library` |
 | (unknown) | `other` |
-
-### Avalanche ICM Remappings
-
-Special handling for Avalanche ICM paths:
-
-```typescript
-const avalancheRemappings = {
-  '@teleporter': 'teleporter',
-  '@utilities': 'utilities',
-  '@subnet-evm': 'subnet-evm',
-  '@ictt': 'ictt',
-  '@validator-manager': 'validator-manager',
-};
-```
 
 ---
 

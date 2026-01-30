@@ -21,7 +21,7 @@ Sol-Flow includes pre-parsed Solidity libraries that can be explored without upl
 
 - **Instant exploration**: No upload or parsing required
 - **Fast loading**: Pre-computed data loads quickly
-- **Reference material**: Explore OpenZeppelin, Solady, and Avalanche ICM implementations
+- **Reference material**: Explore OpenZeppelin and Solady implementations
 
 ---
 
@@ -32,9 +32,6 @@ Sol-Flow includes pre-parsed Solidity libraries that can be explored without upl
 | OpenZeppelin Contracts | `openzeppelin` | Industry-standard smart contract library (v5.0.0) |
 | OpenZeppelin Upgradeable | `openzeppelin-upgradeable` | Upgradeable contract variants |
 | Solady | `solady` | Gas-optimized Solidity snippets |
-| Avalanche Teleporter | `avalanche-teleporter` | Cross-chain messaging for Avalanche |
-| Avalanche ICTT | `avalanche-ictt` | Interchain Token Transfer |
-| Avalanche Validator Manager | `avalanche-validator-manager` | Validator management contracts |
 
 ---
 
@@ -48,8 +45,7 @@ Library source code is stored in the `library/` directory as Git submodules:
 library/
 ├── openzeppelin-contracts/          # OpenZeppelin Contracts
 ├── openzeppelin-contracts-upgradeable/  # OZ Upgradeable
-├── solady/                          # Solady
-└── icm-services/                    # Avalanche ICM
+└── solady/                          # Solady
 ```
 
 ### Pre-parsed Data
@@ -60,10 +56,7 @@ Parsed library data is stored in `app/src/data/libraries/`:
 app/src/data/libraries/
 ├── openzeppelin-parsed.json         # ~1MB
 ├── openzeppelin-upgradeable-parsed.json  # ~1.2MB
-├── solady-parsed.json               # ~800KB
-├── avalanche-teleporter-parsed.json
-├── avalanche-ictt-parsed.json
-└── avalanche-validator-manager-parsed.json
+└── solady-parsed.json               # ~800KB
 ```
 
 ### JSON Structure
@@ -260,7 +253,7 @@ interface Contract {
   // ... standard fields ...
 
   isExternalLibrary?: boolean;  // true for library contracts
-  librarySource?: 'openzeppelin' | 'openzeppelin-upgradeable' | 'solady' | 'avalanche-icm';
+  librarySource?: 'openzeppelin' | 'openzeppelin-upgradeable' | 'solady';
 }
 ```
 

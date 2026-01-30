@@ -105,7 +105,6 @@ abstract contract Ownable {
 |-----------|-------|
 | OpenZeppelin | 📦 OpenZeppelin@5.0.2 |
 | Solady | 📦 Solady |
-| Avalanche ICM | 📦 Avalanche ICM |
 
 ![ライブラリバッジの例](../../guides/images/nodes/library-badge.png)
 

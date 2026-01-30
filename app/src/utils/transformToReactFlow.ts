@@ -130,7 +130,6 @@ export function calculateNodeHeight(contract: Contract): number {
 // Well-known categories that should appear first (in order)
 const WELL_KNOWN_CATEGORIES = [
   'token', 'access', 'governance', 'proxy', 'finance', 'account', 'metatx', 'utils',
-  'teleporter', 'ictt', 'validator-manager', 'utilities',
 ];
 
 // Categories that should always appear last
@@ -190,8 +189,6 @@ function getCategoryLabel(category: ContractCategory): string {
     'access': 'Access Control',
     'metatx': 'Meta TX',
     'utils': 'Utilities',
-    'ictt': 'ICTT',
-    'validator-manager': 'Validator Manager',
   };
 
   if (specialLabels[category.toLowerCase()]) {

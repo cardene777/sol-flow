@@ -105,7 +105,6 @@ External library contracts display the library name and version above the header
 |---------|-----------------|
 | OpenZeppelin | OpenZeppelin@5.0.2 |
 | Solady | Solady |
-| Avalanche ICM | Avalanche ICM |
 
 ![Library Badge Example](./images/nodes/library-badge.png)
 

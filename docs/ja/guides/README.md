@@ -126,7 +126,6 @@ Sol-Flowには、学習や参照用に以下のライブラリが組み込まれ
 |-----------|------|
 | OpenZeppelin Contracts | ERC20、ERC721、アクセス制御、プロキシなどの標準実装 |
 | ERC-7546 Reference | モジュラープロキシのリファレンス実装 |
-| Avalanche ICM | Avalancheのクロスチェーンメッセージング |
 
 ## ヘルプとサポート
 

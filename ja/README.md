@@ -54,7 +54,7 @@ ERC-7546、UUPS、Transparent、Diamond、Beacon等のプロキシパターン�
 Solidityファイルをドラッグ&ドロップするだけ。外部ライブラリ（OpenZeppelin、Solady等）は自動解決されます。
 
 ### 📚 ライブラリ内蔵
-OpenZeppelin、Solady、Avalanche ICM等の主要ライブラリがプリロード済み。すぐに参照できます。
+OpenZeppelin、Solady等の主要ライブラリがプリロード済み。すぐに参照できます。
 
 ### ✏️ 編集モード
 静的解析では捉えられない関係性をカスタムエッジで追加できます。プロキシ関係やクロスコントラクトの相互作用をドキュメント化するのに最適です。
@@ -138,9 +138,6 @@ src/
 | **OpenZeppelin Contracts** | 業界標準のスマートコントラクトライブラリ |
 | **OpenZeppelin Upgradeable** | プロキシパターン対応のアップグレード可能なコントラクト |
 | **Solady** | ガス最適化されたSolidityスニペット |
-| **Avalanche Teleporter** | Avalanche間のクロスチェーンメッセージング |
-| **Avalanche ICTT** | Interchain Token Transfer |
-| **Avalanche Validator Manager** | バリデータ管理 |
 
 ヘッダーの「Projects」ボタンからライブラリを切り替えできます。
 
@@ -170,8 +167,7 @@ sol-flow/
 ├── library/                # 内蔵ライブラリソース (Git submodules)
 │   ├── openzeppelin-contracts/
 │   ├── openzeppelin-contracts-upgradeable/
-│   ├── solady/
-│   └── icm-services/
+│   └── solady/
 ├── docs/                   # ドキュメント
 └── README.md
 ```
@@ -204,7 +200,6 @@ sol-flow/
 - [OpenZeppelin](https://openzeppelin.com/) - スマートコントラクトライブラリ
 - [Solady](https://github.com/Vectorized/solady) - ガス最適化されたSolidityスニペット
 - [React Flow](https://reactflow.dev/) - グラフ可視化ライブラリ
-- [Ava Labs](https://www.avalabs.org/) - Avalanche ICMライブラリ
 
 ---
 

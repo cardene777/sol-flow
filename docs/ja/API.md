@@ -79,10 +79,7 @@ const { libraries } = await response.json();
 // [
 //   { id: 'openzeppelin', name: 'OpenZeppelin Contracts', version: '5.0.0' },
 //   { id: 'openzeppelin-upgradeable', name: 'OpenZeppelin Upgradeable', version: '5.0.0' },
-//   { id: 'solady', name: 'Solady', version: 'latest' },
-//   { id: 'avalanche-teleporter', name: 'Avalanche Teleporter', version: 'latest' },
-//   { id: 'avalanche-ictt', name: 'Avalanche ICTT', version: 'latest' },
-//   { id: 'avalanche-validator-manager', name: 'Avalanche Validator Manager', version: 'latest' }
+//   { id: 'solady', name: 'Solady', version: 'latest' }
 // ]
 ```
 
@@ -105,9 +102,6 @@ const { libraries } = await response.json();
 | `openzeppelin` | OpenZeppelin Contracts |
 | `openzeppelin-upgradeable` | OpenZeppelin Upgradeable |
 | `solady` | Solady |
-| `avalanche-teleporter` | Avalanche Teleporter |
-| `avalanche-ictt` | Avalanche ICTT |
-| `avalanche-validator-manager` | Avalanche Validator Manager |
 
 ### レスポンス
 

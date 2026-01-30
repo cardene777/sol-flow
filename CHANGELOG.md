@@ -41,7 +41,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - OpenZeppelin Contracts
 - OpenZeppelin Contracts Upgradeable
 - Solady
-- Avalanche ICM (Teleporter, ICTT, Validator Manager)
 
 #### User Experience
 - **Auto-zoom**: Clicking a contract in sidebar automatically centers the view on that contract

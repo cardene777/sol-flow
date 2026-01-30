@@ -42,7 +42,7 @@ export type ContractKind = 'contract' | 'library' | 'interface' | 'abstract';
 export interface FunctionCall {
   target: string;
   type: 'internal' | 'library' | 'external' | 'modifier' | 'super' | 'delegatecall';
-  /** The resolved type of the target variable (e.g., ITeleporterMessenger) */
+  /** The resolved type of the target variable (e.g., IERC20) */
   targetType?: string;
   /** Number of arguments in the call (used to match overloaded functions) */
   argCount?: number;
@@ -131,7 +131,7 @@ export interface Contract {
   proxyGroupId?: string;
   // External library flag (OpenZeppelin, Solady, etc.)
   isExternalLibrary?: boolean;
-  librarySource?: 'openzeppelin' | 'openzeppelin-upgradeable' | 'solady' | 'avalanche-icm';
+  librarySource?: 'openzeppelin' | 'openzeppelin-upgradeable' | 'solady';
   // Full source code of the contract
   sourceCode?: string;
 }

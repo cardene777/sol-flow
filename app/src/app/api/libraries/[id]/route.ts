@@ -11,11 +11,6 @@ import sampleTransparentData from '@/data/libraries/sample-transparent-parsed.js
 import sampleDiamondData from '@/data/libraries/sample-diamond-parsed.json';
 import sampleBeaconData from '@/data/libraries/sample-beacon-parsed.json';
 import sampleErc7546Data from '@/data/libraries/sample-erc7546-parsed.json';
-// Avalanche ICM libraries
-import avalancheTeleporterData from '@/data/libraries/avalanche-teleporter-parsed.json';
-import avalancheIcttData from '@/data/libraries/avalanche-ictt-parsed.json';
-import avalancheValidatorManagerData from '@/data/libraries/avalanche-validator-manager-parsed.json';
-import avalancheUtilitiesData from '@/data/libraries/avalanche-utilities-parsed.json';
 
 // Map of library IDs to their data
 const libraryDataMap: Record<string, unknown> = {
@@ -27,11 +22,6 @@ const libraryDataMap: Record<string, unknown> = {
   'sample-diamond': sampleDiamondData,
   'sample-beacon': sampleBeaconData,
   'sample-erc7546': sampleErc7546Data,
-  // Avalanche ICM
-  'avalanche-teleporter': avalancheTeleporterData,
-  'avalanche-ictt': avalancheIcttData,
-  'avalanche-validator-manager': avalancheValidatorManagerData,
-  'avalanche-utilities': avalancheUtilitiesData,
 };
 
 // Map import path prefixes to library IDs
