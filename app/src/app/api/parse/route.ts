@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Resolve external library dependencies
-    const allContracts = resolveLibraryDependencies(uploadedContracts);
+    // Resolve external library dependencies (uses pre-parsed library data)
+    const allContracts = await resolveLibraryDependencies(uploadedContracts);
 
     // Build call graph
     const callGraph = buildCallGraph(projectName, allContracts);

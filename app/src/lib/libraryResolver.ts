@@ -1,38 +1,86 @@
-import fs from 'fs';
-import path from 'path';
 import type { Contract } from '@/types/callGraph';
-import { parseSolidityFile } from './solidityParser';
 import {
   normalizeVersionedPath,
   findRemapping,
   type Remapping,
 } from '@/config/remappings';
 
-// Library directory path - try multiple possible locations
-function getLibraryBasePath(): string {
-  // Try relative to current working directory
-  const cwdRelative = path.join(process.cwd(), '..', 'library');
-  if (fs.existsSync(cwdRelative)) {
-    return cwdRelative;
-  }
-
-  // Try relative to app directory (for production)
-  const appRelative = path.resolve(__dirname, '..', '..', '..', '..', 'library');
-  if (fs.existsSync(appRelative)) {
-    return appRelative;
-  }
-
-  // Fallback to original path
-  return cwdRelative;
-}
-
-const LIBRARY_BASE_PATH = getLibraryBasePath();
+// Pre-parsed library data cache
+let libraryContractsCache: Map<string, Contract[]> | null = null;
+let libraryContractsByPath: Map<string, Contract> | null = null;
 
 /**
- * Resolve an import path to a file system path
- * e.g., "@teleporter/TeleporterMessenger.sol" -> "/path/to/library/icm-services/icm-contracts/avalanche/teleporter/TeleporterMessenger.sol"
+ * Library source to library ID mapping
  */
-function resolveImportPath(importPath: string): { fullPath: string; remapping: Remapping } | null {
+const LIBRARY_SOURCE_TO_ID: Record<string, string[]> = {
+  'openzeppelin': ['openzeppelin'],
+  'openzeppelin-upgradeable': ['openzeppelin-upgradeable'],
+  'solady': ['solady'],
+  'avalanche-icm': [
+    'avalanche-teleporter',
+    'avalanche-ictt',
+    'avalanche-validator-manager',
+    'avalanche-utilities',
+  ],
+};
+
+/**
+ * Load all pre-parsed library contracts
+ */
+async function loadAllLibraryContracts(): Promise<Map<string, Contract[]>> {
+  if (libraryContractsCache) {
+    return libraryContractsCache;
+  }
+
+  const cache = new Map<string, Contract[]>();
+  const byPath = new Map<string, Contract>();
+
+  // Dynamically import all library JSON files
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const libraryImports: Record<string, () => Promise<any>> = {
+    'openzeppelin': () => import('@/data/libraries/openzeppelin-parsed.json'),
+    'openzeppelin-upgradeable': () => import('@/data/libraries/openzeppelin-upgradeable-parsed.json'),
+    'solady': () => import('@/data/libraries/solady-parsed.json'),
+    'avalanche-teleporter': () => import('@/data/libraries/avalanche-teleporter-parsed.json'),
+    'avalanche-ictt': () => import('@/data/libraries/avalanche-ictt-parsed.json'),
+    'avalanche-validator-manager': () => import('@/data/libraries/avalanche-validator-manager-parsed.json'),
+    'avalanche-utilities': () => import('@/data/libraries/avalanche-utilities-parsed.json'),
+  };
+
+  for (const [libraryId, importFn] of Object.entries(libraryImports)) {
+    try {
+      const module = await importFn();
+      const data = module.default || module;
+      if (data?.callGraph?.contracts) {
+        const contracts = data.callGraph.contracts as Contract[];
+        cache.set(libraryId, contracts);
+
+        // Index contracts by file path for fast lookup
+        for (const contract of contracts) {
+          if (contract.filePath) {
+            byPath.set(contract.filePath, contract);
+            // Also index by normalized path
+            const normalized = normalizeVersionedPath(contract.filePath);
+            if (normalized !== contract.filePath) {
+              byPath.set(normalized, contract);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn(`Failed to load library ${libraryId}:`, e);
+    }
+  }
+
+  libraryContractsCache = cache;
+  libraryContractsByPath = byPath;
+  return cache;
+}
+
+/**
+ * Find a contract by its import path in pre-parsed libraries
+ */
+async function findContractByImportPath(importPath: string): Promise<{ contract: Contract; remapping: Remapping } | null> {
   const normalized = normalizeVersionedPath(importPath);
   const remapping = findRemapping(normalized);
 
@@ -40,44 +88,46 @@ function resolveImportPath(importPath: string): { fullPath: string; remapping: R
     return null;
   }
 
-  const relativePath = normalized.slice(remapping.alias.length);
-  const fullPath = path.join(LIBRARY_BASE_PATH, remapping.target, relativePath);
+  await loadAllLibraryContracts();
 
-  return { fullPath, remapping };
-}
+  if (!libraryContractsByPath) {
+    return null;
+  }
 
-/**
- * Check if a file is an interface and find its implementation
- * e.g., "ITeleporterMessenger.sol" -> "TeleporterMessenger.sol"
- */
-function findImplementationForInterface(interfacePath: string): string | null {
-  const fileName = path.basename(interfacePath, '.sol');
+  // Try to find contract by file path
+  // The pre-parsed data stores contracts with their import path as filePath
+  let contract = libraryContractsByPath.get(normalized);
 
-  // Check if it's an interface (starts with 'I' and second char is uppercase)
-  if (fileName.startsWith('I') && fileName[1] === fileName[1]?.toUpperCase()) {
-    const implName = fileName.slice(1); // Remove 'I' prefix
-    const implPath = interfacePath.replace(`/${fileName}.sol`, `/${implName}.sol`);
+  if (!contract) {
+    // Try without leading slash
+    const withoutSlash = normalized.startsWith('/') ? normalized.slice(1) : normalized;
+    contract = libraryContractsByPath.get(withoutSlash);
+  }
 
-    const resolved = resolveImportPath(implPath);
-    if (resolved && fs.existsSync(resolved.fullPath)) {
-      return implPath;
+  if (!contract) {
+    // Try to find by matching the end of the path (contract name)
+    const fileName = normalized.split('/').pop()?.replace('.sol', '');
+    if (fileName && libraryContractsCache) {
+      const libraryIds = LIBRARY_SOURCE_TO_ID[remapping.librarySource] || [];
+      for (const libraryId of libraryIds) {
+        const contracts = libraryContractsCache.get(libraryId);
+        if (contracts) {
+          // Find contract with matching name
+          contract = contracts.find(c => c.name === fileName);
+          if (contract) break;
+
+          // Also try matching by file path ending
+          contract = contracts.find(c => c.filePath?.endsWith(normalized.split('/').slice(-2).join('/')));
+          if (contract) break;
+        }
+      }
     }
   }
 
-  return null;
-}
-
-/**
- * Read a Solidity file from the library directory
- */
-function readLibraryFile(filePath: string): string | null {
-  try {
-    if (fs.existsSync(filePath)) {
-      return fs.readFileSync(filePath, 'utf-8');
-    }
-  } catch {
-    // Failed to read file
+  if (contract) {
+    return { contract, remapping };
   }
+
   return null;
 }
 
@@ -99,19 +149,21 @@ function extractExternalImports(contracts: Contract[]): Set<string> {
 }
 
 /**
- * Recursively resolve library dependencies
+ * Recursively resolve library dependencies using pre-parsed library data
  */
-export function resolveLibraryDependencies(
+export async function resolveLibraryDependencies(
   uploadedContracts: Contract[],
   maxDepth: number = 5
-): Contract[] {
+): Promise<Contract[]> {
   const allContracts = [...uploadedContracts];
   const processedPaths = new Set<string>();
+  const processedNames = new Set<string>();
   const pendingImports = new Set<string>();
 
   // Mark uploaded files as processed
   for (const contract of uploadedContracts) {
     processedPaths.add(contract.filePath);
+    processedNames.add(contract.name);
   }
 
   // Collect initial external imports
@@ -134,39 +186,35 @@ export function resolveLibraryDependencies(
       processedPaths.add(importPath);
       processedPaths.add(normalizedImportPath);
 
-      const resolved = resolveImportPath(importPath);
-      if (!resolved) {
+      // Find contract in pre-parsed libraries
+      const result = await findContractByImportPath(importPath);
+      if (!result) {
         continue;
       }
 
-      const content = readLibraryFile(resolved.fullPath);
-      if (!content) {
+      const { contract: libraryContract, remapping } = result;
+
+      // Skip if we already have a contract with this name
+      if (processedNames.has(libraryContract.name)) {
         continue;
       }
+      processedNames.add(libraryContract.name);
 
-      // Parse the library file - use the original import path as filePath
-      // This ensures the path matches what user code imports
-      const { contracts: libraryContracts } = parseSolidityFile(normalizedImportPath, content);
+      // Clone the contract and mark it as external library
+      const contractCopy: Contract = {
+        ...libraryContract,
+        filePath: normalizedImportPath,
+        isExternalLibrary: true,
+        librarySource: remapping.librarySource,
+      };
 
-      for (const contract of libraryContracts) {
-        // Keep the import path format for display and matching
-        contract.filePath = normalizedImportPath;
-        contract.isExternalLibrary = true;
-        contract.librarySource = resolved.remapping.librarySource;
-        allContracts.push(contract);
+      allContracts.push(contractCopy);
 
-        // Collect nested external imports
-        for (const imp of contract.imports) {
-          if (imp.isExternal && !processedPaths.has(imp.path)) {
-            pendingImports.add(imp.path);
-          }
+      // Collect nested external imports
+      for (const imp of contractCopy.imports) {
+        if (imp.isExternal && !processedPaths.has(imp.path)) {
+          pendingImports.add(imp.path);
         }
-      }
-
-      // If this is an interface, also import the implementation file if it exists
-      const implPath = findImplementationForInterface(importPath);
-      if (implPath && !processedPaths.has(implPath)) {
-        pendingImports.add(implPath);
       }
     }
 
@@ -174,4 +222,110 @@ export function resolveLibraryDependencies(
   }
 
   return allContracts;
+}
+
+// Synchronous version that uses cached data (for use after initial load)
+export function resolveLibraryDependenciesSync(
+  uploadedContracts: Contract[],
+  maxDepth: number = 5
+): Contract[] {
+  // If cache is not loaded, return uploaded contracts as-is
+  // The async version should be called first to populate the cache
+  if (!libraryContractsCache || !libraryContractsByPath) {
+    console.warn('Library cache not loaded. Call resolveLibraryDependencies first.');
+    return uploadedContracts;
+  }
+
+  const allContracts = [...uploadedContracts];
+  const processedPaths = new Set<string>();
+  const processedNames = new Set<string>();
+  const pendingImports = new Set<string>();
+
+  // Mark uploaded files as processed
+  for (const contract of uploadedContracts) {
+    processedPaths.add(contract.filePath);
+    processedNames.add(contract.name);
+  }
+
+  // Collect initial external imports
+  for (const imp of extractExternalImports(uploadedContracts)) {
+    pendingImports.add(imp);
+  }
+
+  let depth = 0;
+  while (pendingImports.size > 0 && depth < maxDepth) {
+    const currentBatch = [...pendingImports];
+    pendingImports.clear();
+
+    for (const importPath of currentBatch) {
+      const normalizedImportPath = normalizeVersionedPath(importPath);
+
+      if (processedPaths.has(importPath) || processedPaths.has(normalizedImportPath)) {
+        continue;
+      }
+      processedPaths.add(importPath);
+      processedPaths.add(normalizedImportPath);
+
+      const remapping = findRemapping(normalizedImportPath);
+      if (!remapping) {
+        continue;
+      }
+
+      // Try to find contract by file path
+      let libraryContract = libraryContractsByPath.get(normalizedImportPath);
+
+      if (!libraryContract) {
+        // Try to find by matching the end of the path (contract name)
+        const fileName = normalizedImportPath.split('/').pop()?.replace('.sol', '');
+        if (fileName) {
+          const libraryIds = LIBRARY_SOURCE_TO_ID[remapping.librarySource] || [];
+          for (const libraryId of libraryIds) {
+            const contracts = libraryContractsCache.get(libraryId);
+            if (contracts) {
+              libraryContract = contracts.find(c => c.name === fileName);
+              if (libraryContract) break;
+            }
+          }
+        }
+      }
+
+      if (!libraryContract) {
+        continue;
+      }
+
+      // Skip if we already have a contract with this name
+      if (processedNames.has(libraryContract.name)) {
+        continue;
+      }
+      processedNames.add(libraryContract.name);
+
+      // Clone the contract and mark it as external library
+      const contractCopy: Contract = {
+        ...libraryContract,
+        filePath: normalizedImportPath,
+        isExternalLibrary: true,
+        librarySource: remapping.librarySource,
+      };
+
+      allContracts.push(contractCopy);
+
+      // Collect nested external imports
+      for (const imp of contractCopy.imports) {
+        if (imp.isExternal && !processedPaths.has(imp.path)) {
+          pendingImports.add(imp.path);
+        }
+      }
+    }
+
+    depth++;
+  }
+
+  return allContracts;
+}
+
+/**
+ * Preload library data (call this on app startup)
+ */
+export async function preloadLibraryData(): Promise<void> {
+  await loadAllLibraryContracts();
 }
