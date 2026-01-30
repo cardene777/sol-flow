@@ -24,6 +24,7 @@ export function UploadModal({ onClose, onImport }: UploadModalProps) {
   const [files, setFiles] = useState<FileData[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [projectName, setProjectName] = useState('My Project');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -124,21 +125,26 @@ export function UploadModal({ onClose, onImport }: UploadModalProps) {
     e.stopPropagation();
     setIsDragging(false);
     setError(null);
+    setIsLoadingFiles(true);
 
-    const items = e.dataTransfer.items;
-    const newFiles: FileData[] = [];
+    try {
+      const items = e.dataTransfer.items;
+      const newFiles: FileData[] = [];
 
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      const entry = item.webkitGetAsEntry?.();
-      if (entry) {
-        const results = await processFileEntry(entry);
-        newFiles.push(...results);
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const entry = item.webkitGetAsEntry?.();
+        if (entry) {
+          const results = await processFileEntry(entry);
+          newFiles.push(...results);
+        }
       }
-    }
 
-    if (newFiles.length > 0) {
-      setFiles(prev => [...prev, ...newFiles]);
+      if (newFiles.length > 0) {
+        setFiles(prev => [...prev, ...newFiles]);
+      }
+    } finally {
+      setIsLoadingFiles(false);
     }
   }, [processFileEntry]);
 
@@ -147,19 +153,25 @@ export function UploadModal({ onClose, onImport }: UploadModalProps) {
     if (!selectedFiles) return;
 
     setError(null);
-    const newFiles: FileData[] = [];
+    setIsLoadingFiles(true);
 
-    for (let i = 0; i < selectedFiles.length; i++) {
-      const file = selectedFiles[i];
-      const relativePath = (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name;
-      const fileData = await processFile(file, relativePath);
-      if (fileData) {
-        newFiles.push(fileData);
+    try {
+      const newFiles: FileData[] = [];
+
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        const relativePath = (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name;
+        const fileData = await processFile(file, relativePath);
+        if (fileData) {
+          newFiles.push(fileData);
+        }
       }
-    }
 
-    if (newFiles.length > 0) {
-      setFiles(prev => [...prev, ...newFiles]);
+      if (newFiles.length > 0) {
+        setFiles(prev => [...prev, ...newFiles]);
+      }
+    } finally {
+      setIsLoadingFiles(false);
     }
 
     e.target.value = '';
@@ -259,32 +271,46 @@ export function UploadModal({ onClose, onImport }: UploadModalProps) {
                 : 'border-navy-500 hover:border-navy-400'
             )}
           >
-            <Upload className={clsx(
-              'w-12 h-12 mx-auto mb-4',
-              isDragging ? 'text-mint' : 'text-slate-500'
-            )} />
-            <p className="text-slate-300 mb-2">
-              Drag & drop files or folders here
-            </p>
-            <p className="text-slate-500 text-sm mb-4">
-              or click the buttons below
-            </p>
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2 px-4 py-2 bg-navy-600 hover:bg-navy-500 rounded-lg text-slate-200 text-sm transition-colors"
-              >
-                <FileCode2 className="w-4 h-4" />
-                Select Files
-              </button>
-              <button
-                onClick={() => folderInputRef.current?.click()}
-                className="flex items-center gap-2 px-4 py-2 bg-navy-600 hover:bg-navy-500 rounded-lg text-slate-200 text-sm transition-colors"
-              >
-                <FolderOpen className="w-4 h-4" />
-                Select Folder
-              </button>
-            </div>
+            {isLoadingFiles ? (
+              <>
+                <Loader2 className="w-12 h-12 mx-auto mb-4 text-mint animate-spin" />
+                <p className="text-slate-300 mb-2">
+                  Loading files...
+                </p>
+                <p className="text-slate-500 text-sm">
+                  Please wait while we process your files
+                </p>
+              </>
+            ) : (
+              <>
+                <Upload className={clsx(
+                  'w-12 h-12 mx-auto mb-4',
+                  isDragging ? 'text-mint' : 'text-slate-500'
+                )} />
+                <p className="text-slate-300 mb-2">
+                  Drag & drop files or folders here
+                </p>
+                <p className="text-slate-500 text-sm mb-4">
+                  or click the buttons below
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-2 bg-navy-600 hover:bg-navy-500 rounded-lg text-slate-200 text-sm transition-colors"
+                  >
+                    <FileCode2 className="w-4 h-4" />
+                    Select Files
+                  </button>
+                  <button
+                    onClick={() => folderInputRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-2 bg-navy-600 hover:bg-navy-500 rounded-lg text-slate-200 text-sm transition-colors"
+                  >
+                    <FolderOpen className="w-4 h-4" />
+                    Select Folder
+                  </button>
+                </div>
+              </>
+            )}
             <input
               ref={fileInputRef}
               type="file"

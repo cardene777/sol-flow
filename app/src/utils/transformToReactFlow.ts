@@ -686,7 +686,9 @@ function createEdges(
 
     const sourcePos = nodePositions.get(dep.from);
     const targetPos = nodePositions.get(dep.to);
-    if (!sourcePos || !targetPos) continue;
+    if (!sourcePos || !targetPos) {
+      continue;
+    }
 
     // Skip edges where source and target are at the same position (would cause weird routing)
     if (sourcePos.x === targetPos.x && sourcePos.y === targetPos.y) continue;
@@ -717,23 +719,21 @@ function createEdges(
     // Check if both contracts are in ERC7546 group
     const isErc7546Edge = sourceGroup?.startsWith('eip7546-') && targetGroup?.startsWith('eip7546-');
 
-    // For ERC7546 group, only show key relationship edges (not inheritance to reduce clutter)
+    // For ERC7546 group, show all relationship edges including inheritance
     if (isErc7546Edge) {
-      // Only show delegatecall, registers, uses - skip inherits/implements to avoid duplicate lines
-      if (dep.type === 'delegatecall' || dep.type === 'registers' || dep.type === 'uses') {
-        // Only create one edge per node pair within ERC7546
-        const pairKey = `${dep.from}-${dep.to}`;
-        if (!createdEdgePairs.has(pairKey)) {
-          const sourceOffset = getSourceOffset(dep.from, direction);
-          const targetOffset = getTargetOffset(dep.to, oppositeDir[direction]);
-          const edge = createSingleEdge(dep, sourcePos, targetPos, false, 0.6, sourceOffset, targetOffset);
-          if (edge) {
-            edges.push(edge);
-            createdEdgePairs.add(pairKey);
-          }
+      // Only create one edge per node pair within ERC7546 to avoid duplicate lines
+      const pairKey = `${dep.from}-${dep.to}`;
+      if (!createdEdgePairs.has(pairKey)) {
+        const sourceOffset = getSourceOffset(dep.from, direction);
+        const targetOffset = getTargetOffset(dep.to, oppositeDir[direction]);
+        // Use higher opacity for inheritance, lower for other types
+        const opacity = (dep.type === 'inherits' || dep.type === 'implements') ? 0.7 : 0.6;
+        const edge = createSingleEdge(dep, sourcePos, targetPos, false, opacity, sourceOffset, targetOffset);
+        if (edge) {
+          edges.push(edge);
+          createdEdgePairs.add(pairKey);
         }
       }
-      // Skip all other edge types within ERC7546 group
       continue;
     }
 
@@ -741,8 +741,8 @@ function createEdges(
     if (dep.type === 'inherits' || dep.type === 'implements') {
       const involvesBase = sourceGroup === 'base' || targetGroup === 'base';
       const sameCategory = sourceCategory && targetCategory && sourceCategory === targetCategory;
-      // Use higher opacity for same-category or base, lower for cross-category
-      const opacity = (sameCategory || involvesBase) ? 0.5 : 0.3;
+      // Use higher opacity for visibility - inheritance relationships are important
+      const opacity = (sameCategory || involvesBase) ? 0.7 : 0.5;
       const sourceOffset = getSourceOffset(dep.from, direction);
       const targetOffset = getTargetOffset(dep.to, oppositeDir[direction]);
       const edge = createSingleEdge(dep, sourcePos, targetPos, false, opacity, sourceOffset, targetOffset);
@@ -750,11 +750,11 @@ function createEdges(
       continue;
     }
 
-    // For 'uses' edges (library usage), always show with lower opacity
+    // For 'uses' edges (library usage), always show with moderate opacity
     if (dep.type === 'uses') {
       const sourceOffset = getSourceOffset(dep.from, direction);
       const targetOffset = getTargetOffset(dep.to, oppositeDir[direction]);
-      const edge = createSingleEdge(dep, sourcePos, targetPos, false, 0.4, sourceOffset, targetOffset);
+      const edge = createSingleEdge(dep, sourcePos, targetPos, false, 0.55, sourceOffset, targetOffset);
       if (edge) edges.push(edge);
       continue;
     }
@@ -794,8 +794,8 @@ function createSingleEdge(
   const sourceHandle = `${direction}-source`;
   const targetHandle = `${oppositeDirection[direction]}-target`;
 
-  const opacity = customOpacity ?? (isSelected ? 1 : 0.3);
-  const strokeWidth = isSelected ? 2.5 : 1.2;
+  const opacity = customOpacity ?? (isSelected ? 1 : 0.5);
+  const strokeWidth = isSelected ? 2.5 : 1.8;
 
   const baseEdge = {
     id: `${dep.from}-${dep.to}-${dep.type}${isSelected ? '-selected' : ''}`,
@@ -1238,7 +1238,7 @@ export function transformToReactFlow(
   const COLUMN_GAP = 80;           // Gap between category columns
   const ROW_GAP = 80;              // Gap between rows (vertical layout)
   const SUB_CATEGORY_GAP = 70;     // Gap between sub-category groups
-  const CONTRACTS_PER_ROW = 2;  // Same for all categories including library
+  const CONTRACTS_PER_ROW = 3;  // 3 columns for better horizontal spread
   const PROXY_GROUP_PADDING = 80;
 
   // Get column count for category (same for all)
@@ -1299,7 +1299,59 @@ export function transformToReactFlow(
 
   // Calculate row-based positions for contracts (returns positions relative to group)
   // Also returns the calculated bounds based on actual positions
-  const calcContractPositions = (contractList: Contract[], maxCols: number) => {
+  // If useHierarchy is true, uses dagre layout based on inheritance relationships
+  const calcContractPositions = (
+    contractList: Contract[],
+    maxCols: number,
+    useHierarchy: boolean = false
+  ) => {
+    // Try hierarchical layout first if requested
+    if (useHierarchy && contractList.length > 1) {
+      const hierarchyPositions = calculateHierarchicalPositions(
+        contractList,
+        callGraph.dependencies,
+        nodeHeights
+      );
+
+      if (hierarchyPositions.size > 0) {
+        // Use dagre positions
+        const positions: { contract: Contract; x: number; y: number; height: number }[] = [];
+        let maxX = 0;
+        let maxY = 0;
+
+        for (const contract of contractList) {
+          const pos = hierarchyPositions.get(contract.name);
+          const h = nodeHeights.get(contract.name) || NODE_MIN_HEIGHT;
+
+          if (pos) {
+            positions.push({
+              contract,
+              x: CATEGORY_PADDING + pos.x,
+              y: CATEGORY_PADDING + pos.y,
+              height: h,
+            });
+            maxX = Math.max(maxX, CATEGORY_PADDING + pos.x + NODE_WIDTH);
+            maxY = Math.max(maxY, CATEGORY_PADDING + pos.y + h);
+          } else {
+            // Fallback position
+            positions.push({
+              contract,
+              x: CATEGORY_PADDING,
+              y: CATEGORY_PADDING,
+              height: h,
+            });
+          }
+        }
+
+        return {
+          positions,
+          width: maxX + CATEGORY_PADDING,
+          height: maxY + CATEGORY_PADDING,
+        };
+      }
+    }
+
+    // Fallback to grid layout
     const positions: { contract: Contract; x: number; y: number; height: number }[] = [];
     let currentY = CATEGORY_PADDING;
     let maxX = 0;  // Track rightmost edge
@@ -1434,8 +1486,9 @@ export function transformToReactFlow(
             if (!catContracts || catContracts.length === 0) continue;
 
             catContracts.sort((a, b) => a.name.localeCompare(b.name));
-            const maxCols = catContracts.length <= 2 ? catContracts.length : 2;
-            const { width, height } = calcContractPositions(catContracts, maxCols);
+            const maxCols = catContracts.length <= 3 ? catContracts.length : 3;
+            // Use hierarchy layout for implementation groups
+            const { width, height } = calcContractPositions(catContracts, maxCols, true);
 
             roleLayouts.push({
               role: 'implementation',
@@ -1457,9 +1510,10 @@ export function transformToReactFlow(
         } else {
           // Single role group (Proxy, Dictionary, or small implementation)
           roleContracts.sort((a, b) => a.name.localeCompare(b.name));
-          // Use consistent maxCols: 2 columns max
-          const maxCols = roleContracts.length <= 2 ? roleContracts.length : 2;
-          const { width, height } = calcContractPositions(roleContracts, maxCols);
+          // Use consistent maxCols: 3 columns max
+          const maxCols = roleContracts.length <= 3 ? roleContracts.length : 3;
+          // Use hierarchy layout for all role groups
+          const { width, height } = calcContractPositions(roleContracts, maxCols, true);
 
           roleLayouts.push({
             role,
@@ -1499,8 +1553,9 @@ export function transformToReactFlow(
             if (!catContracts || catContracts.length === 0) continue;
 
             catContracts.sort((a, b) => a.name.localeCompare(b.name));
-            const maxCols = catContracts.length <= 2 ? catContracts.length : 2;
-            const { width, height } = calcContractPositions(catContracts, maxCols);
+            const maxCols = catContracts.length <= 3 ? catContracts.length : 3;
+            // Use hierarchy layout
+            const { width, height } = calcContractPositions(catContracts, maxCols, true);
 
             roleLayouts.push({
               role: 'implementation',
@@ -1517,8 +1572,9 @@ export function transformToReactFlow(
             maxRoleHeight = Math.max(maxRoleHeight, height);
           }
         } else {
-          const maxCols = roleContracts.length <= 2 ? roleContracts.length : 2;
-          const { width, height } = calcContractPositions(roleContracts, maxCols);
+          const maxCols = roleContracts.length <= 3 ? roleContracts.length : 3;
+          // Use hierarchy layout
+          const { width, height } = calcContractPositions(roleContracts, maxCols, true);
 
           roleLayouts.push({
             role,
@@ -1607,9 +1663,9 @@ export function transformToReactFlow(
         draggable: false,
       });
 
-      // Position contracts inside this role group with dynamic heights
-      const maxCols = layout.contracts.length <= 2 ? layout.contracts.length : 2;
-      const { positions: contractPositions } = calcContractPositions(layout.contracts, maxCols);
+      // Position contracts inside this role group with dynamic heights and hierarchy
+      const maxCols = layout.contracts.length <= 3 ? layout.contracts.length : 3;
+      const { positions: contractPositions } = calcContractPositions(layout.contracts, maxCols, true);
 
       for (const pos of contractPositions) {
         const relativePosition = { x: pos.x, y: pos.y };
@@ -1741,13 +1797,14 @@ export function transformToReactFlow(
             width = dims.width;
             height = dims.height;
           } else {
-            const { width: actualWidth, height: actualHeight } = calcContractPositions(group.contracts, colsForCategory);
+            // Fallback: use calcContractPositions with hierarchy mode
+            const { width: actualWidth, height: actualHeight } = calcContractPositions(group.contracts, colsForCategory, true);
             width = actualWidth;
             height = actualHeight;
           }
         } else {
           const colsForCategory = getColumnsForCategory(group.category);
-          const { width: actualWidth, height: actualHeight } = calcContractPositions(group.contracts, colsForCategory);
+          const { width: actualWidth, height: actualHeight } = calcContractPositions(group.contracts, colsForCategory, false);
           width = actualWidth;
           height = actualHeight;
         }
