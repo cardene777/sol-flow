@@ -1488,7 +1488,7 @@ export function transformToReactFlow(
             catContracts.sort((a, b) => a.name.localeCompare(b.name));
             const maxCols = catContracts.length <= 3 ? catContracts.length : 3;
             // Use hierarchy layout for implementation groups
-            const { width, height } = calcContractPositions(catContracts, maxCols, true);
+            const { width, height } = calcContractPositions(catContracts, maxCols, layoutMode === 'hierarchy');
 
             roleLayouts.push({
               role: 'implementation',
@@ -1513,7 +1513,7 @@ export function transformToReactFlow(
           // Use consistent maxCols: 3 columns max
           const maxCols = roleContracts.length <= 3 ? roleContracts.length : 3;
           // Use hierarchy layout for all role groups
-          const { width, height } = calcContractPositions(roleContracts, maxCols, true);
+          const { width, height } = calcContractPositions(roleContracts, maxCols, layoutMode === 'hierarchy');
 
           roleLayouts.push({
             role,
@@ -1555,7 +1555,7 @@ export function transformToReactFlow(
             catContracts.sort((a, b) => a.name.localeCompare(b.name));
             const maxCols = catContracts.length <= 3 ? catContracts.length : 3;
             // Use hierarchy layout
-            const { width, height } = calcContractPositions(catContracts, maxCols, true);
+            const { width, height } = calcContractPositions(catContracts, maxCols, layoutMode === 'hierarchy');
 
             roleLayouts.push({
               role: 'implementation',
@@ -1574,7 +1574,7 @@ export function transformToReactFlow(
         } else {
           const maxCols = roleContracts.length <= 3 ? roleContracts.length : 3;
           // Use hierarchy layout
-          const { width, height } = calcContractPositions(roleContracts, maxCols, true);
+          const { width, height } = calcContractPositions(roleContracts, maxCols, layoutMode === 'hierarchy');
 
           roleLayouts.push({
             role,
@@ -1665,7 +1665,7 @@ export function transformToReactFlow(
 
       // Position contracts inside this role group with dynamic heights and hierarchy
       const maxCols = layout.contracts.length <= 3 ? layout.contracts.length : 3;
-      const { positions: contractPositions } = calcContractPositions(layout.contracts, maxCols, true);
+      const { positions: contractPositions } = calcContractPositions(layout.contracts, maxCols, layoutMode === 'hierarchy');
 
       for (const pos of contractPositions) {
         const relativePosition = { x: pos.x, y: pos.y };
@@ -1798,7 +1798,7 @@ export function transformToReactFlow(
             height = dims.height;
           } else {
             // Fallback: use calcContractPositions with hierarchy mode
-            const { width: actualWidth, height: actualHeight } = calcContractPositions(group.contracts, colsForCategory, true);
+            const { width: actualWidth, height: actualHeight } = calcContractPositions(group.contracts, colsForCategory, layoutMode === 'hierarchy');
             width = actualWidth;
             height = actualHeight;
           }
