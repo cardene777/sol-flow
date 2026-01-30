@@ -54,7 +54,7 @@ Quickly search by contract name, function name, or event name. Navigate large co
 Simply drag and drop Solidity files. External libraries (OpenZeppelin, Solady, etc.) are resolved automatically.
 
 ### 📚 Built-in Libraries
-Major libraries like OpenZeppelin, Solady, and Avalanche ICM are preloaded and ready to explore.
+Major libraries like OpenZeppelin and Solady are preloaded and ready to explore.
 
 ### ✏️ Edit Mode
 Add custom edges to document relationships not captured by static analysis. Perfect for documenting proxy relationships and cross-contract interactions.
@@ -138,9 +138,6 @@ The following libraries are preloaded:
 | **OpenZeppelin Contracts** | Industry-standard smart contract library |
 | **OpenZeppelin Upgradeable** | Upgradeable contracts with proxy patterns |
 | **Solady** | Gas-optimized Solidity snippets |
-| **Avalanche Teleporter** | Cross-chain messaging for Avalanche |
-| **Avalanche ICTT** | Interchain Token Transfer |
-| **Avalanche Validator Manager** | Validator management |
 
 Switch between libraries using the "Projects" button in the header.
 
@@ -170,8 +167,7 @@ sol-flow/
 ├── library/                # Built-in library sources (Git submodules)
 │   ├── openzeppelin-contracts/
 │   ├── openzeppelin-contracts-upgradeable/
-│   ├── solady/
-│   └── icm-services/
+│   └── solady/
 ├── docs/                   # Documentation
 └── README.md
 ```
@@ -204,7 +200,6 @@ See the [LICENSE](LICENSE) file for details. For commercial licensing inquiries,
 - [OpenZeppelin](https://openzeppelin.com/) - Smart contract library
 - [Solady](https://github.com/Vectorized/solady) - Gas optimized Solidity snippets
 - [React Flow](https://reactflow.dev/) - Graph visualization library
-- [Ava Labs](https://www.avalabs.org/) - Avalanche ICM libraries
 
 ---
 

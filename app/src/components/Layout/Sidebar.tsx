@@ -27,8 +27,6 @@ function getCategoryLabel(category: string): string {
     'access': 'Access Control',
     'metatx': 'Meta TX',
     'utils': 'Utilities',
-    'ictt': 'ICTT',
-    'validator-manager': 'Validator Manager',
   };
   if (specialLabels[category.toLowerCase()]) {
     return specialLabels[category.toLowerCase()];

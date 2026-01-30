@@ -21,7 +21,7 @@ Sol-Flowには、ファイルをアップロードせずに探索できるプリ
 
 - **即時探索**: アップロードやパースが不要
 - **高速読み込み**: 事前計算済みデータの高速読み込み
-- **リファレンス資料**: OpenZeppelin、Solady、Avalanche ICMの実装を探索
+- **リファレンス資料**: OpenZeppelin、Soladyの実装を探索
 
 ---
 
@@ -32,9 +32,6 @@ Sol-Flowには、ファイルをアップロードせずに探索できるプリ
 | OpenZeppelin Contracts | `openzeppelin` | 業界標準スマートコントラクトライブラリ（v5.0.0） |
 | OpenZeppelin Upgradeable | `openzeppelin-upgradeable` | アップグレード可能なコントラクトバリアント |
 | Solady | `solady` | ガス最適化されたSolidityスニペット |
-| Avalanche Teleporter | `avalanche-teleporter` | Avalanche向けクロスチェーンメッセージング |
-| Avalanche ICTT | `avalanche-ictt` | インターチェーントークン転送 |
-| Avalanche Validator Manager | `avalanche-validator-manager` | バリデータ管理コントラクト |
 
 ---
 
@@ -48,8 +45,7 @@ Sol-Flowには、ファイルをアップロードせずに探索できるプリ
 library/
 ├── openzeppelin-contracts/          # OpenZeppelin Contracts
 ├── openzeppelin-contracts-upgradeable/  # OZ Upgradeable
-├── solady/                          # Solady
-└── icm-services/                    # Avalanche ICM
+└── solady/                          # Solady
 ```
 
 ### プリパース済みデータ
@@ -60,10 +56,7 @@ library/
 app/src/data/libraries/
 ├── openzeppelin-parsed.json         # ~1MB
 ├── openzeppelin-upgradeable-parsed.json  # ~1.2MB
-├── solady-parsed.json               # ~800KB
-├── avalanche-teleporter-parsed.json
-├── avalanche-ictt-parsed.json
-└── avalanche-validator-manager-parsed.json
+└── solady-parsed.json               # ~800KB
 ```
 
 ### JSON構造
@@ -260,7 +253,7 @@ interface Contract {
   // ... 標準フィールド ...
 
   isExternalLibrary?: boolean;  // ライブラリコントラクトの場合true
-  librarySource?: 'openzeppelin' | 'openzeppelin-upgradeable' | 'solady' | 'avalanche-icm';
+  librarySource?: 'openzeppelin' | 'openzeppelin-upgradeable' | 'solady';
 }
 ```
 

@@ -528,7 +528,7 @@ function getTypeName(typeName: any | null): string {
  *
  * Examples:
  * - @openzeppelin/contracts/access/Ownable.sol → 'access'
- * - @avalanche-icm/teleporter/TeleporterMessenger.sol → 'teleporter'
+ * - solady/src/auth/Ownable.sol → 'auth'
  * - src/MyProject/Core/Contract.sol → 'Core'
  */
 function determineCategory(
@@ -544,8 +544,7 @@ function determineCategory(
   // Handle specific library patterns with remappings
   // @openzeppelin/contracts@5.0.2/access/Ownable.sol → "OpenZeppelin/access"
   // @openzeppelin/contracts-upgradeable@5.0.2/proxy/... → "OZ-Upgradeable/proxy"
-  // @teleporter/TeleporterMessenger.sol → "teleporter"
-  // @utilities/SafeERC20TransferFrom.sol → "utilities"
+  // solady/src/auth/Ownable.sol → "Solady/auth"
 
   // OpenZeppelin patterns
   const ozMatch = filePath.match(/^@openzeppelin\/contracts(?:-upgradeable)?(?:@[\d.]+)?\/(.+)\//);
@@ -556,26 +555,6 @@ function determineCategory(
     // Take only the first directory level for cleaner categories
     const firstDir = subCategory.split('/')[0];
     return `${prefix}/${firstDir}`;
-  }
-
-  // Avalanche ICM remappings: @teleporter, @utilities, @subnet-evm, @mocks, @ictt, @validator-manager
-  const avalancheRemappings: Record<string, string> = {
-    '@teleporter': 'teleporter',
-    '@utilities': 'utilities',
-    '@subnet-evm': 'subnet-evm',
-    '@mocks': 'mocks',
-    '@ictt': 'ictt',
-    '@validator-manager': 'validator-manager',
-    '@avalanche-icm/teleporter': 'teleporter',
-    '@avalanche-icm/ictt': 'ictt',
-    '@avalanche-icm/validator-manager': 'validator-manager',
-    '@avalanche-icm/utilities': 'utilities',
-  };
-
-  for (const [prefix, category] of Object.entries(avalancheRemappings)) {
-    if (filePath.startsWith(prefix)) {
-      return category;
-    }
   }
 
   // Solady pattern

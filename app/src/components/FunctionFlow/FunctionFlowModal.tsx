@@ -382,7 +382,7 @@ function buildFlowGraph(
               const normalizedContractPath = normalizeVersionedPath(c.filePath);
               // Direct match
               if (normalizedContractPath === normalizedPath) return true;
-              // Match by filename (e.g., TeleporterMessenger.sol)
+              // Match by filename (e.g., ERC20.sol)
               const fileName = normalizedPath.split('/').pop();
               const contractFileName = normalizedContractPath.split('/').pop();
               if (fileName === contractFileName && c.name === actualName) return true;
@@ -474,14 +474,14 @@ function buildFlowGraph(
       } else if (call.type === 'external') {
         nodeType = 'external';
 
-        // Try to resolve external call using targetType (e.g., ITeleporterMessenger)
+        // Try to resolve external call using targetType (e.g., IERC20)
         if (call.targetType) {
           const funcName = call.target.includes('.') ? call.target.split('.')[1] : call.target;
 
           let externalContract: Contract | undefined;
 
           // PRIORITY 1: If type starts with 'I' (interface), try to find implementation first
-          // e.g., ITeleporterMessenger -> TeleporterMessenger
+          // e.g., IERC20 -> ERC20
           if (call.targetType.startsWith('I') && call.targetType[1] === call.targetType[1]?.toUpperCase()) {
             const implName = call.targetType.slice(1); // Remove 'I' prefix
             externalContract = findContractByName(graph.contracts, implName, currentContract.filePath);

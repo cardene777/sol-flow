@@ -16,12 +16,6 @@ const LIBRARY_SOURCE_TO_ID: Record<string, string[]> = {
   'openzeppelin': ['openzeppelin'],
   'openzeppelin-upgradeable': ['openzeppelin-upgradeable'],
   'solady': ['solady'],
-  'avalanche-icm': [
-    'avalanche-teleporter',
-    'avalanche-ictt',
-    'avalanche-validator-manager',
-    'avalanche-utilities',
-  ],
 };
 
 /**
@@ -41,10 +35,6 @@ async function loadAllLibraryContracts(): Promise<Map<string, Contract[]>> {
     'openzeppelin': () => import('@/data/libraries/openzeppelin-parsed.json'),
     'openzeppelin-upgradeable': () => import('@/data/libraries/openzeppelin-upgradeable-parsed.json'),
     'solady': () => import('@/data/libraries/solady-parsed.json'),
-    'avalanche-teleporter': () => import('@/data/libraries/avalanche-teleporter-parsed.json'),
-    'avalanche-ictt': () => import('@/data/libraries/avalanche-ictt-parsed.json'),
-    'avalanche-validator-manager': () => import('@/data/libraries/avalanche-validator-manager-parsed.json'),
-    'avalanche-utilities': () => import('@/data/libraries/avalanche-utilities-parsed.json'),
   };
 
   for (const [libraryId, importFn] of Object.entries(libraryImports)) {

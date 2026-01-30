@@ -73,7 +73,7 @@ interface Contract {
 
   // 外部ライブラリフィールド
   isExternalLibrary?: boolean;
-  librarySource?: 'openzeppelin' | 'openzeppelin-upgradeable' | 'solady' | 'avalanche-icm';
+  librarySource?: 'openzeppelin' | 'openzeppelin-upgradeable' | 'solady';
 
   // ソースコード
   sourceCode?: string;                 // 完全なファイル内容
@@ -98,7 +98,6 @@ type ContractCategory = string;
 // - 'OpenZeppelin/token'
 // - 'OZ-Upgradeable/proxy'
 // - 'Solady/auth'
-// - 'teleporter'
 // - 'interface'
 // - 'library'
 // - 'other'

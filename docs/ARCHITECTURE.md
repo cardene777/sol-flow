@@ -141,9 +141,6 @@ Located in `/app/src/data/libraries/`:
 - `openzeppelin-parsed.json`
 - `openzeppelin-upgradeable-parsed.json`
 - `solady-parsed.json`
-- `avalanche-teleporter-parsed.json`
-- `avalanche-ictt-parsed.json`
-- `avalanche-validator-manager-parsed.json`
 
 These are bundled at build time and served via API.
 

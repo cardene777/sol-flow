@@ -59,11 +59,10 @@ pnpm build
 Dynamic category detection based on directory structure:
 - OpenZeppelin/access, OpenZeppelin/token, etc.
 - Solady/auth, Solady/tokens, etc.
-- Avalanche ICM categories
 
 ### 4. Project Management
 - Save/load projects
-- Pre-parsed libraries (OpenZeppelin, Solady, Avalanche ICM)
+- Pre-parsed libraries (OpenZeppelin, Solady)
 - Custom contract upload
 
 ### 5. Source Code Viewer

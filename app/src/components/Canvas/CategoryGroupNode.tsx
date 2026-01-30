@@ -79,12 +79,6 @@ const PRESET_STYLES: Record<string, CategoryStyle> = {
   'oz-upgradeable/proxy': { bg: 'rgba(251, 191, 36, 0.15)', borderColor: '#fbbf24', textColor: '#fcd34d', icon: '🔄' },
   'oz-upgradeable/utils': { bg: 'rgba(148, 163, 184, 0.15)', borderColor: '#94a3b8', textColor: '#cbd5e1', icon: '🔧' },
   'oz-upgradeable/governance': { bg: 'rgba(192, 132, 252, 0.15)', borderColor: '#c084fc', textColor: '#d8b4fe', icon: '🏛️' },
-  // Avalanche ICM categories
-  teleporter: { bg: 'rgba(239, 68, 68, 0.15)', borderColor: '#ef4444', textColor: '#f87171', icon: '📡' },
-  ictt: { bg: 'rgba(249, 115, 22, 0.15)', borderColor: '#f97316', textColor: '#fb923c', icon: '🪙' },
-  'validator-manager': { bg: 'rgba(139, 92, 246, 0.15)', borderColor: '#8b5cf6', textColor: '#a78bfa', icon: '👥' },
-  'subnet-evm': { bg: 'rgba(236, 72, 153, 0.15)', borderColor: '#ec4899', textColor: '#f472b6', icon: '⛓️' },
-  mocks: { bg: 'rgba(100, 116, 139, 0.15)', borderColor: '#64748b', textColor: '#94a3b8', icon: '🎭' },
   // Proxy roles (ERC-7546 and other patterns)
   'proxy-role': { bg: 'rgba(245, 158, 11, 0.15)', borderColor: '#f59e0b', textColor: '#fbbf24', icon: '🔀' },
   'dictionary-role': { bg: 'rgba(6, 182, 212, 0.15)', borderColor: '#06b6d4', textColor: '#22d3ee', icon: '📖' },

@@ -59,11 +59,10 @@ pnpm build
 ディレクトリ構造に基づく動的カテゴリ検出：
 - OpenZeppelin/access、OpenZeppelin/token等
 - Solady/auth、Solady/tokens等
-- Avalanche ICMカテゴリ
 
 ### 4. プロジェクト管理
 - プロジェクトの保存/読み込み
-- プリパース済みライブラリ（OpenZeppelin、Solady、Avalanche ICM）
+- プリパース済みライブラリ（OpenZeppelin、Solady）
 - カスタムコントラクトのアップロード
 
 ### 5. ソースコードビューア

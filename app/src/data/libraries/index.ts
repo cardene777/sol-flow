@@ -36,31 +36,6 @@ export const AVAILABLE_LIBRARIES: LibraryInfo[] = [
     version: 'latest',
     fileName: 'solady-parsed.json',
   },
-  // Avalanche ICM libraries
-  {
-    id: 'avalanche-teleporter',
-    name: 'Avalanche Teleporter',
-    version: '1.0.0',
-    fileName: 'avalanche-teleporter-parsed.json',
-  },
-  {
-    id: 'avalanche-ictt',
-    name: 'Avalanche ICTT',
-    version: '1.0.0',
-    fileName: 'avalanche-ictt-parsed.json',
-  },
-  {
-    id: 'avalanche-validator-manager',
-    name: 'Avalanche Validator Manager',
-    version: '1.0.0',
-    fileName: 'avalanche-validator-manager-parsed.json',
-  },
-  {
-    id: 'avalanche-utilities',
-    name: 'Avalanche Utilities',
-    version: '1.0.0',
-    fileName: 'avalanche-utilities-parsed.json',
-  },
   // Proxy pattern samples
   {
     id: 'sample-uups',

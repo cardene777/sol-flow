@@ -312,9 +312,6 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
               { name: 'OpenZeppelin', color: 'text-blue-400 bg-blue-400/20' },
               { name: 'OpenZeppelin Upgradeable', color: 'text-indigo-400 bg-indigo-400/20' },
               { name: 'Solady', color: 'text-pink-400 bg-pink-400/20' },
-              { name: 'Avalanche Teleporter', color: 'text-red-400 bg-red-400/20' },
-              { name: 'Avalanche ICTT', color: 'text-orange-400 bg-orange-400/20' },
-              { name: 'Avalanche Validator Manager', color: 'text-amber-400 bg-amber-400/20' },
             ].map((lib) => (
               <span
                 key={lib.name}

@@ -147,9 +147,6 @@ function ImportSection() {
         <ListItem>@openzeppelin/contracts</ListItem>
         <ListItem>@openzeppelin/contracts-upgradeable</ListItem>
         <ListItem>solady</ListItem>
-        <ListItem>@teleporter（Avalanche Teleporter）</ListItem>
-        <ListItem>@ictt（Avalanche ICTT）</ListItem>
-        <ListItem>@validator-manager（Avalanche Validator Manager）</ListItem>
       </ul>
 
       <h4 className="text-sm font-semibold text-slate-200 mb-2 mt-6">プロジェクトの保存</h4>

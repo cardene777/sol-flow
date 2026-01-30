@@ -128,7 +128,6 @@ Sol-Flow includes the following libraries for learning and reference. Access the
 |---------|---------|
 | OpenZeppelin Contracts | Standard implementations of ERC20, ERC721, access control, proxies, etc. |
 | ERC-7546 Reference | Modular proxy reference implementation |
-| Avalanche ICM | Avalanche cross-chain messaging |
 
 ## Help and Support
 

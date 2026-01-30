@@ -24,7 +24,7 @@ interface LibraryConfig {
 interface ExternalLibraryMapping {
   prefix: string;
   localPath: string;
-  source: 'openzeppelin' | 'openzeppelin-upgradeable' | 'solady' | 'avalanche-icm';
+  source: 'openzeppelin' | 'openzeppelin-upgradeable' | 'solady';
 }
 
 const LIBRARY_BASE = path.join(__dirname, '..', '..', 'library');
@@ -34,12 +34,6 @@ const LIBRARY_BASE = path.join(__dirname, '..', '..', 'library');
 // @openzeppelin/contracts -> openzeppelin-contracts/contracts
 // @openzeppelin/contracts-upgradeable -> openzeppelin-contracts-upgradeable/contracts
 // solady -> solady/src
-// @teleporter -> icm-services/icm-contracts/avalanche/teleporter
-// @subnet-evm -> icm-services/icm-contracts/avalanche/subnet-evm
-// @mocks -> icm-services/icm-contracts/avalanche/mocks
-// @utilities -> icm-services/icm-contracts/avalanche/utilities
-// @ictt -> icm-services/icm-contracts/avalanche/ictt
-// @validator-manager -> icm-services/icm-contracts/avalanche/validator-manager
 const EXTERNAL_LIBRARY_MAPPINGS: ExternalLibraryMapping[] = [
   // OpenZeppelin
   {
@@ -57,38 +51,6 @@ const EXTERNAL_LIBRARY_MAPPINGS: ExternalLibraryMapping[] = [
     prefix: 'solady',
     localPath: path.join(LIBRARY_BASE, 'solady', 'src'),
     source: 'solady',
-  },
-  // Avalanche ICM - foundry remappings
-  // Note: Using icm-services submodule which contains icm-contracts folder
-  {
-    prefix: '@teleporter',
-    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'teleporter'),
-    source: 'avalanche-icm',
-  },
-  {
-    prefix: '@utilities',
-    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'utilities'),
-    source: 'avalanche-icm',
-  },
-  {
-    prefix: '@subnet-evm',
-    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'subnet-evm'),
-    source: 'avalanche-icm',
-  },
-  {
-    prefix: '@mocks',
-    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'mocks'),
-    source: 'avalanche-icm',
-  },
-  {
-    prefix: '@ictt',
-    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'ictt'),
-    source: 'avalanche-icm',
-  },
-  {
-    prefix: '@validator-manager',
-    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'validator-manager'),
-    source: 'avalanche-icm',
   },
 ];
 
@@ -118,46 +80,6 @@ const LIBRARIES: LibraryConfig[] = [
     localPath: path.join(LIBRARY_BASE, 'solady', 'src'),
     pathPrefix: 'solady/src',
     excludePaths: ['test', '.t.sol', '.s.sol'],
-  },
-  // Avalanche ICM - with external dependency resolution
-  // Use foundry-style remapping prefixes (@teleporter, @utilities, etc.)
-  // to match user project imports
-  // Note: Using icm-services submodule which contains icm-contracts folder
-  {
-    id: 'avalanche-teleporter',
-    name: 'Avalanche Teleporter',
-    version: '1.0.0',
-    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'teleporter'),
-    pathPrefix: '@teleporter',
-    excludePaths: ['mocks', 'test', 'tests', '.t.sol', '.s.sol'],
-    resolveExternalDeps: true,
-  },
-  {
-    id: 'avalanche-ictt',
-    name: 'Avalanche ICTT',
-    version: '1.0.0',
-    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'ictt'),
-    pathPrefix: '@ictt',
-    excludePaths: ['mocks', 'test', 'tests', '.t.sol', '.s.sol'],
-    resolveExternalDeps: true,
-  },
-  {
-    id: 'avalanche-validator-manager',
-    name: 'Avalanche Validator Manager',
-    version: '1.0.0',
-    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'validator-manager'),
-    pathPrefix: '@validator-manager',
-    excludePaths: ['mocks', 'test', 'tests', '.t.sol', '.s.sol'],
-    resolveExternalDeps: true,
-  },
-  {
-    id: 'avalanche-utilities',
-    name: 'Avalanche Utilities',
-    version: '1.0.0',
-    localPath: path.join(LIBRARY_BASE, 'icm-services', 'icm-contracts', 'avalanche', 'utilities'),
-    pathPrefix: '@utilities',
-    excludePaths: ['mocks', 'test', 'tests', '.t.sol', '.s.sol'],
-    resolveExternalDeps: true,
   },
 ];
 

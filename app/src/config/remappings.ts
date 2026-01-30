@@ -2,16 +2,16 @@
  * Standard remappings configuration for Solidity imports
  *
  * Maps foundry-style import aliases to actual file paths.
- * Example: @teleporter/X.sol -> icm-services/icm-contracts/avalanche/teleporter/X.sol
+ * Example: @openzeppelin/contracts/X.sol -> openzeppelin-contracts/contracts/X.sol
  */
 
 export interface Remapping {
-  // Import alias used in Solidity (e.g., "@teleporter")
+  // Import alias used in Solidity (e.g., "@openzeppelin/contracts")
   alias: string;
-  // Actual path relative to library root (e.g., "icm-services/icm-contracts/avalanche/teleporter")
+  // Actual path relative to library root (e.g., "openzeppelin-contracts/contracts")
   target: string;
   // Library source identifier
-  librarySource: 'openzeppelin' | 'openzeppelin-upgradeable' | 'solady' | 'avalanche-icm';
+  librarySource: 'openzeppelin' | 'openzeppelin-upgradeable' | 'solady';
   // GitHub info for "View on GitHub" links
   github?: {
     repo: string;
@@ -26,12 +26,6 @@ export interface Remapping {
  * @openzeppelin/contracts -> openzeppelin-contracts/contracts
  * @openzeppelin/contracts-upgradeable -> openzeppelin-contracts-upgradeable/contracts
  * solady -> solady/src
- * @teleporter -> icm-services/icm-contracts/avalanche/teleporter
- * @utilities -> icm-services/icm-contracts/avalanche/utilities
- * @subnet-evm -> icm-services/icm-contracts/avalanche/subnet-evm
- * @mocks -> icm-services/icm-contracts/avalanche/mocks
- * @ictt -> icm-services/icm-contracts/avalanche/ictt
- * @validator-manager -> icm-services/icm-contracts/avalanche/validator-manager
  */
 export const STANDARD_REMAPPINGS: Remapping[] = [
   // OpenZeppelin (order matters - more specific first)
@@ -66,128 +60,6 @@ export const STANDARD_REMAPPINGS: Remapping[] = [
       basePath: 'src',
     },
   },
-  // Avalanche ICM - support multiple alias formats
-  // Note: Using icm-services submodule which contains icm-contracts folder
-  {
-    alias: '@avalanche-icm/teleporter',
-    target: 'icm-services/icm-contracts/avalanche/teleporter',
-    librarySource: 'avalanche-icm',
-    github: {
-      repo: 'ava-labs/icm-services',
-      branch: 'main',
-      basePath: 'icm-contracts/avalanche/teleporter',
-    },
-  },
-  {
-    alias: '@teleporter',
-    target: 'icm-services/icm-contracts/avalanche/teleporter',
-    librarySource: 'avalanche-icm',
-    github: {
-      repo: 'ava-labs/icm-services',
-      branch: 'main',
-      basePath: 'icm-contracts/avalanche/teleporter',
-    },
-  },
-  {
-    alias: '@avalanche-icm/utilities',
-    target: 'icm-services/icm-contracts/avalanche/utilities',
-    librarySource: 'avalanche-icm',
-    github: {
-      repo: 'ava-labs/icm-services',
-      branch: 'main',
-      basePath: 'icm-contracts/avalanche/utilities',
-    },
-  },
-  {
-    alias: '@utilities',
-    target: 'icm-services/icm-contracts/avalanche/utilities',
-    librarySource: 'avalanche-icm',
-    github: {
-      repo: 'ava-labs/icm-services',
-      branch: 'main',
-      basePath: 'icm-contracts/avalanche/utilities',
-    },
-  },
-  {
-    alias: '@avalanche-icm/subnet-evm',
-    target: 'icm-services/icm-contracts/avalanche/subnet-evm',
-    librarySource: 'avalanche-icm',
-    github: {
-      repo: 'ava-labs/icm-services',
-      branch: 'main',
-      basePath: 'icm-contracts/avalanche/subnet-evm',
-    },
-  },
-  {
-    alias: '@subnet-evm',
-    target: 'icm-services/icm-contracts/avalanche/subnet-evm',
-    librarySource: 'avalanche-icm',
-    github: {
-      repo: 'ava-labs/icm-services',
-      branch: 'main',
-      basePath: 'icm-contracts/avalanche/subnet-evm',
-    },
-  },
-  {
-    alias: '@avalanche-icm/mocks',
-    target: 'icm-services/icm-contracts/avalanche/mocks',
-    librarySource: 'avalanche-icm',
-    github: {
-      repo: 'ava-labs/icm-services',
-      branch: 'main',
-      basePath: 'icm-contracts/avalanche/mocks',
-    },
-  },
-  {
-    alias: '@mocks',
-    target: 'icm-services/icm-contracts/avalanche/mocks',
-    librarySource: 'avalanche-icm',
-    github: {
-      repo: 'ava-labs/icm-services',
-      branch: 'main',
-      basePath: 'icm-contracts/avalanche/mocks',
-    },
-  },
-  {
-    alias: '@avalanche-icm/ictt',
-    target: 'icm-services/icm-contracts/avalanche/ictt',
-    librarySource: 'avalanche-icm',
-    github: {
-      repo: 'ava-labs/icm-services',
-      branch: 'main',
-      basePath: 'icm-contracts/avalanche/ictt',
-    },
-  },
-  {
-    alias: '@ictt',
-    target: 'icm-services/icm-contracts/avalanche/ictt',
-    librarySource: 'avalanche-icm',
-    github: {
-      repo: 'ava-labs/icm-services',
-      branch: 'main',
-      basePath: 'icm-contracts/avalanche/ictt',
-    },
-  },
-  {
-    alias: '@avalanche-icm/validator-manager',
-    target: 'icm-services/icm-contracts/avalanche/validator-manager',
-    librarySource: 'avalanche-icm',
-    github: {
-      repo: 'ava-labs/icm-services',
-      branch: 'main',
-      basePath: 'icm-contracts/avalanche/validator-manager',
-    },
-  },
-  {
-    alias: '@validator-manager',
-    target: 'icm-services/icm-contracts/avalanche/validator-manager',
-    librarySource: 'avalanche-icm',
-    github: {
-      repo: 'ava-labs/icm-services',
-      branch: 'main',
-      basePath: 'icm-contracts/avalanche/validator-manager',
-    },
-  },
 ];
 
 /**
@@ -218,7 +90,7 @@ export function findRemapping(importPath: string): Remapping | null {
 
 /**
  * Resolve import path to actual file path (relative to library root)
- * e.g., "@teleporter/TeleporterMessenger.sol" -> "icm-services/icm-contracts/avalanche/teleporter/TeleporterMessenger.sol"
+ * e.g., "@openzeppelin/contracts/token/ERC20/ERC20.sol" -> "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol"
  */
 export function resolveImportToTarget(importPath: string): { targetPath: string; remapping: Remapping } | null {
   const normalized = normalizeVersionedPath(importPath);
@@ -236,7 +108,7 @@ export function resolveImportToTarget(importPath: string): { targetPath: string;
 
 /**
  * Convert target path back to import alias format
- * e.g., "icm-services/icm-contracts/avalanche/teleporter/TeleporterMessenger.sol" -> "@teleporter/TeleporterMessenger.sol"
+ * e.g., "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol" -> "@openzeppelin/contracts/token/ERC20/ERC20.sol"
  */
 export function targetToAlias(targetPath: string): string | null {
   for (const remapping of STANDARD_REMAPPINGS) {
@@ -292,26 +164,6 @@ export const LIBRARY_GITHUB_CONFIG: Record<string, { repo: string; branch: strin
     repo: 'Vectorized/solady',
     branch: 'main',
     basePath: 'src',
-  },
-  'avalanche-teleporter': {
-    repo: 'ava-labs/icm-services',
-    branch: 'main',
-    basePath: 'contracts/teleporter',
-  },
-  'avalanche-ictt': {
-    repo: 'ava-labs/icm-services',
-    branch: 'main',
-    basePath: 'contracts/ictt',
-  },
-  'avalanche-validator-manager': {
-    repo: 'ava-labs/icm-services',
-    branch: 'main',
-    basePath: 'contracts/validator-manager',
-  },
-  'avalanche-utilities': {
-    repo: 'ava-labs/icm-services',
-    branch: 'main',
-    basePath: 'contracts/utilities',
   },
 };
 

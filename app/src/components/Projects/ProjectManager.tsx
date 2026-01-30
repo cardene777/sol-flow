@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, useState } from 'react';
-import { X, Trash2, FolderOpen, Database, Shield, Zap, ArrowUpCircle, Eye, Gem, Radio, Layers, Mountain, ChevronDown, ChevronRight, Send, Coins, Users, Settings } from 'lucide-react';
+import { X, Trash2, FolderOpen, Database, Shield, Zap, ArrowUpCircle, Eye, Gem, Radio, Layers, ChevronDown, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
 import type { SavedProject } from '@/lib/storage';
 import type { LucideIcon } from 'lucide-react';
@@ -58,47 +58,6 @@ export const STANDALONE_LIBRARIES: LibraryItem[] = [
 
 // Library groups with children
 export const LIBRARY_GROUPS: LibraryGroup[] = [
-  {
-    id: 'avalanche',
-    name: 'Avalanche ICM',
-    description: 'Interchain messaging & token transfer',
-    icon: Mountain,
-    color: 'red',
-    children: [
-      {
-        id: 'avalanche-teleporter',
-        name: 'Teleporter',
-        version: 'v1.0.0',
-        description: 'Cross-chain messaging protocol',
-        icon: Send,
-        color: 'red',
-      },
-      {
-        id: 'avalanche-ictt',
-        name: 'ICTT',
-        version: 'v1.0.0',
-        description: 'Interchain token transfer',
-        icon: Coins,
-        color: 'red',
-      },
-      {
-        id: 'avalanche-validator-manager',
-        name: 'Validator Manager',
-        version: 'v1.0.0',
-        description: 'L1 validator management & staking',
-        icon: Users,
-        color: 'red',
-      },
-      {
-        id: 'avalanche-utilities',
-        name: 'Utilities',
-        version: 'v1.0.0',
-        description: 'Common utilities for ICM',
-        icon: Settings,
-        color: 'red',
-      },
-    ],
-  },
   {
     id: 'proxy',
     name: 'Proxy Patterns',

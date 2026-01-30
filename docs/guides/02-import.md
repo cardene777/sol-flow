@@ -116,10 +116,6 @@ A library providing lightweight, gas-efficient implementations. Offers equivalen
 
 Reference implementation of the modular proxy pattern. Provides a flexible proxy structure that can call different implementation contracts for each function.
 
-### Avalanche ICM
-
-Libraries for Avalanche blockchain's Interchain Messaging.
-
 ## Best Practices
 
 ### Project Organization

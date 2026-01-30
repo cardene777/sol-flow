@@ -141,9 +141,6 @@ CallGraphをReact Flowのノード/エッジに変換:
 - `openzeppelin-parsed.json`
 - `openzeppelin-upgradeable-parsed.json`
 - `solady-parsed.json`
-- `avalanche-teleporter-parsed.json`
-- `avalanche-ictt-parsed.json`
-- `avalanche-validator-manager-parsed.json`
 
 これらはビルド時にバンドルされ、API経由で提供されます。
 
