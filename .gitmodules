@@ -10,6 +10,3 @@
 [submodule "library/solady"]
 	path = library/solady
 	url = https://github.com/Vectorized/solady.git
-[submodule "library/icm-services"]
-	path = library/icm-services
-	url = https://github.com/ava-labs/icm-services.git
