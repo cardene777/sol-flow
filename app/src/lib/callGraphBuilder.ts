@@ -486,13 +486,18 @@ function detectProxyGroups(contracts: Contract[]): ProxyGroup[] {
 }
 
 // Resolve a relative import path to an absolute path
+// Security: Prevents path traversal beyond the base directory
 function resolveRelativePath(basePath: string, relativePath: string): string {
   const baseDir = basePath.split('/').slice(0, -1);
   const parts = relativePath.split('/');
 
   for (const part of parts) {
     if (part === '..') {
-      baseDir.pop();
+      // Only pop if there are directories to go up to
+      // This prevents traversing beyond the base directory
+      if (baseDir.length > 0) {
+        baseDir.pop();
+      }
     } else if (part !== '.' && part !== '') {
       baseDir.push(part);
     }

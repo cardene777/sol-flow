@@ -3,6 +3,11 @@ import { parseSolidityFiles } from '@/lib/solidityParser';
 import { buildCallGraph } from '@/lib/callGraphBuilder';
 import { resolveLibraryDependencies } from '@/lib/libraryResolver';
 
+// Security limits
+const MAX_REQUEST_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_FILES = 500;
+const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB per file
+
 interface FileData {
   path: string;
   content: string;
@@ -15,6 +20,15 @@ interface ParseRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check request size
+    const contentLength = request.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > MAX_REQUEST_SIZE) {
+      return NextResponse.json(
+        { error: 'Request too large' },
+        { status: 413 }
+      );
+    }
+
     const body: ParseRequest = await request.json();
     const { projectName, files } = body;
 
@@ -23,6 +37,24 @@ export async function POST(request: NextRequest) {
         { error: 'No files provided' },
         { status: 400 }
       );
+    }
+
+    // Validate file count
+    if (files.length > MAX_FILES) {
+      return NextResponse.json(
+        { error: `Too many files. Maximum ${MAX_FILES} files allowed` },
+        { status: 400 }
+      );
+    }
+
+    // Validate individual file sizes
+    for (const file of files) {
+      if (file.content.length > MAX_FILE_SIZE) {
+        return NextResponse.json(
+          { error: `File too large: ${file.path}` },
+          { status: 400 }
+        );
+      }
     }
 
     // Parse Solidity files
@@ -45,8 +77,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ callGraph });
   } catch (error) {
+    // Log error server-side for debugging
+    console.error('Parse error:', error);
+    // Return generic message to client to avoid information leakage
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to parse files' },
+      { error: 'Failed to parse files' },
       { status: 500 }
     );
   }

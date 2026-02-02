@@ -49,7 +49,7 @@ export function saveProject(name: string, callGraph: CallGraph, sourceFiles?: So
     throw new Error('Cannot save: not in browser environment');
   }
 
-  const id = `project-${Date.now()}`;
+  const id = `project-${crypto.randomUUID()}`;
   const project: SavedProject = {
     id,
     name,
@@ -247,7 +247,7 @@ export function importProject(jsonString: string): SavedProject | null {
     }
 
     // Generate new ID to avoid conflicts
-    const newId = `project-${Date.now()}`;
+    const newId = `project-${crypto.randomUUID()}`;
     const project: SavedProject = {
       ...data.project,
       id: newId,

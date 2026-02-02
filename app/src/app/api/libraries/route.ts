@@ -90,11 +90,19 @@ async function fetchGitHubDirectory(
 ): Promise<GitHubFile[]> {
   const url = `https://api.github.com/repos/${repo}/contents/${dirPath}?ref=${branch}`;
 
+  // Build headers with optional authentication
+  const headers: HeadersInit = {
+    'Accept': 'application/vnd.github.v3+json',
+    'User-Agent': 'sol-flow',
+  };
+
+  // Use GitHub token if available (increases rate limit from 60 to 5000 requests/hour)
+  if (process.env.GITHUB_TOKEN) {
+    headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`;
+  }
+
   const response = await fetch(url, {
-    headers: {
-      'Accept': 'application/vnd.github.v3+json',
-      'User-Agent': 'sol-flow',
-    },
+    headers,
     next: { revalidate: 3600 }, // Cache for 1 hour
   });
 
@@ -209,8 +217,11 @@ export async function POST(request: NextRequest) {
       files,
     });
   } catch (error) {
+    // Log error server-side for debugging
+    console.error('Library fetch error:', error);
+    // Return generic message to client to avoid information leakage
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to fetch library' },
+      { error: 'Failed to fetch library' },
       { status: 500 }
     );
   }
