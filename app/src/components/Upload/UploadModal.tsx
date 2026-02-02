@@ -20,6 +20,10 @@ interface UploadModalProps {
   onImport: (callGraph: CallGraph, sourceFiles: SourceFile[]) => void;
 }
 
+// Security limits for file uploads
+const MAX_FILES = 500;
+const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB per file
+
 export function UploadModal({ onClose, onImport }: UploadModalProps) {
   const [files, setFiles] = useState<FileData[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -36,6 +40,12 @@ export function UploadModal({ onClose, onImport }: UploadModalProps) {
 
     // Only accept .sol files
     if (!fileName.endsWith('.sol')) {
+      return null;
+    }
+
+    // Check file size limit
+    if (file.size > MAX_FILE_SIZE) {
+      console.warn(`Skipping large file (>${MAX_FILE_SIZE / 1024 / 1024}MB): ${relativePath}`);
       return null;
     }
 
@@ -141,7 +151,14 @@ export function UploadModal({ onClose, onImport }: UploadModalProps) {
       }
 
       if (newFiles.length > 0) {
-        setFiles(prev => [...prev, ...newFiles]);
+        setFiles(prev => {
+          const combined = [...prev, ...newFiles];
+          if (combined.length > MAX_FILES) {
+            setError(`Maximum ${MAX_FILES} files allowed. Some files were skipped.`);
+            return combined.slice(0, MAX_FILES);
+          }
+          return combined;
+        });
       }
     } finally {
       setIsLoadingFiles(false);
@@ -168,7 +185,14 @@ export function UploadModal({ onClose, onImport }: UploadModalProps) {
       }
 
       if (newFiles.length > 0) {
-        setFiles(prev => [...prev, ...newFiles]);
+        setFiles(prev => {
+          const combined = [...prev, ...newFiles];
+          if (combined.length > MAX_FILES) {
+            setError(`Maximum ${MAX_FILES} files allowed. Some files were skipped.`);
+            return combined.slice(0, MAX_FILES);
+          }
+          return combined;
+        });
       }
     } finally {
       setIsLoadingFiles(false);

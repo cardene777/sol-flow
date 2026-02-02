@@ -327,11 +327,11 @@ export async function GET(
   try {
     const { id: libraryId } = await params;
 
-    // Find library info
+    // Find library info (whitelist check)
     const libraryInfo = AVAILABLE_LIBRARIES.find(l => l.id === libraryId);
     if (!libraryInfo) {
       return NextResponse.json(
-        { error: `Unknown library: ${libraryId}` },
+        { error: 'Library not found' },
         { status: 404 }
       );
     }
@@ -340,7 +340,7 @@ export async function GET(
     const data = libraryDataMap[libraryId];
     if (!data) {
       return NextResponse.json(
-        { error: `Library data not found: ${libraryId}` },
+        { error: 'Library data not found' },
         { status: 404 }
       );
     }
