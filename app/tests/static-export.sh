@@ -94,7 +94,7 @@ no_vercel_json() {
 
 docs_link_custom_domain() {
   local found file
-  found=$(git -C "$repo_dir" grep -n -F "sol-flow.vercel.app" -- . 2>/dev/null)
+  found=$(git -C "$repo_dir" grep -n -F "sol-flow.vercel.app" -- . ':!app/tests' 2>/dev/null)
   [ -z "$found" ] || { why="sol-flow.vercel.app remains: $(echo "$found" | head -3 | tr '\n' ' ')"; return 1; }
   for file in README.md ja/README.md docs/guides/README.md docs/ja/guides/README.md; do
     grep -q -F "https://sol-flow.cardene.dev" "$repo_dir/$file" || { why="$file does not link https://sol-flow.cardene.dev"; return 1; }
