@@ -9,7 +9,9 @@ Interactive visualization tool for Solidity smart contracts.
 | Document | Description |
 |----------|-------------|
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | System architecture, data flow, component structure |
-| [API.md](./API.md) | API endpoint reference |
+| [API.md](./API.md) | Library files and the parse Web Worker |
+| [DEPLOY.md](./DEPLOY.md) | Publishing on GitHub Pages |
+| [MANUAL_SETUP.md](./MANUAL_SETUP.md) | DNS and GitHub Pages settings made by hand |
 | [FEATURES.md](./FEATURES.md) | Detailed feature documentation |
 | [DATA_TYPES.md](./DATA_TYPES.md) | TypeScript type definitions (CallGraph, Contract, etc.) |
 | [PARSER.md](./PARSER.md) | Solidity parser implementation details |

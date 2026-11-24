@@ -136,4 +136,4 @@ If you encounter issues or have feature requests, please use the following:
 | Resource | URL | Purpose |
 |----------|-----|---------|
 | GitHub Issues | [github.com/cardene777/sol-flow/issues](https://github.com/cardene777/sol-flow/issues) | Bug reports, feature requests |
-| Demo Site | [sol-flow.vercel.app](https://sol-flow.vercel.app) | Try it out |
+| Demo Site | [sol-flow.cardene.dev](https://sol-flow.cardene.dev) | Try it out |

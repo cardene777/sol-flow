@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Sol-Flow - Solidity Contract Visualizer",
   description: "Visualize Solidity smart contract dependencies, inheritance structures, and function flows as interactive diagrams.",
-  metadataBase: new URL("https://sol-flow.vercel.app"),
+  metadataBase: new URL("https://sol-flow.cardene.dev"),
   openGraph: {
     title: "Sol-Flow - Solidity Contract Visualizer",
     description: "Visualize Solidity smart contract dependencies, inheritance structures, and function flows as interactive diagrams.",

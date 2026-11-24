@@ -12,9 +12,7 @@ sol-flow/
 ├── app/                          # Next.jsアプリケーション
 │   ├── src/
 │   │   ├── app/                  # App Router（Next.js 15）
-│   │   │   ├── api/              # APIルート
-│   │   │   │   ├── libraries/    # ライブラリ取得API
-│   │   │   │   └── parse/        # Solidityパース API
+│   │   │   ├── libraries/        # buildの時に書き出すライブラリのJSON（/libraries/<id>.json）
 │   │   │   └── page.tsx          # メインページ
 │   │   ├── components/           # Reactコンポーネント
 │   │   │   ├── Canvas/           # React Flowキャンバス
@@ -50,7 +48,7 @@ sol-flow/
          │ アップロード
          ▼
 ┌─────────────────┐
-│   /api/parse    │ Solidityパーサー
+│ parse.worker.ts │ Web Workerの中のSolidityパーサー
 │ solidityParser  │ (@solidity-parser/parser)
 └────────┬────────┘
          │ Contract[]
@@ -168,13 +166,13 @@ MainLayout
     └── ContractDetailModal
 ```
 
-## API概要
+## データの概要
 
-| エンドポイント | メソッド | 説明 |
-|---------------|---------|------|
-| `/api/parse` | POST | Solidityファイルをパース |
-| `/api/libraries` | GET | 利用可能なライブラリ一覧 |
-| `/api/libraries/[id]` | GET | 特定ライブラリのデータ取得 |
-| `/api/libraries/default` | GET | デフォルトライブラリ取得 |
+Sol-FlowはサーバーのAPIを持たず、GitHub Pagesから静的なfileとして配られます。
+
+| パス | 種類 | 説明 |
+|------|------|------|
+| `/libraries/<id>.json` | 静的なfile | ライブラリ1つ分の、事前に作ったCallGraph |
+| `app/src/workers/parse.worker.ts` | Web Worker | アップロードしたSolidityファイルをブラウザの中で解析する |
 
 詳細は[API.md](./API.md)をご覧ください。

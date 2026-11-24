@@ -134,5 +134,5 @@ Sol-Flowには、学習や参照用に以下のライブラリが組み込まれ
 | リソース | URL | 用途 |
 |---------|-----|------|
 | GitHub Issues | [github.com/cardene777/sol-flow/issues](https://github.com/cardene777/sol-flow/issues) | バグ報告、機能リクエスト |
-| デモサイト | [sol-flow.vercel.app](https://sol-flow.vercel.app) | 実際に試してみる |
+| デモサイト | [sol-flow.cardene.dev](https://sol-flow.cardene.dev) | 実際に試してみる |
 

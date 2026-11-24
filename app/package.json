@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "deploy:pages": "bash scripts/deploy-pages.sh",
     "screenshots": "playwright test scripts/screenshots/capture-all.spec.ts",
     "screenshots:headed": "playwright test scripts/screenshots/capture-all.spec.ts --headed"
   },

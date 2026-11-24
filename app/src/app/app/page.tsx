@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MainLayout } from '@/components/Layout/MainLayout';
+import { parseInWorker } from '@/lib/parseInWorker';
 import { UploadModal } from '@/components/Upload/UploadModal';
 import { ProjectManager, type LibraryId } from '@/components/Projects/ProjectManager';
 import { OnboardingTour } from '@/components/Onboarding/OnboardingTour';
@@ -91,14 +92,14 @@ export default function AppPage() {
 
         // Check for last selected library (default to openzeppelin)
         let lastLibraryId = (localStorage.getItem(STORAGE_KEYS.CURRENT_LIBRARY) || 'openzeppelin') as LibraryId;
-        let response = await fetch(`/api/libraries/${lastLibraryId}`);
+        let response = await fetch(`/libraries/${lastLibraryId}.json`);
 
         // Fallback to openzeppelin if the saved library doesn't exist
         if (!response.ok && lastLibraryId !== 'openzeppelin') {
           // Warning:(`Library ${lastLibraryId} not found, falling back to openzeppelin`);
           lastLibraryId = 'openzeppelin';
           localStorage.setItem(STORAGE_KEYS.CURRENT_LIBRARY, 'openzeppelin');
-          response = await fetch(`/api/libraries/openzeppelin`);
+          response = await fetch('/libraries/openzeppelin.json');
         }
 
         if (response.ok) {
@@ -167,7 +168,7 @@ export default function AppPage() {
       setCurrentLibraryId('openzeppelin');
       localStorage.removeItem(STORAGE_KEYS.CURRENT_PROJECT);
       localStorage.setItem(STORAGE_KEYS.CURRENT_LIBRARY, 'openzeppelin');
-      fetch('/api/libraries/openzeppelin')
+      fetch('/libraries/openzeppelin.json')
         .then(res => res.json())
         .then(data => setCallGraph(data.callGraph))
         .catch(() => { /* ignore */ });
@@ -202,7 +203,7 @@ export default function AppPage() {
   }, []);
 
   // Reload/Reset current view
-  // For libraries: re-fetch from API
+  // For libraries: re-fetch the static JSON
   // For user projects: re-parse from saved source files
   const handleReload = useCallback(async () => {
     setSelectedContract(null);
@@ -217,18 +218,10 @@ export default function AppPage() {
           const savedProject = getSavedProjects().find(p => p.id === currentProjectId);
           const projectName = savedProject?.name || callGraph.projectName;
 
-          const response = await fetch('/api/parse', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ projectName, files: sourceFiles }),
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            setCallGraph(data.callGraph);
-            // Update saved project with new callGraph
-            updateProjectCallGraph(currentProjectId, data.callGraph);
-          }
+          const newCallGraph = await parseInWorker({ projectName, files: sourceFiles });
+          setCallGraph(newCallGraph);
+          // Update saved project with new callGraph
+          updateProjectCallGraph(currentProjectId, newCallGraph);
         } else {
           // No source files saved (old project), just reload from storage
           const savedCallGraph = loadProject(currentProjectId);
@@ -237,8 +230,8 @@ export default function AppPage() {
           }
         }
       } else if (currentLibraryId) {
-        // For libraries: re-fetch from API
-        const response = await fetch(`/api/libraries/${currentLibraryId}`);
+        // For libraries: re-fetch the static JSON
+        const response = await fetch(`/libraries/${currentLibraryId}.json`);
         if (response.ok) {
           const data = await response.json();
           setCallGraph(data.callGraph);
@@ -350,7 +343,7 @@ export default function AppPage() {
     }));
 
     try {
-      const response = await fetch(`/api/libraries/${libraryId}`);
+      const response = await fetch(`/libraries/${libraryId}.json`);
       if (response.ok) {
         const data = await response.json();
         setCallGraph(data.callGraph);

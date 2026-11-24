@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react';
 import { X, Upload, FolderOpen, FileCode2, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import type { CallGraph } from '@/types/callGraph';
+import { parseInWorker } from '@/lib/parseInWorker';
 
 interface FileData {
   path: string;
@@ -211,24 +212,8 @@ export function UploadModal({ onClose, onImport }: UploadModalProps) {
     setError(null);
 
     try {
-      const response = await fetch('/api/parse', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          projectName,
-          files,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to parse files');
-      }
-
-      const data = await response.json();
-      onImport(data.callGraph, files);
+      const callGraph = await parseInWorker({ projectName, files });
+      onImport(callGraph, files);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to parse files');
