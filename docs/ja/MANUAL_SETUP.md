@@ -19,6 +19,15 @@ repoの外で、1回だけ手で行う設定です。
 プロキシはオフのままにします。
 オンにすると、GitHubが`sol-flow.cardene.dev`のHTTPSの証明書を発行できません。
 
+## GitHubでドメインを確かめる
+
+`cardene.dev`を持ち主のドメインとしてGitHubに確かめさせます。
+確かめた後は、GitHub Pagesを止めても、他人のrepoが`sol-flow.cardene.dev`を名乗れません。
+
+1. [GitHubの Settings → Pages](https://github.com/settings/pages)で「Add a domain」を押し、`cardene.dev`と入れて「Add domain」を押す
+2. CloudflareのDNSのレコードの画面で「レコードを追加」を押し、「タイプ」を`TXT`、「名前」を`_github-pages-challenge-cardene777`、「コンテンツ」をGitHubが出した値にして「保存」を押す
+3. GitHubの画面へ戻って「Verify」を押す
+
 ## GitHub Pagesの設定
 
 [cardene777/sol-flowのSettings → Pages](https://github.com/cardene777/sol-flow/settings/pages)で、次のとおりに設定します。

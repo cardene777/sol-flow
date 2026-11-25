@@ -19,6 +19,14 @@ The owner adds this record on the [DNS records page of cardene.dev](https://dash
 Keep the proxy off.
 With the proxy on, GitHub cannot issue the HTTPS certificate for `sol-flow.cardene.dev`.
 
+## Verify the domain on GitHub
+
+Verifying `cardene.dev` on GitHub keeps other repositories from claiming `sol-flow.cardene.dev`, even while GitHub Pages is turned off.
+
+1. On [GitHub Settings → Pages](https://github.com/settings/pages), press "Add a domain", enter `cardene.dev`, and press "Add domain"
+2. On the Cloudflare DNS records page, press "Add record" and save a record with Type `TXT`, Name `_github-pages-challenge-cardene777`, and Content set to the value GitHub shows
+3. Back on GitHub, press "Verify"
+
 ## GitHub Pages settings
 
 On [Settings → Pages of cardene777/sol-flow](https://github.com/cardene777/sol-flow/settings/pages):

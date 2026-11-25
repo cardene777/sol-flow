@@ -3,7 +3,7 @@ import { parseSolidityFiles } from '@/lib/solidityParser';
 import { resolveLibraryDependencies } from '@/lib/libraryResolver';
 import { buildCallGraph } from '@/lib/callGraphBuilder';
 
-// 以前の `/api/parse` と同じ上限
+// ブラウザのメモリを使い切らないよう、1回に解析するfileの数と大きさに上限を置く
 const MAX_FILES = 500;
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 file あたり 1MB
 

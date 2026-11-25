@@ -63,11 +63,16 @@ metadata_base_is_custom_domain() {
   [ -f "$out_dir/index.html" ] || { why="app/out/index.html is missing"; return 1; }
   grep -Eq 'property="og:image" content="https://sol-flow\.cardene\.dev/' "$out_dir/index.html" \
     || { why="og:image of app/out/index.html does not start with https://sol-flow.cardene.dev"; return 1; }
+  # GitHub Pages は拡張子の無い file を画像として配らないので、OG 画像は .png で書き出す
+  grep -Eq 'property="og:image" content="[^"]*\.png' "$out_dir/index.html" \
+    || { why="og:image of app/out/index.html is not a .png file"; return 1; }
+  [ -f "$out_dir/opengraph-image.png" ] || { why="app/out/opengraph-image.png is missing"; return 1; }
 }
 
 no_api_fetch() {
   local found
-  found=$(git -C "$repo_dir" grep -n -F "/api/" -- app/src 2>/dev/null)
+  # ライブラリの JSON は OpenZeppelin などの原文を含み、原文の URL が "/api/" に当たるので code だけを見る
+  found=$(git -C "$repo_dir" grep -n -F "/api/" -- 'app/src/*.ts' 'app/src/*.tsx' 2>/dev/null)
   [ -z "$found" ] || { why="app/src still calls the API: $(echo "$found" | head -3 | tr '\n' ' ')"; return 1; }
   git -C "$repo_dir" grep -q -F "new Worker(" -- app/src || { why="app/src has no new Worker( call"; return 1; }
 }
