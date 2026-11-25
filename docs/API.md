@@ -1,99 +1,22 @@
-# Sol-Flow API Reference
+# Sol-Flow Data Reference
 
-## Endpoint Overview
+Sol-Flow runs entirely in the browser.
+It is served as static files from GitHub Pages at [https://sol-flow.cardene.dev](https://sol-flow.cardene.dev) and has no server API.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/parse` | Parse Solidity files |
-| GET | `/api/libraries` | List available libraries |
-| GET | `/api/libraries/[id]` | Get specific library CallGraph |
-| GET | `/api/libraries/default` | Get default library |
+## Overview
 
----
-
-## POST /api/parse
-
-Parses Solidity files and generates a CallGraph.
-
-### Request
-
-```typescript
-{
-  files: Array<{
-    path: string;     // File path
-    content: string;  // File content
-  }>;
-  projectName: string;  // Project name
-}
-```
-
-### Response
-
-```typescript
-{
-  callGraph: CallGraph;
-}
-```
-
-### Example
-
-```javascript
-const response = await fetch('/api/parse', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    files: [
-      { path: 'contracts/Token.sol', content: 'pragma solidity...' },
-      { path: 'contracts/Access.sol', content: 'pragma solidity...' }
-    ],
-    projectName: 'MyProject'
-  })
-});
-
-const { callGraph } = await response.json();
-```
-
----
-
-## GET /api/libraries
-
-Retrieves the list of available pre-parsed libraries.
-
-### Response
-
-```typescript
-{
-  libraries: Array<{
-    id: string;
-    name: string;
-    version: string;
-  }>;
-}
-```
-
-### Example
-
-```javascript
-const response = await fetch('/api/libraries');
-const { libraries } = await response.json();
-// [
-//   { id: 'openzeppelin', name: 'OpenZeppelin Contracts', version: '5.0.0' },
-//   { id: 'openzeppelin-upgradeable', name: 'OpenZeppelin Upgradeable', version: '5.0.0' },
-//   { id: 'solady', name: 'Solady', version: 'latest' }
-// ]
-```
-
----
-
-## GET /api/libraries/[id]
-
-Retrieves the CallGraph for a specific library.
-
-### Parameters
-
-| Name | Type | Description |
+| Kind | Path | Description |
 |------|------|-------------|
-| id | string | Library ID |
+| Static file | `/libraries/<id>.json` | Pre-built CallGraph of one library |
+| Web Worker | `app/src/workers/parse.worker.ts` | Parses uploaded Solidity files in the browser |
+
+---
+
+## Library files: `/libraries/<id>.json`
+
+`pnpm build` writes one JSON file per library to `app/out/libraries/`.
+The route `app/src/app/libraries/[file]/route.ts` builds each file with `buildLibraryGraph()` from `app/src/lib/libraryGraph.ts`.
+Sample libraries include the contracts of the libraries they import, such as OpenZeppelin Upgradeable for `sample-uups`.
 
 ### Available Library IDs
 
@@ -102,8 +25,13 @@ Retrieves the CallGraph for a specific library.
 | `openzeppelin` | OpenZeppelin Contracts |
 | `openzeppelin-upgradeable` | OpenZeppelin Upgradeable |
 | `solady` | Solady |
+| `sample-uups` | UUPS proxy sample |
+| `sample-transparent` | Transparent proxy sample |
+| `sample-diamond` | Diamond proxy sample |
+| `sample-beacon` | Beacon proxy sample |
+| `sample-erc7546` | ERC-7546 proxy sample |
 
-### Response
+### File content
 
 ```typescript
 {
@@ -119,19 +47,47 @@ Retrieves the CallGraph for a specific library.
 ### Example
 
 ```javascript
-const response = await fetch('/api/libraries/openzeppelin');
+const response = await fetch('/libraries/openzeppelin.json');
 const { library, callGraph } = await response.json();
 ```
 
 ---
 
-## GET /api/libraries/default
+## Parsing uploaded files in a Web Worker
 
-Retrieves the default library (OpenZeppelin).
+The upload screen and the reload button call `parseInWorker()` from `app/src/lib/parseInWorker.ts`.
+It starts `app/src/workers/parse.worker.ts`, so parsing does not block the screen, and the uploaded files never leave the browser.
+The worker loads only the library JSON that the import paths name: a project that imports only `@openzeppelin/contracts/...` does not download Solady.
 
-### Response
+### Request
 
-Same as `GET /api/libraries/openzeppelin`.
+```typescript
+{
+  projectName: string;  // Project name
+  files: Array<{
+    path: string;     // File path
+    content: string;  // File content
+  }>;
+}
+```
+
+### Result
+
+`parseInWorker()` resolves with a `CallGraph`, and rejects with an `Error` whose message is one of the errors below.
+
+### Example
+
+```javascript
+import { parseInWorker } from '@/lib/parseInWorker';
+
+const callGraph = await parseInWorker({
+  projectName: 'MyProject',
+  files: [
+    { path: 'contracts/Token.sol', content: 'pragma solidity...' },
+    { path: 'contracts/Access.sol', content: 'pragma solidity...' },
+  ],
+});
+```
 
 ---
 
@@ -226,44 +182,12 @@ type ProxyRole =
 
 ---
 
-## Error Responses
+## Parse Errors
 
-All endpoints return errors in the following format:
-
-```typescript
-{
-  error: string;  // Error message
-}
-```
-
-### HTTP Status Codes
-
-| Code | Description |
-|------|-------------|
-| 200 | Success |
-| 400 | Bad Request |
-| 404 | Resource Not Found |
-| 500 | Internal Server Error |
-
-### Error Examples
-
-**400 Bad Request**
-```json
-{
-  "error": "Missing required field: files"
-}
-```
-
-**404 Not Found**
-```json
-{
-  "error": "Library not found: invalid-id"
-}
-```
-
-**500 Internal Server Error**
-```json
-{
-  "error": "Failed to parse Solidity files"
-}
-```
+| Message | When |
+|---------|------|
+| `No files provided` | `files` is empty |
+| `Too many files. Maximum 500 files allowed` | more than 500 files |
+| `File too large: <path>` | a file is larger than 1MB |
+| `No contracts found in uploaded files` | no file declares a contract, interface, or library |
+| `Failed to parse files` | the parser threw an error |

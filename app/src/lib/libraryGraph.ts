@@ -1,8 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
 import type { Contract, CallGraph, Dependency, DependencyType } from '@/types/callGraph';
 import { AVAILABLE_LIBRARIES } from '@/data/libraries';
 
-// Import all library data statically (Next.js requires static imports for bundling)
+// build の時に全ライブラリの図を書き出すので、JSON はここで全部読み込む
 import openzeppelinData from '@/data/libraries/openzeppelin-parsed.json';
 import openzeppelinUpgradeableData from '@/data/libraries/openzeppelin-upgradeable-parsed.json';
 import soladyData from '@/data/libraries/solady-parsed.json';
@@ -319,77 +318,52 @@ function processLocalDependencies(callGraph: CallGraph): CallGraph {
   };
 }
 
-// GET /api/libraries/[id] - Load a specific library
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id: libraryId } = await params;
+export interface LibraryGraph {
+  library: { id: string; name: string; version: string };
+  callGraph: CallGraph;
+}
 
-    // Find library info (whitelist check)
-    const libraryInfo = AVAILABLE_LIBRARIES.find(l => l.id === libraryId);
-    if (!libraryInfo) {
-      return NextResponse.json(
-        { error: 'Library not found' },
-        { status: 404 }
-      );
-    }
+/**
+ * ライブラリ 1 つ分の呼び出し図を作る。
+ * サンプルのライブラリは、import している OpenZeppelin などの契約を合わせて返す。
+ * 一覧に無い id には null を返す。
+ */
+export function buildLibraryGraph(libraryId: string): LibraryGraph | null {
+  const libraryInfo = AVAILABLE_LIBRARIES.find(l => l.id === libraryId);
+  const data = libraryDataMap[libraryId];
+  if (!libraryInfo || !data) {
+    return null;
+  }
 
-    // Get the library data
-    const data = libraryDataMap[libraryId];
-    if (!data) {
-      return NextResponse.json(
-        { error: 'Library data not found' },
-        { status: 404 }
-      );
-    }
+  const libraryData = data as { id: string; name: string; version: string; callGraph: CallGraph };
+  let callGraph = libraryData.callGraph;
 
-    // Cast to expected structure
-    const libraryData = data as { id: string; name: string; version: string; callGraph: CallGraph };
-    let callGraph = libraryData.callGraph;
-
-    // For sample libraries, merge with required dependency libraries
-    if (SAMPLE_LIBRARIES.has(libraryId)) {
-      const requiredLibs = getRequiredLibraries(callGraph.contracts);
-
-      if (requiredLibs.size > 0) {
-        const libraryCallGraphsWithIds: Array<{ callGraph: CallGraph; libraryId: string }> = [];
-
-        for (const libId of requiredLibs) {
-          const libData = libraryDataMap[libId];
-          if (libData) {
-            const typedLibData = libData as { callGraph: CallGraph };
-            libraryCallGraphsWithIds.push({
-              callGraph: typedLibData.callGraph,
-              libraryId: libId,
-            });
-          }
-        }
-
-        if (libraryCallGraphsWithIds.length > 0) {
-          callGraph = mergeWithDependencies(callGraph, libraryCallGraphsWithIds);
-        }
+  if (SAMPLE_LIBRARIES.has(libraryId)) {
+    const libraryCallGraphsWithIds: Array<{ callGraph: CallGraph; libraryId: string }> = [];
+    for (const libId of getRequiredLibraries(callGraph.contracts)) {
+      const libData = libraryDataMap[libId];
+      if (libData) {
+        libraryCallGraphsWithIds.push({
+          callGraph: (libData as { callGraph: CallGraph }).callGraph,
+          libraryId: libId,
+        });
       }
     }
-
-    // Process local dependencies for all libraries (inheritance, implements, uses)
-    if (!callGraph.dependencies || callGraph.dependencies.length === 0) {
-      callGraph = processLocalDependencies(callGraph);
+    if (libraryCallGraphsWithIds.length > 0) {
+      callGraph = mergeWithDependencies(callGraph, libraryCallGraphsWithIds);
     }
-
-    return NextResponse.json({
-      library: {
-        id: libraryData.id,
-        name: libraryData.name,
-        version: libraryData.version,
-      },
-      callGraph,
-    });
-  } catch {
-    return NextResponse.json(
-      { error: 'Failed to load library' },
-      { status: 500 }
-    );
   }
+
+  if (!callGraph.dependencies || callGraph.dependencies.length === 0) {
+    callGraph = processLocalDependencies(callGraph);
+  }
+
+  return {
+    library: {
+      id: libraryData.id,
+      name: libraryData.name,
+      version: libraryData.version,
+    },
+    callGraph,
+  };
 }

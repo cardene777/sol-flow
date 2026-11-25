@@ -1,109 +1,38 @@
-# Sol-Flow APIリファレンス
+# Sol-Flow データリファレンス
 
-## エンドポイント一覧
+Sol-Flowは、全ての処理をブラウザの中で行います。
+GitHub Pagesの[https://sol-flow.cardene.dev](https://sol-flow.cardene.dev)から静的なfileとして配られ、サーバーのAPIを持ちません。
 
-| メソッド | パス | 説明 |
-|---------|------|------|
-| POST | `/api/parse` | Solidityファイルをパース |
-| GET | `/api/libraries` | 利用可能なライブラリ一覧 |
-| GET | `/api/libraries/[id]` | 特定ライブラリのCallGraph取得 |
-| GET | `/api/libraries/default` | デフォルトライブラリ取得 |
+## 一覧
 
----
-
-## POST /api/parse
-
-Solidityファイルをパースし、CallGraphを生成します。
-
-### リクエスト
-
-```typescript
-{
-  files: Array<{
-    path: string;     // ファイルパス
-    content: string;  // ファイル内容
-  }>;
-  projectName: string;  // プロジェクト名
-}
-```
-
-### レスポンス
-
-```typescript
-{
-  callGraph: CallGraph;
-}
-```
-
-### 使用例
-
-```javascript
-const response = await fetch('/api/parse', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    files: [
-      { path: 'contracts/Token.sol', content: 'pragma solidity...' },
-      { path: 'contracts/Access.sol', content: 'pragma solidity...' }
-    ],
-    projectName: 'MyProject'
-  })
-});
-
-const { callGraph } = await response.json();
-```
+| 種類 | パス | 説明 |
+|------|------|------|
+| 静的なfile | `/libraries/<id>.json` | ライブラリ1つ分の、事前に作ったCallGraph |
+| Web Worker | `app/src/workers/parse.worker.ts` | アップロードしたSolidityファイルをブラウザの中で解析する |
 
 ---
 
-## GET /api/libraries
+## ライブラリのfile `/libraries/<id>.json`
 
-利用可能なプリパース済みライブラリの一覧を取得します。
-
-### レスポンス
-
-```typescript
-{
-  libraries: Array<{
-    id: string;
-    name: string;
-    version: string;
-  }>;
-}
-```
-
-### 使用例
-
-```javascript
-const response = await fetch('/api/libraries');
-const { libraries } = await response.json();
-// [
-//   { id: 'openzeppelin', name: 'OpenZeppelin Contracts', version: '5.0.0' },
-//   { id: 'openzeppelin-upgradeable', name: 'OpenZeppelin Upgradeable', version: '5.0.0' },
-//   { id: 'solady', name: 'Solady', version: 'latest' }
-// ]
-```
-
----
-
-## GET /api/libraries/[id]
-
-特定のライブラリのCallGraphを取得します。
-
-### パラメータ
-
-| 名前 | 型 | 説明 |
-|------|-----|------|
-| id | string | ライブラリID |
+`pnpm build`は、ライブラリごとに1つのJSONファイルを`app/out/libraries/`へ書き出します。
+各fileは、`app/src/app/libraries/[file]/route.ts`が`app/src/lib/libraryGraph.ts`の`buildLibraryGraph()`で作ります。
+サンプルのライブラリは、`import`しているライブラリの契約も含みます。
+たとえば`sample-uups`は、OpenZeppelin Upgradeableの契約を含みます。
 
 ### 利用可能なライブラリID
 
 | ID | ライブラリ |
-|----|----------|
+|----|-----------|
 | `openzeppelin` | OpenZeppelin Contracts |
 | `openzeppelin-upgradeable` | OpenZeppelin Upgradeable |
 | `solady` | Solady |
+| `sample-uups` | UUPSプロキシのサンプル |
+| `sample-transparent` | Transparentプロキシのサンプル |
+| `sample-diamond` | Diamondプロキシのサンプル |
+| `sample-beacon` | Beaconプロキシのサンプル |
+| `sample-erc7546` | ERC-7546プロキシのサンプル |
 
-### レスポンス
+### fileの中身
 
 ```typescript
 {
@@ -116,22 +45,52 @@ const { libraries } = await response.json();
 }
 ```
 
-### 使用例
+### 例
 
 ```javascript
-const response = await fetch('/api/libraries/openzeppelin');
+const response = await fetch('/libraries/openzeppelin.json');
 const { library, callGraph } = await response.json();
 ```
 
 ---
 
-## GET /api/libraries/default
+## アップロードしたfileをWeb Workerで解析する
 
-デフォルトライブラリ（OpenZeppelin）を取得します。
+アップロード画面と再読み込みのボタンは、`app/src/lib/parseInWorker.ts`の`parseInWorker()`を呼びます。
+`parseInWorker()`は`app/src/workers/parse.worker.ts`を起動するので、解析の間も画面は止まらず、アップロードしたfileはブラウザの外へ出ません。
+Workerは、`import`のpathが指すライブラリのJSONだけを読み込みます。
+`@openzeppelin/contracts/...`だけを`import`するプロジェクトでは、SoladyのJSONを読み込みません。
 
-### レスポンス
+### リクエスト
 
-`GET /api/libraries/openzeppelin`と同じ。
+```typescript
+{
+  projectName: string;  // プロジェクト名
+  files: Array<{
+    path: string;     // ファイルパス
+    content: string;  // ファイル内容
+  }>;
+}
+```
+
+### 結果
+
+`parseInWorker()`は`CallGraph`を返します。
+失敗した時は、下のエラーのどれかを文にした`Error`で失敗します。
+
+### 例
+
+```javascript
+import { parseInWorker } from '@/lib/parseInWorker';
+
+const callGraph = await parseInWorker({
+  projectName: 'MyProject',
+  files: [
+    { path: 'contracts/Token.sol', content: 'pragma solidity...' },
+    { path: 'contracts/Access.sol', content: 'pragma solidity...' },
+  ],
+});
+```
 
 ---
 
@@ -226,44 +185,12 @@ type ProxyRole =
 
 ---
 
-## エラーレスポンス
+## 解析のエラー
 
-すべてのエンドポイントは、エラー時に以下の形式でレスポンスを返します:
-
-```typescript
-{
-  error: string;  // エラーメッセージ
-}
-```
-
-### HTTPステータスコード
-
-| コード | 説明 |
-|--------|------|
-| 200 | 成功 |
-| 400 | リクエスト不正 |
-| 404 | リソースが見つからない |
-| 500 | サーバーエラー |
-
-### エラー例
-
-**400 Bad Request**
-```json
-{
-  "error": "Missing required field: files"
-}
-```
-
-**404 Not Found**
-```json
-{
-  "error": "Library not found: invalid-id"
-}
-```
-
-**500 Internal Server Error**
-```json
-{
-  "error": "Failed to parse Solidity files"
-}
-```
+| 文 | 起きる時 |
+|----|----------|
+| `No files provided` | `files`が空 |
+| `Too many files. Maximum 500 files allowed` | fileが500を超える |
+| `File too large: <path>` | 1MBを超えるfileがある |
+| `No contracts found in uploaded files` | どのfileも契約、インターフェース、ライブラリを宣言していない |
+| `Failed to parse files` | 解析器がエラーを投げた |

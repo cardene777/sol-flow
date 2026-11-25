@@ -12,9 +12,7 @@ sol-flow/
 ├── app/                          # Next.js Application
 │   ├── src/
 │   │   ├── app/                  # App Router (Next.js 15)
-│   │   │   ├── api/              # API Routes
-│   │   │   │   ├── libraries/    # Library fetch API
-│   │   │   │   └── parse/        # Solidity parse API
+│   │   │   ├── libraries/        # Library JSON written at build (/libraries/<id>.json)
 │   │   │   └── page.tsx          # Main page
 │   │   ├── components/           # React Components
 │   │   │   ├── Canvas/           # React Flow canvas
@@ -50,7 +48,7 @@ sol-flow/
          │ Upload
          ▼
 ┌─────────────────┐
-│   /api/parse    │ Solidity Parser
+│ parse.worker.ts │ Solidity Parser in a Web Worker
 │ solidityParser  │ (@solidity-parser/parser)
 └────────┬────────┘
          │ Contract[]
@@ -168,13 +166,13 @@ MainLayout
     └── ContractDetailModal
 ```
 
-## API Overview
+## Data Overview
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/parse` | POST | Parse Solidity files |
-| `/api/libraries` | GET | List available libraries |
-| `/api/libraries/[id]` | GET | Get specific library data |
-| `/api/libraries/default` | GET | Get default library |
+Sol-Flow has no server API and is served as static files from GitHub Pages.
+
+| Path | Kind | Description |
+|------|------|-------------|
+| `/libraries/<id>.json` | Static file | Pre-built CallGraph of one library |
+| `app/src/workers/parse.worker.ts` | Web Worker | Parses uploaded Solidity files in the browser |
 
 See [API.md](./API.md) for detailed documentation.

@@ -9,7 +9,9 @@ Solidityスマートコントラクトのインタラクティブ可視化ツー
 | ドキュメント | 説明 |
 |-------------|------|
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | システムアーキテクチャ、データフロー、コンポーネント構成 |
-| [API.md](./API.md) | APIエンドポイントリファレンス |
+| [API.md](./API.md) | ライブラリのfileと解析のWeb Worker |
+| [DEPLOY.md](./DEPLOY.md) | GitHub Pagesでの公開 |
+| [MANUAL_SETUP.md](./MANUAL_SETUP.md) | 手で行うDNSとGitHub Pagesの設定 |
 | [FEATURES.md](./FEATURES.md) | 機能詳細ドキュメント |
 | [DATA_TYPES.md](./DATA_TYPES.md) | TypeScript型定義（CallGraph、Contract等） |
 | [PARSER.md](./PARSER.md) | Solidityパーサーの実装詳細 |

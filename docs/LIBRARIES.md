@@ -131,14 +131,14 @@ export const LIBRARIES = [
 ];
 ```
 
-### Step 4: Update API Route
+### Step 4: Update the Library Graph
 
-Edit `app/src/app/api/libraries/[id]/route.ts`:
+Edit `app/src/lib/libraryGraph.ts`. `pnpm build` then writes `/libraries/example-library.json`:
 
 ```typescript
 import exampleLibraryData from '@/data/libraries/example-library-parsed.json';
 
-const LIBRARY_DATA: Record<string, any> = {
+const libraryDataMap: Record<string, unknown> = {
   // ... existing libraries ...
   'example-library': exampleLibraryData,
 };
@@ -198,31 +198,15 @@ The regeneration script (`app/scripts/regenerate-libraries.mjs`):
 
 ---
 
-## API Endpoints
+## Library Files
 
-### List Libraries
-
-```
-GET /api/libraries
-```
-
-Response:
-```json
-{
-  "libraries": [
-    { "id": "openzeppelin", "name": "OpenZeppelin Contracts", "version": "5.0.0" },
-    { "id": "solady", "name": "Solady", "version": "latest" }
-  ]
-}
-```
-
-### Get Library Data
+`pnpm build` writes one static file per library. There is no server API.
 
 ```
-GET /api/libraries/[id]
+GET /libraries/<id>.json
 ```
 
-Response:
+Content:
 ```json
 {
   "library": {
@@ -233,14 +217,6 @@ Response:
   "callGraph": { /* CallGraph data */ }
 }
 ```
-
-### Get Default Library
-
-```
-GET /api/libraries/default
-```
-
-Returns OpenZeppelin Contracts (the default library).
 
 ---
 

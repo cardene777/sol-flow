@@ -64,7 +64,7 @@ View full contract source code with Solidity syntax highlighting. Includes comme
 
 ## Demo
 
-🌐 **Live Demo**: [https://sol-flow.vercel.app](https://sol-flow.vercel.app)
+🌐 **Live Demo**: [https://sol-flow.cardene.dev](https://sol-flow.cardene.dev)
 
 ## Getting Started
 

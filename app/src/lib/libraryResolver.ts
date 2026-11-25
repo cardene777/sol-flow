@@ -18,26 +18,30 @@ const LIBRARY_SOURCE_TO_ID: Record<string, string[]> = {
   'solady': ['solady'],
 };
 
+// Dynamically import each library JSON only when an import path needs it.
+// In the browser each import becomes its own chunk, so Solady is never downloaded
+// for a project that imports only OpenZeppelin.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const libraryImports: Record<string, () => Promise<any>> = {
+  'openzeppelin': () => import('@/data/libraries/openzeppelin-parsed.json'),
+  'openzeppelin-upgradeable': () => import('@/data/libraries/openzeppelin-upgradeable-parsed.json'),
+  'solady': () => import('@/data/libraries/solady-parsed.json'),
+};
+
 /**
- * Load all pre-parsed library contracts
+ * Load the pre-parsed contracts of the given libraries, skipping ones already loaded
  */
-async function loadAllLibraryContracts(): Promise<Map<string, Contract[]>> {
-  if (libraryContractsCache) {
-    return libraryContractsCache;
-  }
+async function loadLibraryContracts(libraryIds: string[]): Promise<Map<string, Contract[]>> {
+  const cache = libraryContractsCache ?? new Map<string, Contract[]>();
+  const byPath = libraryContractsByPath ?? new Map<string, Contract>();
+  libraryContractsCache = cache;
+  libraryContractsByPath = byPath;
 
-  const cache = new Map<string, Contract[]>();
-  const byPath = new Map<string, Contract>();
-
-  // Dynamically import all library JSON files
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const libraryImports: Record<string, () => Promise<any>> = {
-    'openzeppelin': () => import('@/data/libraries/openzeppelin-parsed.json'),
-    'openzeppelin-upgradeable': () => import('@/data/libraries/openzeppelin-upgradeable-parsed.json'),
-    'solady': () => import('@/data/libraries/solady-parsed.json'),
-  };
-
-  for (const [libraryId, importFn] of Object.entries(libraryImports)) {
+  for (const libraryId of libraryIds) {
+    const importFn = libraryImports[libraryId];
+    if (!importFn || cache.has(libraryId)) {
+      continue;
+    }
     try {
       const module = await importFn();
       const data = module.default || module;
@@ -62,9 +66,14 @@ async function loadAllLibraryContracts(): Promise<Map<string, Contract[]>> {
     }
   }
 
-  libraryContractsCache = cache;
-  libraryContractsByPath = byPath;
   return cache;
+}
+
+/**
+ * Load all pre-parsed library contracts
+ */
+async function loadAllLibraryContracts(): Promise<Map<string, Contract[]>> {
+  return loadLibraryContracts(Object.keys(libraryImports));
 }
 
 /**
@@ -78,7 +87,7 @@ async function findContractByImportPath(importPath: string): Promise<{ contract:
     return null;
   }
 
-  await loadAllLibraryContracts();
+  await loadLibraryContracts(LIBRARY_SOURCE_TO_ID[remapping.librarySource] || []);
 
   if (!libraryContractsByPath) {
     return null;

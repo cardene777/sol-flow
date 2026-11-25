@@ -131,14 +131,15 @@ export const LIBRARIES = [
 ];
 ```
 
-### ステップ4: APIルートの更新
+### ステップ4: ライブラリの図の更新
 
-`app/src/app/api/libraries/[id]/route.ts`を編集:
+`app/src/lib/libraryGraph.ts`を編集します。
+`pnpm build`が`/libraries/example-library.json`を書き出します。
 
 ```typescript
 import exampleLibraryData from '@/data/libraries/example-library-parsed.json';
 
-const LIBRARY_DATA: Record<string, any> = {
+const libraryDataMap: Record<string, unknown> = {
   // ... 既存のライブラリ ...
   'example-library': exampleLibraryData,
 };
@@ -198,31 +199,16 @@ pnpm run regenerate-libraries
 
 ---
 
-## APIエンドポイント
+## ライブラリのfile
 
-### ライブラリ一覧
-
-```
-GET /api/libraries
-```
-
-レスポンス:
-```json
-{
-  "libraries": [
-    { "id": "openzeppelin", "name": "OpenZeppelin Contracts", "version": "5.0.0" },
-    { "id": "solady", "name": "Solady", "version": "latest" }
-  ]
-}
-```
-
-### ライブラリデータの取得
+`pnpm build`は、ライブラリごとに1つの静的なfileを書き出します。
+サーバーのAPIはありません。
 
 ```
-GET /api/libraries/[id]
+GET /libraries/<id>.json
 ```
 
-レスポンス:
+中身:
 ```json
 {
   "library": {
@@ -233,14 +219,6 @@ GET /api/libraries/[id]
   "callGraph": { /* CallGraphデータ */ }
 }
 ```
-
-### デフォルトライブラリの取得
-
-```
-GET /api/libraries/default
-```
-
-OpenZeppelin Contracts（デフォルトライブラリ）を返します。
 
 ---
 
